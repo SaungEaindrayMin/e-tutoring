@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Card, useTheme } from "@mui/material";
 
 const AuthContainer = ({ children }) => {
   const theme = useTheme();
@@ -13,7 +13,14 @@ const AuthContainer = ({ children }) => {
         px: 1,
       }}
     >
-      {children}
+      <Card
+        sx={{
+          width: "100%",
+          maxWidth: 500,
+        }}
+      >
+        {children}
+      </Card>
     </Box>
   );
 };

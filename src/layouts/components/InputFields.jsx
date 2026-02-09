@@ -1,10 +1,16 @@
-import { TextField, InputAdornment } from "@mui/material";
+import { useState } from "react";
+import { TextField, InputAdornment, IconButton } from "@mui/material";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
 const InputField = ({ icon: Icon, type = "text", placeholder, ...props }) => {
+  const isPassword = type === "password";
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <TextField
       fullWidth
-      type={type}
+      type={isPassword && showPassword ? "text" : type}
       placeholder={placeholder}
       margin="normal"
       variant="outlined"
@@ -14,12 +20,27 @@ const InputField = ({ icon: Icon, type = "text", placeholder, ...props }) => {
             <Icon fontSize="small" />
           </InputAdornment>
         ) : null,
+
+        endAdornment: isPassword ? (
+          <InputAdornment position="end">
+            <IconButton
+              onClick={() => setShowPassword((prev) => !prev)}
+              edge="end"
+              size="small"
+            >
+              {showPassword ? (
+                <VisibilityOutlinedIcon fontSize="small" />
+              ) : (
+                <VisibilityOffOutlinedIcon fontSize="small" />
+              )}
+            </IconButton>
+          </InputAdornment>
+        ) : null,
       }}
       sx={{
         "& .MuiOutlinedInput-root": {
           borderRadius: "5px",
           backgroundColor: "background.paper",
-          transition: "all 0.2s ease",
 
           "& fieldset": {
             borderColor: "text.input",

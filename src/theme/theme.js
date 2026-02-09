@@ -25,8 +25,8 @@ const theme = createTheme({
     text: {
       primary: "#000000",
       secondary: "#9E9E9E",
-      input:"#E0E0E0",
-      muted :"#616161"
+      input: "#E0E0E0",
+      muted: "#616161",
     },
 
     error: {
@@ -40,7 +40,6 @@ const theme = createTheme({
     h1: { fontSize: "40px", fontWeight: 700 },
     h2: { fontSize: "32px", fontWeight: 700 },
     h3: { fontSize: "24px", fontWeight: 600 },
-
     body1: { fontSize: "16px" },
     body2: { fontSize: "14px" },
 
@@ -57,7 +56,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: "lg",
           padding: "10px 18px",
           boxShadow: "none",
         },
