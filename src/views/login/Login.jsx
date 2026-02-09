@@ -14,7 +14,6 @@ const Login = () => {
 
   return (
     <AuthContainer>
-
       <Box
         sx={{
           display: "flex",
@@ -44,11 +43,7 @@ const Login = () => {
         University Personal Tutoring Platform
       </Typography>
 
-      <Box
-        sx={{
-          mb: 3,
-        }}
-      >
+      <Box mb={3}>
         <Typography variant="body2" fontWeight={600} color="text.primary">
           University Email
         </Typography>

@@ -41,7 +41,7 @@ const ForgetPassword = () => {
         </Box>
       </Box>
 
-      <Typography variant="h2" align="center" gutterBottom color="primary.main">
+      <Typography variant="h3" align="center" gutterBottom color="primary.main">
         Forgot Password
       </Typography>
 
