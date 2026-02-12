@@ -11,6 +11,7 @@ const theme = createTheme({
       main: "#1686D7",
       light: "#60A5FA",
       dark: "#1E40AF",
+      active: "#e0f2fe"
     },
 
     secondary: {
@@ -27,6 +28,7 @@ const theme = createTheme({
       secondary: "#9E9E9E",
       input: "#E0E0E0",
       muted: "#616161",
+      active: "#2563eb"
     },
 
     error: {
@@ -42,6 +44,7 @@ const theme = createTheme({
     h3: { fontSize: "24px", fontWeight: 600 },
     body1: { fontSize: "16px" },
     body2: { fontSize: "14px" },
+    body3: { fontSize: "11px" },
 
     button: {
       textTransform: "none",

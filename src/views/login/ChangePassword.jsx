@@ -1,6 +1,6 @@
 import { Box, Button, Typography } from "@mui/material";
-import AuthContainer from "../../layouts/components/AuthContainer";
-import InputField from "../../layouts/components/InputFields";
+import AuthContainer from "../../layouts/main/components/AuthContainer";
+import InputField from "../../layouts/main/components/InputFields";
 import icon from "../../assets/images/newpassword.svg";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 

@@ -1,9 +1,9 @@
 import { Box, Typography, Button, Link } from "@mui/material";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import AuthContainer from "../../layouts/components/AuthContainer";
+import AuthContainer from "../../layouts/main/components/AuthContainer";
 import icon from "../../assets/images/icon.svg";
-import InputField from "../../layouts/components/InputFields";
+import InputField from "../../layouts/main/components/InputFields";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {

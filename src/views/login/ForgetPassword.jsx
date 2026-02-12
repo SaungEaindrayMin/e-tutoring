@@ -2,8 +2,8 @@ import { Box, Button, Typography, IconButton } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { useNavigate } from "react-router-dom";
-import AuthContainer from "../../layouts/components/AuthContainer";
-import InputField from "../../layouts/components/InputFields";
+import AuthContainer from "../../layouts/main/components/AuthContainer";
+import InputField from "../../layouts/main/components/InputFields";
 import icon from "../../assets/images/forgotpassword.svg";
 
 const ForgetPassword = () => {

@@ -1,4 +1,4 @@
-import AuthContainer from "../../layouts/components/AuthContainer";
+import AuthContainer from "../../layouts/main/components/AuthContainer";
 import icon from "../../assets/images/verify.svg";
 import { Box, Button, Typography } from "@mui/material";
 

@@ -1,8 +1,8 @@
 import { Box, Button, Link, TextField, Typography } from "@mui/material";
-import AuthContainer from "../../layouts/components/AuthContainer";
+import AuthContainer from "../../layouts/main/components/AuthContainer";
 import icon from "../../assets/images/otp.svg";
 import { useRef, useState } from "react";
-import InputField from "../../layouts/components/InputFields";
+import InputField from "../../layouts/main/components/InputFields";
 
 const OTP_LENGTH = 6;
 
