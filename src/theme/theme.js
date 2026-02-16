@@ -28,9 +28,17 @@ const theme = createTheme({
       secondary: "#9E9E9E",
       input: "#E0E0E0",
       muted: "#616161",
-      active: "#2563eb"
+      active: "#2563eb",
+      message : "#43A047",
+      document:"#7E57C2",
+      meeting:"#E65100"
     },
 
+    icon: {
+      message : "#C8E6C9",
+      document:"#EDE7F6",
+      meeting:"#FBE9E7"
+    },
     error: {
       main: "#EF4444",
     },

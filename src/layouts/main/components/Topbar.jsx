@@ -1,41 +1,44 @@
-import { LogoutOutlined } from "@mui/icons-material";
-import { AppBar, Toolbar, Box, Typography } from "@mui/material";
-const drawerWidth = 240;
+import { LogoutOutlined, Menu } from "@mui/icons-material";
+import { AppBar, Toolbar, Box, Typography, IconButton } from "@mui/material";
 
-const Topbar = () => {
+const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   return (
     <AppBar
       position="fixed"
       elevation={0}
       sx={{
-        width: `calc(100% - ${drawerWidth}px)`,
-        ml: `${drawerWidth}px`,
-        backgroundColor: "background.paper",
+        width: { lg: `calc(100% - ${drawerWidth}px)` },
+        ml: { lg: `${drawerWidth}px` },
+        bgcolor: "background.paper",
         color: "text.primary",
         borderBottom: "1px solid #e5e7eb",
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Box>
-          <Typography variant="h6" fontWeight={600}>
-            Welcome back, Alice!
-          </Typography>
-          <Typography variant="body3" color="text.muted">
-            Here your personal tutoring overview
-          </Typography>
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {!isDesktop && (
+            <IconButton onClick={onMenuClick}>
+              <Menu />
+            </IconButton>
+          )}
+
+          <Box>
+            <Typography fontWeight={600}>Welcome back, Alice!</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Here your personal tutoring overview
+            </Typography>
+          </Box>
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box sx={{ textAlign: "right" }}>
-            <Typography variant="body1" fontWeight={500}>
-              Alice Johnson
-            </Typography>
+          <Box textAlign="right">
+            <Typography fontWeight={500}>Alice Johnson</Typography>
             <Typography variant="body2" color="text.secondary">
               Student
             </Typography>
           </Box>
 
-          <LogoutOutlined sx={{ color: "text.muted", fontSize: 20 }} />
+          <LogoutOutlined />
         </Box>
       </Toolbar>
     </AppBar>

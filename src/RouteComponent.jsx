@@ -6,6 +6,7 @@ import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
 import Dashboard from "./views/adminDashboard/Dashboard";
+import ProtectedRoute from "./layouts/main/ProtectedRoute";
 
 const RouteComponent = () => {
   return (
@@ -17,8 +18,10 @@ const RouteComponent = () => {
       <Route path="/verify-success" element={<Verify />} />
       <Route path="/change-password" element={<ChangePassword />} />
 
-      <Route path="/admin" element={<Main />}>
-        <Route index element={<Dashboard />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/admin" element={<Main />}>
+          <Route index element={<Dashboard />} />
+        </Route>
       </Route>
     </Routes>
   );
