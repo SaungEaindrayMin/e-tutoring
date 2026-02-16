@@ -5,7 +5,7 @@ import OtpVerify from "./views/login/OtpVerify";
 import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
-import Dashboard from "./views/Dashboard/Dashboard";
+import Dashboard from "./views/dashboard/Dashboard";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
 
 const RouteComponent = () => {
