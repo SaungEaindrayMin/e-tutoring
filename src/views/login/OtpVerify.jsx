@@ -1,7 +1,7 @@
 import { Box, Button, Link, Typography, Alert } from "@mui/material";
 import AuthContainer from "../../layouts/main/components/AuthContainer";
 import icon from "../../assets/images/otp.svg";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import InputField from "../../layouts/main/components/InputFields";
 import { useNavigate, useLocation } from "react-router-dom";
 import Configuration from "../../services/configuration";
@@ -14,11 +14,12 @@ const OtpVerify = () => {
   const [verificationAttempted, setVerificationAttempted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
   const inputsRef = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
-
+  const RESEND_TIME = 600;
+  const [timer, setTimer] = useState(RESEND_TIME);
+  const [canResend, setCanResend] = useState(false);
   const email = location.state?.email;
 
   const config = new Configuration();
@@ -42,6 +43,52 @@ const OtpVerify = () => {
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  useEffect(() => {
+    if (timer <= 0) {
+      setCanResend(true);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleResend = async () => {
+    if (!canResend) return;
+
+    setErrorMessage("");
+    setLoading(true);
+
+    try {
+      const res = await dataService.authorize(
+        { email },
+        config.SERVICE_NAME + config.SERVICE_FORGET_PASSWORD,
+      );
+
+      setLoading(false);
+
+      if (res?.status === "success") {
+        setTimer(RESEND_TIME);
+        setCanResend(false);
+        setOtp(Array(OTP_LENGTH).fill(""));
+      } else {
+        setErrorMessage(res?.message || "Failed to resend OTP");
+      }
+    } catch {
+      setLoading(false);
+      setErrorMessage("Network error");
     }
   };
 
@@ -76,7 +123,14 @@ const OtpVerify = () => {
       setLoading(false);
 
       if (res?.status === "success") {
-        navigate("/change-password", { state: { email } });
+        sessionStorage.setItem("reset_email", email);
+        sessionStorage.setItem("reset_otp", otpValue);
+        navigate("/change-password", {
+          state: {
+            email,
+            otp: otpValue,
+          },
+        });
       } else {
         setErrorMessage(res?.message || "Invalid OTP");
       }
@@ -133,6 +187,25 @@ const OtpVerify = () => {
           />
         ))}
       </Box>
+
+      <Typography variant="body2" align="center" color="text.secondary" mb={6}>
+        Didn’t receive the code?{" "}
+        {canResend ? (
+          <Link
+            component="button"
+            underline="none"
+            color="primary.main"
+            onClick={handleResend}
+            sx={{ fontWeight: 600 }}
+          >
+            Resend Code
+          </Link>
+        ) : (
+          <Typography style={{ color: "#999" }}>
+            Resend in {formatTime(timer)}
+          </Typography>
+        )}
+      </Typography>
 
       <Button
         fullWidth

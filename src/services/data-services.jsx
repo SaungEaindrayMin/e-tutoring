@@ -30,6 +30,44 @@ class DataServices {
       });
   }
 
+  	async authorizePUT(data, serviceName) {
+		const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+
+		const makeRequest = async () => {
+			return fetch(url, {
+				method: "PUT",
+				mode: "cors",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(data),
+			});
+		};
+
+		try {
+			let response = await makeRequest();
+
+			if (response.status === 401) {
+				response = await fetch(url, {
+					method: "PUT",
+					mode: "cors",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: "Bearer " + token,
+					},
+					body: JSON.stringify(data),
+				});
+			}
+
+			if (!response.ok) this.handleResponseError(response);
+			return await response.json();
+		} catch (error) {
+			this.handleError(error);
+			return null;
+		}
+	}
+
+
   async handleError(error) {
     if (error?.response) {
       try {
