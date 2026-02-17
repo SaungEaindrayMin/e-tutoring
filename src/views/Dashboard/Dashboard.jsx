@@ -41,7 +41,6 @@ const StatCard = ({ title, value, icon, color }) => (
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            
           }}
         >
           {icon}
@@ -73,7 +72,7 @@ const Dashboard = () => {
           <StatCard
             title="Upcoming Meetings"
             value="2"
-            icon={<CalendarTodayOutlinedIcon sx={{color:"text.active"}} />}
+            icon={<CalendarTodayOutlinedIcon sx={{ color: "text.active" }} />}
             color="primary.active"
           />
         </Box>
@@ -82,7 +81,9 @@ const Dashboard = () => {
           <StatCard
             title="Unread Messages"
             value="0"
-            icon={<ChatBubbleOutlineOutlinedIcon sx={{color:"text.message"}} />}
+            icon={
+              <ChatBubbleOutlineOutlinedIcon sx={{ color: "text.message" }} />
+            }
             color="icon.message"
           />
         </Box>
@@ -91,7 +92,7 @@ const Dashboard = () => {
           <StatCard
             title="Documents"
             value="2"
-            icon={<DescriptionOutlinedIcon sx={{color:"text.document"}} />}
+            icon={<DescriptionOutlinedIcon sx={{ color: "text.document" }} />}
             color="icon.document"
           />
         </Box>
@@ -100,7 +101,7 @@ const Dashboard = () => {
           <StatCard
             title="Meeting Hours"
             value="12"
-            icon={<AccessTimeOutlinedIcon sx={{color:"text.meeting"}} />}
+            icon={<AccessTimeOutlinedIcon sx={{ color: "text.meeting" }} />}
             color="icon.meeting"
           />
         </Box>
@@ -126,7 +127,15 @@ const Dashboard = () => {
                   <Typography color="text.secondary">
                     Computer Science
                   </Typography>
-                  <Chip label="T001" size="small" sx={{ mt: 1, bgcolor:"icon.document", color:"text.document" }} />
+                  <Chip
+                    label="T001"
+                    size="small"
+                    sx={{
+                      mt: 1,
+                      bgcolor: "icon.document",
+                      color: "text.document",
+                    }}
+                  />
                 </Box>
               </Stack>
 

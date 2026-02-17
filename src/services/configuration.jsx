@@ -6,7 +6,7 @@ class Configuration {
     SERVICE_FORGET_PASSWORD = "auth/forgot-password";
     SERVICE_OTP_VERIFY = "auth/verify-otp";
     SERVICE_RESET_PASSWORD = "auth/reset-password";
-    
+
 }
 
 export default Configuration;

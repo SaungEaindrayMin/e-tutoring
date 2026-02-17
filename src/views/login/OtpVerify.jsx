@@ -1,15 +1,28 @@
-import { Box, Button, Link, TextField, Typography } from "@mui/material";
+import { Box, Button, Link, Typography, Alert } from "@mui/material";
 import AuthContainer from "../../layouts/main/components/AuthContainer";
 import icon from "../../assets/images/otp.svg";
 import { useRef, useState } from "react";
 import InputField from "../../layouts/main/components/InputFields";
+import { useNavigate, useLocation } from "react-router-dom";
+import Configuration from "../../services/configuration";
+import DataServices from "../../services/data-services";
 
 const OTP_LENGTH = 6;
 
 const OtpVerify = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [verificationAttempted, setVerificationAttempted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const inputsRef = useRef([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const email = location.state?.email;
+
+  const config = new Configuration();
+  const dataService = new DataServices();
 
   const otpValue = otp.join("");
   const otpValid = otpValue.length === OTP_LENGTH;
@@ -41,11 +54,36 @@ const OtpVerify = () => {
     inputsRef.current[pasted.length - 1]?.focus();
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     setVerificationAttempted(true);
+    setErrorMessage("");
+
     if (!otpValid) return;
 
-    console.log("OTP verified:", otpValue);
+    setLoading(true);
+
+    const param = {
+      email: email,
+      otp: otpValue,
+    };
+
+    try {
+      const res = await dataService.authorize(
+        param,
+        config.SERVICE_NAME + config.SERVICE_OTP_VERIFY,
+      );
+
+      setLoading(false);
+
+      if (res?.status === "success") {
+        navigate("/change-password", { state: { email } });
+      } else {
+        setErrorMessage(res?.message || "Invalid OTP");
+      }
+    } catch (err) {
+      setLoading(false);
+      setErrorMessage("Network error. Try again.");
+    }
   };
 
   return (
@@ -67,8 +105,14 @@ const OtpVerify = () => {
         mb={3}
         px={5}
       >
-        Please enter the 6-digit code sent to your email address.
+        Enter the 6-digit code sent to {email}
       </Typography>
+
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      )}
 
       <Box display="flex" justifyContent="center" gap={1} mb={6}>
         {otp.map((value, index) => (
@@ -83,34 +127,25 @@ const OtpVerify = () => {
             inputProps={{
               maxLength: 1,
               inputMode: "numeric",
-              style: {
-                textAlign: "center",
-                fontSize: 16,
-              },
+              style: { textAlign: "center", fontSize: 16 },
             }}
             error={verificationAttempted && !otpValid}
           />
         ))}
       </Box>
 
-      <Typography variant="body2" align="center" color="text.secondary" mb={6}>
-        Didn’t receive the code?{" "}
-        <Link underline="none" href="#" color="primary.main">
-          Resend
-        </Link>
-      </Typography>
-
       <Button
         fullWidth
         size="large"
         onClick={handleVerify}
+        disabled={loading}
         sx={{
           bgcolor: "primary.main",
           color: "background.paper",
           ":hover": { bgcolor: "primary.light" },
         }}
       >
-        Verify Code
+        {loading ? "Verifying..." : "Verify Code"}
       </Button>
     </AuthContainer>
   );

@@ -1,5 +1,5 @@
 import Configuration from "./configuration";
-import Resources from "./resourses";
+import Resources from "./resources";
 
 class DataServices {
   constructor() {

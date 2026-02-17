@@ -5,8 +5,9 @@ import OtpVerify from "./views/login/OtpVerify";
 import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
-import Dashboard from "./views/dashboard/Dashboard";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
+import Meeting from "./views/meeting/Meeting";
+import Dashboard from "./views/Dashboard/Dashboard";
 
 const RouteComponent = () => {
   return (
@@ -21,6 +22,7 @@ const RouteComponent = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Main />}>
           <Route index element={<Dashboard />} />
+          <Route path="admin/meetings" element={<Meeting />} />
         </Route>
       </Route>
     </Routes>
