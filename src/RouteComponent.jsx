@@ -8,6 +8,8 @@ import Main from "./layouts/main/Main";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
 import Meeting from "./views/meeting/Meeting";
 import Dashboard from "./views/Dashboard/Dashboard";
+import Message from "./views/message/Message";
+
 
 const RouteComponent = () => {
   return (
@@ -22,7 +24,8 @@ const RouteComponent = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Main />}>
           <Route index element={<Dashboard />} />
-          <Route path="admin/meetings" element={<Meeting />} />
+          <Route path="meetings" element={<Meeting />} />
+          <Route path="messages" element={<Message />} />
         </Route>
       </Route>
     </Routes>
