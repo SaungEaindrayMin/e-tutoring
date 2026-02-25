@@ -9,6 +9,7 @@ import ProtectedRoute from "./layouts/main/ProtectedRoute";
 import Dashboard from "./views/Dashboard/Dashboard";
 import Meeting from "./views/meeting/Meeting";
 import UserList from "./views/user/UserList";
+import Message from "./views/message/Message";
 
 const RouteComponent = () => {
   return (
@@ -25,6 +26,7 @@ const RouteComponent = () => {
           <Route index element={<Dashboard />} />
           <Route path="/admin/meetings" element={<Meeting />} />
           <Route path="/admin/users" element={<UserList />} />
+          <Route path="/admin/messages" element={<Message />} />
         </Route>
       </Route>
     </Routes>
