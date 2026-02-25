@@ -22,6 +22,8 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
     { name: "Documents", icon: <FiFileText />, path: "/admin/documents" },
     { name: "Blog", icon: <FiBookOpen />, path: "/admin/blog" },
     { name: "Allocate Tutor", icon: <FiUsers />, path: "/admin/allocate-tutor" },
+    { name: "Create Account", icon: <FiUsers />, path: "/admin/users" },
+
   ];
 
   const drawerContent = (

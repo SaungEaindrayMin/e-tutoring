@@ -6,8 +6,9 @@ import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
-import Meeting from "./views/meeting/Meeting";
 import Dashboard from "./views/Dashboard/Dashboard";
+import Meeting from "./views/meeting/Meeting";
+import UserList from "./views/user/UserList";
 
 const RouteComponent = () => {
   return (
@@ -22,7 +23,8 @@ const RouteComponent = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Main />}>
           <Route index element={<Dashboard />} />
-          <Route path="admin/meetings" element={<Meeting />} />
+          <Route path="/admin/meetings" element={<Meeting />} />
+          <Route path="/admin/users" element={<UserList />} />
         </Route>
       </Route>
     </Routes>
