@@ -1,5 +1,6 @@
 class Configuration {
 	COOKIE_NAME_TOKEN = "social-token";
+    COOKIE_NAME_USER = "social-user";
 
 	SERVICE_NAME = "/v1/";
     SERVICE_USER = "auth/login";

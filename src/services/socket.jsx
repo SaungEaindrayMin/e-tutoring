@@ -81,13 +81,13 @@ class SocketService {
       if (!this.listeners.onMessage) {
         this.listeners.onMessage = callback;
       }
-      this.socket.on("receive_message", callback);
+      this.socket.on("new_message", callback);
     }
   }
 
   offMessageReceived() {
     if (this.socket && this.listeners.onMessage) {
-      this.socket.off("receive_message", this.listeners.onMessage);
+      this.socket.off("new_message", this.listeners.onMessage);
       delete this.listeners.onMessage;
     }
   }

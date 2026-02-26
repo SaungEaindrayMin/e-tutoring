@@ -18,51 +18,8 @@ import SocketService from "../../services/socket";
 import Cookies from "js-cookie";
 
 
-const contacts = [
-  { id: 1, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 2, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 3, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 4, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 5, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 6, name: "Sarah Anderson", initials: "SA", role: "Student" },
-];
 
-const tutor = {
-  name: "Dr.Sarah Anderson",
-  initials: "SA",
-  role: "Personal Tutor",
-};
 
-const mockMessages = [
-  {
-    id: 1,
-    text: "Hi Sarah Anderson, I wanted to discuss with you.",
-    time: "10:30",
-    fullDate: "Feb 2, 2026, 10:30:00 AM",
-    sender: "me",
-  },
-  {
-    id: 2,
-    text: "Of course Emma! I have time available this Thursday at 2pm. Does that work for you?",
-    time: "11:15",
-    fullDate: "Feb 2, 2026, 11:15:00 AM",
-    sender: "other",
-  },
-  {
-    id: 3,
-    text: "That works perfectly, thank you!",
-    time: "11:20",
-    fullDate: "Feb 9, 2026, 11:20:00 PM",
-    sender: "me",
-  },
-  {
-    id: 4,
-    text: "Seen You Soon!",
-    time: "11:20",
-    fullDate: "Feb 9, 2026, 11:20:00 PM",
-    sender: "me",
-  },
-];
 
 const MessageBubble = ({ message }) => {
   const isMe = message.sender === "me";
@@ -145,7 +102,7 @@ const ChatView = ({ contact, messageText, setMessageText, onSendMessage, message
         },
       }}
     >
-      {mockMessages.map((msg) => (
+      {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
     </Box>
@@ -196,44 +153,74 @@ const Message = () => {
 
   const [selectedContact, setSelectedContact] = useState(null);
   const [messageText, setMessageText] = useState("");
-  const [isStudent] = useState(true);
   const [messages, setMessages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const token = Cookies.get(config.COOKIE_NAME_TOKEN);
+  // const [isStudent] = useState(true);
+  const user = Cookies.get(config.COOKIE_NAME_USER) ? JSON.parse(Cookies.get(config.COOKIE_NAME_USER)) : null;
+  const isStudent = user?.role === "STUDENT";
   const [conversations, setConversations] = useState([]);
-  
+
+
+
+
+  // Fetch messages logic
+  const fetchMessages = async () => {
+    try {
+      const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_MESSAGES);
+      if (response?.status === 'success') {
+        const apiMessages = Array.isArray(response.data?.data)
+          ? response.data.data
+          : (Array.isArray(response.data) ? response.data : []);
+
+        let myId = null;
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            myId = payload.id || payload.sub || payload.userId;
+          } catch (e) { }
+        }
+
+        const formattedMessages = apiMessages.map((msg) => ({
+          id: msg.id,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          fullDate: new Date(msg.createdAt).toLocaleString(),
+          sender: msg.senderId === myId ? "me" : "other",
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+        })).reverse();
+
+        setMessages(formattedMessages);
+        console.log("Fetched messages:", response.data);
+      } else {
+        setErrorMessage("Failed to fetch messages");
+      }
+    } catch (err) {
+      setErrorMessage("Network error: Cannot connect to server");
+      console.error(err);
+    }
+  };
+
+  // Fetch messages on component mount
+  useEffect(() => {
+    fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
 
   // Fetch messages on component mount
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await dataService.retrieve(config.SERVICE_NAME , config.SERVICE_GET_MESSAGES);
+        const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_CONVERSATIONS);
         if (response?.status === 'success') {
-          setMessages(response.data || []);
-        } else {
-          setErrorMessage("Failed to fetch messages");
-        }
-      } catch (err) {
-        setErrorMessage("Network error: Cannot connect to server");
-        console.error(err);
-      }
-    };
-
-    fetchMessages();
-  }, []);
-
-
-   // Fetch messages on component mount
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await dataService.getSecureData(config.SERVICE_NAME + config.SERVICE_GET_CONVERSATIONS);
-        if (response?.status === 'success') {
-          if(isStudent){
-          setSelectedContact(response.data[0] || null);
-          }else{
-          setConversations(response.data || []);
+          if (isStudent) {
+            setSelectedContact(response.data[0] || null);
+          } else {
+            setConversations(response.data || []);
           }
           console.log("Fetched conversations:", response.data[0]);
         } else {
@@ -253,13 +240,13 @@ const Message = () => {
 
     if (token) {
       SocketService.init(token, "http://localhost:3001");
-      
-        SocketService.joinUserRoom();
-      
+
+      SocketService.joinUserRoom();
 
       // Listen for incoming messages
       const handleReceiveMessage = (data) => {
-        setMessages((prev) => [...prev, data]);
+        console.log("New message received via socket:", data.content);
+        fetchMessages();
       };
 
       SocketService.onMessageReceived(handleReceiveMessage);
@@ -268,27 +255,52 @@ const Message = () => {
         SocketService.offMessageReceived();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageText.trim() && selectedContact) {
+      const text = messageText;
+      setMessageText("");
+
       // Send via socket
-      SocketService.sendMessage(selectedContact.id, messageText);
-      
+      SocketService.sendMessage(selectedContact.id, text);
+
+      // Send via API
+      try {
+        const payload = {
+          conversationId: selectedContact.id,
+          content: text,
+        };
+        const response = await dataService.retrievePOST(
+          payload,
+          config.SERVICE_NAME + config.SERVICE_SEND_MESSAGE
+        );
+        if (response?.status !== "success") {
+          console.error("Failed to send message via API", response);
+        }
+      } catch (err) {
+        console.error("Network error: Cannot send message", err);
+      }
+
       // Add to local messages
       const newMessage = {
-        id: messages.length + 1,
-        text: messageText,
+        id: (Array.isArray(messages) ? messages.length : 0) + 1,
+        text: text,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         fullDate: new Date().toLocaleString(),
         sender: "me",
       };
-      setMessages((prev) => [...prev, newMessage]);
-      setMessageText("");
+      setMessages((prev) => (Array.isArray(prev) ? [...prev, newMessage] : [newMessage]));
     }
   };
 
   if (isStudent) {
+    const tutor = {
+      name: selectedContact?.tutorName || '',
+      initials: selectedContact?.tutorInitialName || '',
+      role: "Personal Tutor",
+    };
     return (
       <Box>
         <Typography variant="h5" fontWeight={700}>
@@ -432,12 +444,12 @@ const Message = () => {
                 fontSize: 14,
               }}
             >
-              {selectedContact.initials}
+              {selectedContact.initialName}
             </Avatar>
             <Box>
-              <Typography fontWeight={600}>{selectedContact.name}</Typography>
+              <Typography fontWeight={600}>{selectedContact.studentName}</Typography>
               <Typography variant="caption" color="text.secondary">
-                {selectedContact.role}
+                Student
               </Typography>
             </Box>
           </Stack>
@@ -451,7 +463,7 @@ const Message = () => {
               mb: 2,
             }}
           >
-            {mockMessages.map((msg) => (
+            {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}
           </Box>

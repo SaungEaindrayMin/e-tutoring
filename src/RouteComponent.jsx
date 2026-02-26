@@ -10,7 +10,6 @@ import Dashboard from "./views/Dashboard/Dashboard";
 import Meeting from "./views/meeting/Meeting";
 import UserList from "./views/user/UserList";
 import Message from "./views/message/Message";
-import Message from "./views/message/Message";
 
 
 const RouteComponent = () => {

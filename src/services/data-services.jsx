@@ -1,5 +1,7 @@
 import Configuration from "./configuration";
 import Resources from "./resources";
+import Cookies from "js-cookie";
+
 
 class DataServices {
   constructor() {
@@ -119,6 +121,7 @@ class DataServices {
 
       return data;
     } catch (error) {
+      console.error("Error during data retrieval:", error);
       return {
         success: false,
         message: error.message,
