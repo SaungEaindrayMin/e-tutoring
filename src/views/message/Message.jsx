@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -12,6 +12,11 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DataServices from "../../services/data-services";
+import Configuration from "../../services/configuration";
+import SocketService from "../../services/socket";
+import Cookies from "js-cookie";
+
 
 const contacts = [
   { id: 1, name: "Sarah Anderson", initials: "SA", role: "Student" },
@@ -104,7 +109,7 @@ const MessageBubble = ({ message }) => {
   );
 };
 
-const ChatView = ({ contact, messageText, setMessageText }) => (
+const ChatView = ({ contact, messageText, setMessageText, onSendMessage, messages }) => (
   <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 340px)", minHeight: 300 }}>
     <Stack direction="row" spacing={2} alignItems="center" mb={2} flexShrink={0}>
       <Avatar
@@ -145,7 +150,7 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
       ))}
     </Box>
 
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} alignItems="flex-end">
       <TextField
         fullWidth
         multiline
@@ -153,6 +158,12 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
         placeholder="Type your message..."
         value={messageText}
         onChange={(e) => setMessageText(e.target.value)}
+        onKeyPress={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSendMessage();
+          }
+        }}
         sx={{
           flex: 1,
           "& .MuiOutlinedInput-root": {
@@ -162,6 +173,7 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
         }}
       />
       <IconButton
+        onClick={onSendMessage}
         sx={{
           flexShrink: 0,
           bgcolor: "primary.main",
@@ -179,9 +191,102 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
 );
 
 const Message = () => {
+  const config = new Configuration();
+  const dataService = new DataServices();
+
   const [selectedContact, setSelectedContact] = useState(null);
   const [messageText, setMessageText] = useState("");
-  const [isStudent] = useState(false);
+  const [isStudent] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const token = Cookies.get(config.COOKIE_NAME_TOKEN);
+  const [conversations, setConversations] = useState([]);
+  
+
+  // Fetch messages on component mount
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await dataService.retrieve(config.SERVICE_NAME , config.SERVICE_GET_MESSAGES);
+        if (response?.status === 'success') {
+          setMessages(response.data || []);
+        } else {
+          setErrorMessage("Failed to fetch messages");
+        }
+      } catch (err) {
+        setErrorMessage("Network error: Cannot connect to server");
+        console.error(err);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+
+   // Fetch messages on component mount
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await dataService.getSecureData(config.SERVICE_NAME + config.SERVICE_GET_CONVERSATIONS);
+        if (response?.status === 'success') {
+          if(isStudent){
+          setSelectedContact(response.data[0] || null);
+          }else{
+          setConversations(response.data || []);
+          }
+          console.log("Fetched conversations:", response.data[0]);
+        } else {
+          setErrorMessage("Failed to fetch conversations");
+        }
+      } catch (err) {
+        setErrorMessage("Network error: Cannot connect to server");
+        console.error(err);
+      }
+    };
+
+    fetchMessages();
+  }, []);
+
+  // Initialize socket connection on component mount
+  useEffect(() => {
+
+    if (token) {
+      SocketService.init(token, "http://localhost:3001");
+      
+        SocketService.joinUserRoom();
+      
+
+      // Listen for incoming messages
+      const handleReceiveMessage = (data) => {
+        setMessages((prev) => [...prev, data]);
+      };
+
+      SocketService.onMessageReceived(handleReceiveMessage);
+
+      return () => {
+        SocketService.offMessageReceived();
+      };
+    }
+  }, []);
+
+  const handleSendMessage = () => {
+    if (messageText.trim() && selectedContact) {
+      // Send via socket
+      SocketService.sendMessage(selectedContact.id, messageText);
+      
+      // Add to local messages
+      const newMessage = {
+        id: messages.length + 1,
+        text: messageText,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        fullDate: new Date().toLocaleString(),
+        sender: "me",
+      };
+      setMessages((prev) => [...prev, newMessage]);
+      setMessageText("");
+    }
+  };
 
   if (isStudent) {
     return (
@@ -197,6 +302,8 @@ const Message = () => {
           contact={tutor}
           messageText={messageText}
           setMessageText={setMessageText}
+          onSendMessage={handleSendMessage}
+          messages={messages}
         />
       </Box>
     );
@@ -210,6 +317,12 @@ const Message = () => {
       <Typography variant="body2" color="text.secondary" mb={2}>
         Communicate with your students
       </Typography>
+
+      {errorMessage && (
+        <Typography color="error" variant="body2" mb={2}>
+          {errorMessage}
+        </Typography>
+      )}
 
       <TextField
         fullWidth
@@ -244,7 +357,7 @@ const Message = () => {
           scrollbarWidth: "none",
         }}
       >
-        {contacts.map((c) => (
+        {(conversations).map((c) => (
           <Box
             key={c.id}
             onClick={() => setSelectedContact(c)}
@@ -273,7 +386,7 @@ const Message = () => {
                     : "2px solid transparent",
               }}
             >
-              {c.initials}
+              {c.initialName}
             </Avatar>
             <Typography
               variant="caption"
@@ -281,7 +394,7 @@ const Message = () => {
               noWrap
               sx={{ width: 110 }}
             >
-              {c.name}
+              {c.studentName}
             </Typography>
           </Box>
         ))}
@@ -307,11 +420,78 @@ const Message = () => {
           </Typography>
         </Box>
       ) : (
-        <ChatView
-          contact={selectedContact}
-          messageText={messageText}
-          setMessageText={setMessageText}
-        />
+        <Box>
+          <Stack direction="row" spacing={2} alignItems="center" mb={3}>
+            <Avatar
+              sx={{
+                width: 44,
+                height: 44,
+                bgcolor: "#fce4ec",
+                color: "#e91e63",
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {selectedContact.initials}
+            </Avatar>
+            <Box>
+              <Typography fontWeight={600}>{selectedContact.name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                {selectedContact.role}
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Box
+            sx={{
+              minHeight: 320,
+              maxHeight: 420,
+              overflowY: "auto",
+              px: 1,
+              mb: 2,
+            }}
+          >
+            {mockMessages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))}
+          </Box>
+
+          <Stack direction="row" spacing={1} alignItems="flex-end">
+            <TextField
+              fullWidth
+              multiline
+              maxRows={3}
+              placeholder="Type your message..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 1,
+                  bgcolor: "background.paper",
+                },
+              }}
+            />
+            <IconButton
+              onClick={handleSendMessage}
+              sx={{
+                bgcolor: "primary.main",
+                color: "#fff",
+                width: 48,
+                height: 48,
+                borderRadius: 1,
+                "&:hover": { bgcolor: "primary.dark" },
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       )}
     </Box>
   );
