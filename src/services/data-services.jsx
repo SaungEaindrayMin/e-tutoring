@@ -1,5 +1,6 @@
 import Configuration from "./configuration";
 import Resources from "./resources";
+import Cookies from "js-cookie";
 
 class DataServices {
   constructor() {

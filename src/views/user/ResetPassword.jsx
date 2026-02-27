@@ -1,13 +1,13 @@
-import { Box, MenuItem, Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import CustomDialog from "../../layouts/main/components/CustomDialog";
 import InputField from "../../layouts/main/components/InputFields";
 
-const CreateAccountDialog = ({ open, onClose }) => {
+const ResetPassword = ({ open, onClose }) => {
   return (
     <CustomDialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       title={
         <Typography
           variant="h4"
@@ -15,27 +15,12 @@ const CreateAccountDialog = ({ open, onClose }) => {
           fontWeight={600}
           color="primary.main"
         >
-          Create Account
+          Reset Password
         </Typography>
       }
     >
       <Box p={2}>
-        <Typography textAlign="center" color="text.secondary" mb={3}>
-          Create your account to access the personal tutoring platform
-        </Typography>
-
-        <InputField select label="I am a *" defaultValue="Student">
-          <MenuItem value="Student">Student</MenuItem>
-          <MenuItem value="Tutor">Tutor</MenuItem>
-        </InputField>
-
-
-        <Box display="flex" gap={2}>
-          <InputField label="Full Name *" />
-          <InputField label="University Email *" />
-        </Box>
-
-        <Box display="flex" gap={2}>
+        <Box>
           <InputField label="Password *" type="password" />
           <InputField label="Confirm Password *" type="password" />
         </Box>
@@ -50,11 +35,11 @@ const CreateAccountDialog = ({ open, onClose }) => {
             ":hover": { bgcolor: "primary.light" },
           }}
         >
-          Create Account
+          Save Changes
         </Button>
       </Box>
     </CustomDialog>
   );
 };
 
-export default CreateAccountDialog;
+export default ResetPassword;

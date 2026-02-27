@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -12,6 +12,8 @@ import {
   IconButton,
   Pagination,
   Stack,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PageHeader from "../../layouts/main/components/PageHeader";
@@ -22,18 +24,55 @@ import {
   BorderColorOutlined,
   DeleteOutlineOutlined,
 } from "@mui/icons-material";
-
-const users = [
-  { name: "Hmue", email: "hmue@university.edu", role: "Tutor" },
-  { name: "Ni Ni", email: "ni@university.edu", role: "Tutor" },
-  { name: "Khin", email: "khin@university.edu", role: "Tutor" },
-  { name: "Eaint Eaint", email: "eaint@university.edu", role: "Tutor" },
-  { name: "Jhon", email: "jhon@university.edu", role: "Tutor" },
-];
+import Configuration from "../../services/configuration";
+import DataServices from "../../services/data-services";
+import ResetPassword from "./ResetPassword";
 
 const UserList = () => {
+  const [users, setUsers] = useState([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const config = new Configuration();
+  const dataService = new DataServices();
+
+  const fetchUsers = async (pageNumber = 1) => {
+    setLoading(true);
+    try {
+      const serviceAction = `${config.SERVICE_USER_LIST}?page=${pageNumber}&limit=${limit}`;
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        serviceAction,
+      );
+
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        setUsers(res.data);
+        setTotalPages(1);
+      } else {
+        setUsers([]);
+        setTotalPages(1);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users", err);
+      setUsers([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers(page);
+  }, [page]);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
 
   return (
     <Box>
@@ -79,7 +118,7 @@ const UserList = () => {
                 <b>Role</b>
               </TableCell>
               <TableCell>
-                <b>Create at</b>
+                <b>Created At</b>
               </TableCell>
               <TableCell>
                 <b>Action</b>
@@ -87,34 +126,60 @@ const UserList = () => {
             </TableRow>
           </TableHead>
 
-          <TableBody>
-            {users.map((user, index) => (
-              <TableRow key={index}>
-                <TableCell>{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>Feb-20, 8:00 AM</TableCell>
-                <TableCell>
-                  <IconButton size="small">
-                    <BorderColorOutlined fontSize="small" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setOpenDelete(true)}
-                  >
-                    <DeleteOutlineOutlined fontSize="small" />
-                  </IconButton>
+          <TableBody
+            sx={{
+              "& .MuiTableCell-root": { borderBottom: "none" },
+            }}
+          >
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    No users found.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user, index) => (
+                <TableRow key={index}>
+                  <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.createdAt).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton size="small" onClick={() => setOpenEdit(true)}>
+                      <BorderColorOutlined fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => setOpenDelete(true)}
+                    >
+                      <DeleteOutlineOutlined fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>
 
       <Box display="flex" justifyContent="center" mt={4}>
         <Pagination
-          count={10}
+          count={totalPages}
+          page={page}
+          onChange={handlePageChange}
           shape="rounded"
           sx={{
             "& .MuiPaginationItem-root": {
@@ -136,11 +201,12 @@ const UserList = () => {
         open={openCreate}
         onClose={() => setOpenCreate(false)}
       />
-
       <DeleteConfirmDialog
         open={openDelete}
         onClose={() => setOpenDelete(false)}
       />
+
+      <ResetPassword open={openEdit} onClose={() => setOpenEdit(false)} />
     </Box>
   );
 };
