@@ -17,7 +17,7 @@ const OtpVerify = () => {
   const inputsRef = useRef([]);
   const navigate = useNavigate();
   const location = useLocation();
-  const RESEND_TIME = 600;
+  const RESEND_TIME = 180;
   const [timer, setTimer] = useState(RESEND_TIME);
   const [canResend, setCanResend] = useState(false);
   const email = location.state?.email;
@@ -43,6 +43,9 @@ const OtpVerify = () => {
   const handleKeyDown = (e, index) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
+    }
+    if (e.key === "Enter" && !loading) {
+      handleVerify();
     }
   };
 
@@ -162,12 +165,6 @@ const OtpVerify = () => {
         Enter the 6-digit code sent to {email}
       </Typography>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-
       <Box display="flex" justifyContent="center" gap={1} mb={6}>
         {otp.map((value, index) => (
           <InputField
@@ -183,10 +180,22 @@ const OtpVerify = () => {
               inputMode: "numeric",
               style: { textAlign: "center", fontSize: 16 },
             }}
-            error={verificationAttempted && !otpValid}
+            disabled={loading}
+            error={(verificationAttempted && !otpValid) || !!errorMessage}
           />
         ))}
       </Box>
+
+      {errorMessage && (
+        <Typography
+          variant="body2"
+          color="error"
+          align="center"
+          sx={{ mt: -4, mb: 3 }}
+        >
+          {errorMessage}
+        </Typography>
+      )}
 
       <Typography variant="body2" align="center" color="text.secondary" mb={6}>
         Didn’t receive the code?{" "}

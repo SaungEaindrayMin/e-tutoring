@@ -47,7 +47,7 @@ const InputField = forwardRef(
         sx={{
           "& .MuiOutlinedInput-root": {
             borderRadius: 0.5,
-            backgroundColor: "background.switch",
+            // backgroundColor: "background.switch",
 
             "& .MuiOutlinedInput-notchedOutline": {
               borderColor: "text.input",

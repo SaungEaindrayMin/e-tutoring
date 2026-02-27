@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Alert } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import AuthContainer from "../../layouts/main/components/AuthContainer";
 import InputField from "../../layouts/main/components/InputFields";
 import icon from "../../assets/images/newpassword.svg";
@@ -12,7 +12,7 @@ const ChangePassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [alert, setAlert] = useState({ type: "", message: "" });
+  const [errors, setErrors] = useState({});
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,33 +24,23 @@ const ChangePassword = () => {
   const dataService = new DataServices();
 
   const handleSave = async () => {
-    setAlert({ type: "", message: "" });
+    const newErrors = {};
 
-    if (!password || !confirmPassword) {
-      setAlert({ type: "error", message: "Both fields are required." });
-      return;
-    }
+    if (!password) newErrors.password = "Please fill your password!";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please fill your confirm password!";
+    if (password && confirmPassword && password !== confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match.";
+    if (!email || !otp)
+      newErrors.general = "Session expired. Please try again.";
 
-    if (password !== confirmPassword) {
-      setAlert({ type: "error", message: "Passwords do not match." });
-      return;
-    }
+    setErrors(newErrors);
 
-    if (!email || !otp) {
-      setAlert({
-        type: "error",
-        message: "Session expired. Please try again.",
-      });
-      return;
-    }
+    if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
 
-    const param = {
-      email: email,
-      otp: otp,
-      newPassword: password,
-    };
+    const param = { email, otp, newPassword: password };
 
     try {
       const res = await dataService.authorize(
@@ -61,26 +51,19 @@ const ChangePassword = () => {
       setLoading(false);
 
       if (res?.status === "success") {
-        setAlert({
-          type: "success",
-          message: res.message || "Password changed successfully!",
-        });
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+        setTimeout(() => navigate("/login"), 1500);
       } else {
-        setAlert({
-          type: "error",
-          message: res?.message || "Failed to reset password",
-        });
+        setErrors({ general: res?.message || "Failed to reset password." });
       }
     } catch (err) {
       setLoading(false);
-      setAlert({
-        type: "error",
-        message: "Network error. Please try again.",
-      });
+      setErrors({ general: "Network error. Please try again." });
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !loading) {
+      handleSave();
     }
   };
 
@@ -107,13 +90,13 @@ const ChangePassword = () => {
         mb={3}
         px={5}
       >
-        Your new password must be different from previous password
+        Your new password must be different from previously used passwords
       </Typography>
 
-      {alert.message && (
-        <Alert severity={alert.type} sx={{ mb: 2 }}>
-          {alert.message}
-        </Alert>
+      {errors.general && (
+        <Typography variant="body2" color="error" align="center" mb={2}>
+          {errors.general}
+        </Typography>
       )}
 
       <Box mb={3}>
@@ -125,22 +108,34 @@ const ChangePassword = () => {
           type="password"
           placeholder="Enter your password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors({ ...errors, password: "", general: "" });
+          }}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
+          error={!!errors.password}
+          helperText={errors.password}
         />
       </Box>
 
-      <Box>
+      <Box mb={3}>
         <Typography variant="body2" fontWeight={600}>
           Confirm Password
         </Typography>
         <InputField
           icon={LockOutlinedIcon}
           type="password"
-          placeholder="Confirm your password"
+          placeholder="Enter your confirm password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setErrors({ ...errors, confirmPassword: "", general: "" });
+          }}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword}
         />
       </Box>
 
@@ -150,13 +145,13 @@ const ChangePassword = () => {
         onClick={handleSave}
         disabled={loading}
         sx={{
-          mt: 3,
+          mt: 2,
           bgcolor: "primary.main",
           color: "background.paper",
           ":hover": { bgcolor: "primary.light" },
         }}
       >
-        {loading ? "Saving..." : "Continue"}
+        {loading ? "Continue..." : "Continue"}
       </Button>
     </AuthContainer>
   );

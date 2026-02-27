@@ -1,4 +1,4 @@
-import { Box, Button, Typography, Alert } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { useNavigate } from "react-router-dom";
@@ -16,23 +16,22 @@ const ForgetPassword = () => {
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = async () => {
-    setErrorMessage("");
-    setSuccessMessage("");
+    const newErrors = {};
 
     if (!email) {
-      setErrorMessage("Email is required");
-      return;
+      newErrors.email = "Please fill your email.";
     }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
 
-    const param = {
-      email: email,
-    };
+    const param = { email };
 
     try {
       const res = await dataService.authorize(
@@ -43,14 +42,23 @@ const ForgetPassword = () => {
       setLoading(false);
 
       if (res?.status === "success") {
-        setSuccessMessage(res.message || "Instructions sent successfully!");
         navigate("/email-otp-verify", { state: { email } });
       } else {
-        setErrorMessage(res?.message || "Failed to send instructions");
+        setErrors({
+          email: res?.message || "Failed to send instructions.",
+        });
       }
     } catch (err) {
       setLoading(false);
-      setErrorMessage("Network error: Unable to connect to server");
+      setErrors({
+        email: "Network error: Unable to connect to server.",
+      });
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !loading) {
+      handleSubmit();
     }
   };
 
@@ -92,33 +100,28 @@ const ForgetPassword = () => {
       </Typography>
 
       <Typography variant="body2" align="center" color="text.secondary" mb={3}>
-        Enter the email associated with your account and we’ll send instructions
-        to reset your password.
+        Enter the email associated with your account and will send an email with
+        instructions to reset your password.
       </Typography>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {errorMessage}
-        </Alert>
-      )}
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
-        </Alert>
-      )}
-
       <Box mb={3}>
-        <Typography variant="body2" fontWeight={600} color="text.primary">
+        <Typography variant="body2" fontWeight={600}>
           Email address
         </Typography>
 
         <InputField
           icon={EmailOutlinedIcon}
           type="email"
-          placeholder="name@university.edu"
-          required
+          placeholder="Enter your email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErrors({ ...errors, email: "" });
+          }}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
+          error={!!errors.email}
+          helperText={errors.email}
         />
       </Box>
 
@@ -128,7 +131,7 @@ const ForgetPassword = () => {
         onClick={handleSubmit}
         disabled={loading}
         sx={{
-          mt: 3,
+          mt: 2,
           bgcolor: "primary.main",
           color: "background.paper",
           ":hover": { bgcolor: "primary.light" },
