@@ -10,6 +10,8 @@ import Dashboard from "./views/Dashboard/Dashboard";
 import Meeting from "./views/meeting/Meeting";
 import UserList from "./views/user/UserList";
 import Message from "./views/message/Message";
+import BlogList from "./views/blog/BlogList";
+import BlogDetail from "./views/blog/BlogDetail";
 
 const RouteComponent = () => {
   return (
@@ -27,6 +29,8 @@ const RouteComponent = () => {
           <Route path="/admin/meetings" element={<Meeting />} />
           <Route path="/admin/users" element={<UserList />} />
           <Route path="/admin/messages" element={<Message />} />
+          <Route path="/admin/blog" element={<BlogList />} />
+          <Route path="/admin/blog/:slug" element={<BlogDetail />} />
         </Route>
       </Route>
     </Routes>
