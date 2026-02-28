@@ -37,6 +37,7 @@ const UserList = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const config = new Configuration();
   const dataService = new DataServices();
@@ -163,7 +164,10 @@ const UserList = () => {
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => setOpenDelete(true)}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setOpenDelete(true);
+                      }}
                     >
                       <DeleteOutlineOutlined fontSize="small" />
                     </IconButton>
@@ -204,6 +208,8 @@ const UserList = () => {
       <DeleteConfirmDialog
         open={openDelete}
         onClose={() => setOpenDelete(false)}
+        userId={selectedUserId}
+        onSuccess={() => fetchUsers(page)}
       />
 
       <ResetPassword open={openEdit} onClose={() => setOpenEdit(false)} />

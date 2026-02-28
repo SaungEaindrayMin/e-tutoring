@@ -10,7 +10,6 @@ class Configuration {
     SERVICE_CREATE_USER = "users";
     SERVICE_DELETE_USER = "users";
 
-
 }
 
 export default Configuration;
