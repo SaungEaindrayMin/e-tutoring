@@ -39,18 +39,38 @@ const UserList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [search, setSearch] = useState("");
+  const [role, setRole] = useState("All");
 
   const config = new Configuration();
   const dataService = new DataServices();
 
-  const fetchUsers = async (pageNumber = 1, searchValue = "") => {
+  const fetchUsers = async (
+    pageNumber = 1,
+    searchValue = "",
+    roleValue = "All",
+  ) => {
     setLoading(true);
+
     try {
-      const serviceAction = `${config.SERVICE_USER_LIST}?page=${pageNumber}&limit=${limit}&search=${searchValue}`;
+      const params = new URLSearchParams();
+      params.append("page", pageNumber);
+      params.append("limit", limit);
+
+      if (searchValue) {
+        params.append("search", searchValue);
+      }
+
+      if (roleValue !== "All") {
+        params.append("role", roleValue);
+      }
+
+      const serviceAction = `${config.SERVICE_USER_LIST}?${params.toString()}`;
+
       const res = await dataService.retrieve(
         config.SERVICE_NAME,
         serviceAction,
       );
+
       if (res?.status === "success" && Array.isArray(res.data)) {
         setUsers(res.data);
         setTotalPages(res?.pagination?.totalPages || 1);
@@ -66,9 +86,10 @@ const UserList = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchUsers(page, search);
-  }, [page, search]);
+    fetchUsers(page, search, role);
+  }, [page, search, role]);
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -94,15 +115,26 @@ const UserList = () => {
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               setPage(1);
-              fetchUsers(1, search);
+              fetchUsers(1, search, role);
             }
           }}
         />
-        <TextField select size="small" sx={{ width: 200 }} defaultValue="All">
+        <InputField
+          select
+          size="small"
+          sx={{ width: 200 }}
+          value={role}
+          onChange={(e) => {
+            setRole(e.target.value);
+            setPage(1);
+          }}
+        >
           <MenuItem value="All">All</MenuItem>
-          <MenuItem value="Tutor">Tutors</MenuItem>
-          <MenuItem value="Student">Students</MenuItem>
-        </TextField>
+          <MenuItem value="TUTOR">Tutor</MenuItem>
+          <MenuItem value="STUDENT">Student</MenuItem>
+          <MenuItem value="ADMIN">Admin</MenuItem>
+          <MenuItem value="STAFF">Staff</MenuItem>
+        </InputField>
       </Stack>
 
       <Card
