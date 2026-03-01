@@ -181,7 +181,6 @@ const Message = () => {
 
 
 
-  // Decode current user id from JWT once
   let myId = null;
   if (token) {
     try {
@@ -190,7 +189,6 @@ const Message = () => {
     } catch (e) { }
   }
 
-  // Fetch messages — pageNumber=1 replaces list, pageNumber>1 prepends older messages
   const fetchMessages = useCallback(async (pageNumber = 1) => {
     if (pageNumber === 1) {
       setIsLoading(true);
@@ -225,12 +223,10 @@ const Message = () => {
           shouldScrollToBottom.current = true;
           setMessages(formatted);
         } else {
-          // Prepend older messages — do NOT scroll to bottom
           shouldScrollToBottom.current = false;
           const container = scrollContainerRef.current;
           const prevScrollHeight = container ? container.scrollHeight : 0;
           setMessages((prev) => [...formatted, ...prev]);
-          // After React renders, push scrollTop down by the height the new items added
           requestAnimationFrame(() => {
             if (container) {
               container.scrollTop = container.scrollHeight - prevScrollHeight;
@@ -247,16 +243,13 @@ const Message = () => {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myId]);
 
   // Fetch page 1 on mount
   useEffect(() => {
     fetchMessages(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive (page-1 updates)
   useEffect(() => {
     if (shouldScrollToBottom.current && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -264,7 +257,6 @@ const Message = () => {
     }
   }, [messages]);
 
-  // Scroll handler — load next page when user scrolls to the top
   const handleScroll = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -319,7 +311,6 @@ const Message = () => {
         SocketService.offMessageReceived();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSendMessage = async () => {
