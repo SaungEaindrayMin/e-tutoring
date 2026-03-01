@@ -253,6 +253,10 @@ class DataServices {
     return token;
   }
 
+  removeTokenCookie() {
+    Cookies.remove(this.config.COOKIE_NAME_TOKEN, { path: "/" });
+  }
+
   async handleError(error) {
     if (error?.response) {
       try {

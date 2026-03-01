@@ -1,7 +1,31 @@
 import { LogoutOutlined, Menu } from "@mui/icons-material";
 import { AppBar, Toolbar, Box, Typography, IconButton } from "@mui/material";
+import Configuration from "../../../services/configuration";
+import DataServices from "../../../services/data-services";
+import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
+  const navigate = useNavigate();
+  const config = new Configuration();
+  const dataService = new DataServices();
+
+  const handleLogout = async () => {
+    try {
+      const serviceName = config.SERVICE_NAME + config.SERVICE_LOGOUT;
+      const response = await dataService.retrievePOST({}, serviceName);
+
+      console.log("Logout response:", response);
+      Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
+
+      navigate("/login"); 
+      
+    } catch (error) {
+      console.error("Logout failed", error);
+      Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
+      navigate("/login");
+    }
+  };
   return (
     <AppBar
       position="fixed"
@@ -38,7 +62,9 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
             </Typography>
           </Box>
 
-          <LogoutOutlined />
+          <IconButton onClick={handleLogout}>
+            <LogoutOutlined />
+          </IconButton>
         </Box>
       </Toolbar>
     </AppBar>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -8,6 +8,7 @@ import {
   Stack,
   IconButton,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
@@ -16,7 +17,7 @@ import DataServices from "../../services/data-services";
 import Configuration from "../../services/configuration";
 import SocketService from "../../services/socket";
 import Cookies from "js-cookie";
-
+import Resources from "../../services/resources";
 
 
 
@@ -29,15 +30,15 @@ const MessageBubble = ({ message }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        alignItems: isMe ? "flex-start" : "flex-end",
+        alignItems: isMe ? "flex-end" : "flex-start",
         mb: 1,
       }}
     >
       <Box
         sx={{
           maxWidth: "60%",
-          bgcolor: isMe ? "#f0f0f0" : "primary.main",
-          color: isMe ? "text.primary" : "#fff",
+          bgcolor: isMe ? "primary.main" : "#f0f0f0",
+          color: isMe ? "#fff" : "text.primary",
           borderRadius: 2,
           px: 2,
           py: 1.2,
@@ -66,8 +67,8 @@ const MessageBubble = ({ message }) => {
   );
 };
 
-const ChatView = ({ contact, messageText, setMessageText, onSendMessage, messages }) => (
-  <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 340px)", minHeight: 300 }}>
+const ChatView = ({ contact, messageText, setMessageText, onSendMessage, messages, scrollContainerRef, onScroll, isFetchingMore }) => (
+  <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
     <Stack direction="row" spacing={2} alignItems="center" mb={2} flexShrink={0}>
       <Avatar
         sx={{
@@ -90,6 +91,8 @@ const ChatView = ({ contact, messageText, setMessageText, onSendMessage, message
     </Stack>
 
     <Box
+      ref={scrollContainerRef}
+      onScroll={onScroll}
       sx={{
         flex: 1,
         overflowY: "auto",
@@ -102,6 +105,11 @@ const ChatView = ({ contact, messageText, setMessageText, onSendMessage, message
         },
       }}
     >
+      {isFetchingMore && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+          <CircularProgress size={20} />
+        </Box>
+      )}
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
@@ -150,6 +158,8 @@ const ChatView = ({ contact, messageText, setMessageText, onSendMessage, message
 const Message = () => {
   const config = new Configuration();
   const dataService = new DataServices();
+  const resources = new Resources();
+
 
   const [selectedContact, setSelectedContact] = useState(null);
   const [messageText, setMessageText] = useState("");
@@ -157,32 +167,51 @@ const Message = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const token = Cookies.get(config.COOKIE_NAME_TOKEN);
-  // const [isStudent] = useState(true);
   const user = Cookies.get(config.COOKIE_NAME_USER) ? JSON.parse(Cookies.get(config.COOKIE_NAME_USER)) : null;
   const isStudent = user?.role === "STUDENT";
   const [conversations, setConversations] = useState([]);
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const shouldScrollToBottom = useRef(true); // true for fresh/new messages, false when prepending old ones
 
 
 
-  // Fetch messages logic
-  const fetchMessages = async () => {
+
+  // Decode current user id from JWT once
+  let myId = null;
+  if (token) {
     try {
-      const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_MESSAGES);
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      myId = payload.id || payload.sub || payload.userId;
+    } catch (e) { }
+  }
+
+  // Fetch messages — pageNumber=1 replaces list, pageNumber>1 prepends older messages
+  const fetchMessages = useCallback(async (pageNumber = 1) => {
+    if (pageNumber === 1) {
+      setIsLoading(true);
+    } else {
+      setIsFetchingMore(true);
+    }
+
+    try {
+      const endpoint = `${config.SERVICE_GET_MESSAGES}?page=${pageNumber}&limit=10`;
+      const response = await dataService.retrieve(config.SERVICE_NAME, endpoint);
+
       if (response?.status === 'success') {
         const apiMessages = Array.isArray(response.data?.data)
           ? response.data.data
           : (Array.isArray(response.data) ? response.data : []);
 
-        let myId = null;
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            myId = payload.id || payload.sub || payload.userId;
-          } catch (e) { }
-        }
+        const pagination = response.data?.pagination || {};
+        setHasNextPage(pagination.hasNextPage ?? false);
+        setPage(pageNumber);
 
-        const formattedMessages = apiMessages.map((msg) => ({
+        const formatted = apiMessages.map((msg) => ({
           id: msg.id,
           text: msg.content,
           time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -192,28 +221,63 @@ const Message = () => {
           receiverId: msg.receiverId,
         })).reverse();
 
-        setMessages(formattedMessages);
-        console.log("Fetched messages:", response.data);
+        if (pageNumber === 1) {
+          shouldScrollToBottom.current = true;
+          setMessages(formatted);
+        } else {
+          // Prepend older messages — do NOT scroll to bottom
+          shouldScrollToBottom.current = false;
+          const container = scrollContainerRef.current;
+          const prevScrollHeight = container ? container.scrollHeight : 0;
+          setMessages((prev) => [...formatted, ...prev]);
+          // After React renders, push scrollTop down by the height the new items added
+          requestAnimationFrame(() => {
+            if (container) {
+              container.scrollTop = container.scrollHeight - prevScrollHeight;
+            }
+          });
+        }
       } else {
         setErrorMessage("Failed to fetch messages");
       }
     } catch (err) {
       setErrorMessage("Network error: Cannot connect to server");
       console.error(err);
+    } finally {
+      setIsLoading(false);
+      setIsFetchingMore(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myId]);
 
-  // Fetch messages on component mount
+  // Fetch page 1 on mount
   useEffect(() => {
-    fetchMessages();
+    fetchMessages(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-
-  // Fetch messages on component mount
+  // Auto-scroll to bottom when new messages arrive (page-1 updates)
   useEffect(() => {
-    const fetchMessages = async () => {
+    if (shouldScrollToBottom.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messages]);
+
+  // Scroll handler — load next page when user scrolls to the top
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    if (container.scrollTop === 0 && hasNextPage && !isFetchingMore) {
+      fetchMessages(page + 1);
+    }
+  }, [hasNextPage, isFetchingMore, page, fetchMessages]);
+
+
+
+  // Fetch conversations on component mount
+  useEffect(() => {
+    const fetchConversations = async () => {
       try {
         const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_CONVERSATIONS);
         if (response?.status === 'success') {
@@ -232,21 +296,21 @@ const Message = () => {
       }
     };
 
-    fetchMessages();
+    fetchConversations();
   }, []);
 
   // Initialize socket connection on component mount
   useEffect(() => {
 
     if (token) {
-      SocketService.init(token, "http://localhost:3001");
+      SocketService.init(token, resources.BACKEND_SIDE_SOCKET_URL);
 
       SocketService.joinUserRoom();
 
       // Listen for incoming messages
       const handleReceiveMessage = (data) => {
         console.log("New message received via socket:", data.content);
-        fetchMessages();
+        fetchMessages(1);
       };
 
       SocketService.onMessageReceived(handleReceiveMessage);
@@ -296,13 +360,44 @@ const Message = () => {
   };
 
   if (isStudent) {
+    if (!selectedContact) {
+      return (
+        <Box>
+          <Typography variant="h5" fontWeight={700}>
+            Messages
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Chat with your tutor
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 340,
+              color: "text.secondary",
+            }}
+          >
+            <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: 48, mb: 2 }} />
+            <Typography fontWeight={600} color="text.primary">
+              No Conversation Yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              You have not been assigned a tutor yet. Please check back later.
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
     const tutor = {
       name: selectedContact?.tutorName || '',
       initials: selectedContact?.tutorInitialName || '',
       role: "Personal Tutor",
     };
     return (
-      <Box>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
         <Typography variant="h5" fontWeight={700}>
           Messages
         </Typography>
@@ -316,13 +411,16 @@ const Message = () => {
           setMessageText={setMessageText}
           onSendMessage={handleSendMessage}
           messages={messages}
+          scrollContainerRef={scrollContainerRef}
+          onScroll={handleScroll}
+          isFetchingMore={isFetchingMore}
         />
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
       <Typography variant="h5" fontWeight={700}>
         Messages
       </Typography>
@@ -432,7 +530,7 @@ const Message = () => {
           </Typography>
         </Box>
       ) : (
-        <Box>
+        <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           <Stack direction="row" spacing={2} alignItems="center" mb={3}>
             <Avatar
               sx={{
@@ -455,14 +553,22 @@ const Message = () => {
           </Stack>
 
           <Box
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
             sx={{
-              minHeight: 320,
-              maxHeight: 420,
+              flex: 1,
               overflowY: "auto",
               px: 1,
               mb: 2,
+              "&::-webkit-scrollbar": { width: 6 },
+              "&::-webkit-scrollbar-thumb": { bgcolor: "#ccc", borderRadius: 3 },
             }}
           >
+            {isFetchingMore && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+                <CircularProgress size={20} />
+              </Box>
+            )}
             {messages.map((msg) => (
               <MessageBubble key={msg.id} message={msg} />
             ))}

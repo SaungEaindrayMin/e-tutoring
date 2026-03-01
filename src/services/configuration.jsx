@@ -10,6 +10,9 @@ class Configuration {
     SERVICE_GET_CONVERSATIONS = "conversation";
     SERVICE_GET_MESSAGES = "conversation/messages";
     SERVICE_SEND_MESSAGE = "conversation/send-message";
+    SERVICE_LOGOUT = "auth/logout";
+    SERVICE_USERS = "users";
+
 }
 
 export default Configuration;
