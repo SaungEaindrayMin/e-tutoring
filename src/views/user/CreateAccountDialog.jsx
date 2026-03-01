@@ -15,7 +15,6 @@ import { useState } from "react";
 const CreateAccountDialog = ({ open, onClose }) => {
   const dataService = new DataServices();
   const config = new Configuration();
-
   const [formData, setFormData] = useState({
     role: "STUDENT",
     name: "",
@@ -116,6 +115,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
             select
             label="I am a *"
             value={formData.role}
+            disabled={loading}
             onChange={(e) => handleChange("role", e.target.value)}
           >
             <MenuItem value="STUDENT">Student</MenuItem>
@@ -128,11 +128,13 @@ const CreateAccountDialog = ({ open, onClose }) => {
             <InputField
               label="Full Name *"
               value={formData.name}
+              disabled={loading}
               onChange={(e) => handleChange("name", e.target.value)}
             />
             <InputField
               label="University Email *"
               value={formData.email}
+              disabled={loading}
               onChange={(e) => handleChange("email", e.target.value)}
             />
           </Box>
@@ -142,12 +144,14 @@ const CreateAccountDialog = ({ open, onClose }) => {
               label="Password *"
               type="password"
               value={formData.password}
+              disabled={loading}
               onChange={(e) => handleChange("password", e.target.value)}
             />
             <InputField
               label="Confirm Password *"
               type="password"
               value={formData.confirmPassword}
+              disabled={loading}
               onChange={(e) => handleChange("confirmPassword", e.target.value)}
             />
           </Box>

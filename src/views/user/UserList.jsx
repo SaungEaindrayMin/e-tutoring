@@ -38,22 +38,22 @@ const UserList = () => {
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [search, setSearch] = useState("");
 
   const config = new Configuration();
   const dataService = new DataServices();
 
-  const fetchUsers = async (pageNumber = 1) => {
+  const fetchUsers = async (pageNumber = 1, searchValue = "") => {
     setLoading(true);
     try {
-      const serviceAction = `${config.SERVICE_USER_LIST}?page=${pageNumber}&limit=${limit}`;
+      const serviceAction = `${config.SERVICE_USER_LIST}?page=${pageNumber}&limit=${limit}&search=${searchValue}`;
       const res = await dataService.retrieve(
         config.SERVICE_NAME,
         serviceAction,
       );
-
       if (res?.status === "success" && Array.isArray(res.data)) {
         setUsers(res.data);
-        setTotalPages(1);
+        setTotalPages(res?.pagination?.totalPages || 1);
       } else {
         setUsers([]);
         setTotalPages(1);
@@ -66,10 +66,9 @@ const UserList = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchUsers(page);
-  }, [page]);
+    fetchUsers(page, search);
+  }, [page, search]);
 
   const handlePageChange = (event, value) => {
     setPage(value);
@@ -86,10 +85,18 @@ const UserList = () => {
 
       <Stack direction="row" spacing={2} mb={3}>
         <InputField
-          placeholder="Search..."
+          placeholder="Search by username or email..."
           size="small"
           icon={SearchIcon}
           placeholderColor="text.secondary"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setPage(1);
+              fetchUsers(1, search);
+            }
+          }}
         />
         <TextField select size="small" sx={{ width: 200 }} defaultValue="All">
           <MenuItem value="All">All</MenuItem>
