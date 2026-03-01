@@ -59,7 +59,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
 
       const response = await dataService.retrievePOST(
         payload,
-        config.SERVICE_NAME + config.SERVICE_CREATE_USER,
+        config.SERVICE_NAME + config.SERVICE_USERS,
       );
 
       if (response?.status === "success") {

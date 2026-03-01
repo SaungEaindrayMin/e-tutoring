@@ -11,7 +11,7 @@ const DeleteConfirmDialog = ({ open, onClose, userId, onSuccess }) => {
     if (!userId) return;
 
     const response = await dataService.retrieveDELETE(
-      config.SERVICE_NAME + config.SERVICE_DELETE_USER,
+      config.SERVICE_NAME + config.SERVICE_USERS,
       `/${userId}`,
     );
 

@@ -64,7 +64,7 @@ const UserList = () => {
         params.append("role", roleValue);
       }
 
-      const serviceAction = `${config.SERVICE_USER_LIST}?${params.toString()}`;
+      const serviceAction = `${config.SERVICE_USERS}?${params.toString()}`;
 
       const res = await dataService.retrieve(
         config.SERVICE_NAME,
