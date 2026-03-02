@@ -176,7 +176,8 @@ const Message = () => {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const scrollContainerRef = useRef(null);
-  const shouldScrollToBottom = useRef(true); // true for fresh/new messages, false when prepending old ones
+  const shouldScrollToBottom = useRef(true);
+  const selectedContactRef = useRef(null); // always holds latest selectedContact for use inside callbacks
 
 
 
@@ -190,6 +191,9 @@ const Message = () => {
   }
 
   const fetchMessages = useCallback(async (pageNumber = 1) => {
+    const conversationId = selectedContactRef.current?.id;
+    if (!conversationId) return; // no conversation selected yet
+
     if (pageNumber === 1) {
       setIsLoading(true);
     } else {
@@ -197,7 +201,7 @@ const Message = () => {
     }
 
     try {
-      const endpoint = `${config.SERVICE_GET_MESSAGES}?page=${pageNumber}&limit=10`;
+      const endpoint = `${config.SERVICE_GET_MESSAGES}?page=${pageNumber}&limit=10&conversationId=${conversationId}`;
       const response = await dataService.retrieve(config.SERVICE_NAME, endpoint);
 
       if (response?.status === 'success') {
@@ -245,10 +249,15 @@ const Message = () => {
     }
   }, [myId]);
 
-  // Fetch page 1 on mount
   useEffect(() => {
-    fetchMessages(1);
-  }, []);
+    selectedContactRef.current = selectedContact;
+    if (selectedContact) {
+      setMessages([]);
+      setPage(1);
+      setHasNextPage(false);
+      fetchMessages(1);
+    }
+  }, [selectedContact]);
 
   useEffect(() => {
     if (shouldScrollToBottom.current && scrollContainerRef.current) {
