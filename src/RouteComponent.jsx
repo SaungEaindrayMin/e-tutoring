@@ -13,6 +13,7 @@ import Message from "./views/message/Message";
 import BlogList from "./views/blog/BlogList";
 import BlogDetail from "./views/blog/BlogDetail";
 
+
 const RouteComponent = () => {
   return (
     <Routes>
