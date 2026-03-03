@@ -12,6 +12,7 @@ class Configuration {
     SERVICE_SEND_MESSAGE = "conversation/send-message";
     SERVICE_LOGOUT = "auth/logout";
     SERVICE_USERS = "users";
+    SERVICE_SIDEBAR = "sidebar"
 
 }
 

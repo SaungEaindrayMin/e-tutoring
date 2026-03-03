@@ -54,6 +54,10 @@ const Login = () => {
         sessionStorage.setItem(config.COOKIE_NAME_TOKEN, response.token);
         sessionStorage.setItem(config.COOKIE_NAME_USER, JSON.stringify(response.user));
 
+        sessionStorage.setItem("userRole", response.user.role);
+
+        sessionStorage.setItem("userName", response.user.name);
+
         navigate("/admin");
       } else {
         setErrorMessage(response?.message || "Invalid email or password");

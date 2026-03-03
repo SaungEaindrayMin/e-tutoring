@@ -34,12 +34,14 @@ const theme = createTheme({
       document: "#7E57C2",
       meeting: "#E65100",
       danger: "#F44336",
+      assign : "#2FAB30"
     },
 
     icon: {
       message: "#C8E6C9",
       document: "#EDE7F6",
       meeting: "#FBE9E7",
+      assign : "#C3FFBF"
     },
     error: {
       main: "#EF4444",

@@ -16,17 +16,18 @@ const CustomDialog = ({
   children,
   actions,
   maxWidth = "md",
+  titleAlign = "center",
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth} >
       <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
 
-      <DialogTitle sx={{ m: 0, p: 1 }}>
-        <Typography variant="h6" textAlign="center">
+      <DialogTitle sx={{ px: 3 }}>
+        <Typography variant="h6" textAlign={titleAlign}>
           {title}
         </Typography>
       </DialogTitle>
