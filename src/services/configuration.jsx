@@ -8,6 +8,7 @@ class Configuration {
     SERVICE_RESET_PASSWORD = "auth/reset-password";
     SERVICE_LOGOUT = "auth/logout";
     SERVICE_USERS = "users";
+    SERVICE_SIDEBAR = "sidebar"
 
 }
 
