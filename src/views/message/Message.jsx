@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -8,56 +8,19 @@ import {
   Stack,
   IconButton,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DataServices from "../../services/data-services";
+import Configuration from "../../services/configuration";
+import SocketService from "../../services/socket";
+import Cookies from "js-cookie";
+import Resources from "../../services/resources";
 
-const contacts = [
-  { id: 1, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 2, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 3, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 4, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 5, name: "Sarah Anderson", initials: "SA", role: "Student" },
-  { id: 6, name: "Sarah Anderson", initials: "SA", role: "Student" },
-];
 
-const tutor = {
-  name: "Dr.Sarah Anderson",
-  initials: "SA",
-  role: "Personal Tutor",
-};
 
-const mockMessages = [
-  {
-    id: 1,
-    text: "Hi Sarah Anderson, I wanted to discuss with you.",
-    time: "10:30",
-    fullDate: "Feb 2, 2026, 10:30:00 AM",
-    sender: "me",
-  },
-  {
-    id: 2,
-    text: "Of course Emma! I have time available this Thursday at 2pm. Does that work for you?",
-    time: "11:15",
-    fullDate: "Feb 2, 2026, 11:15:00 AM",
-    sender: "other",
-  },
-  {
-    id: 3,
-    text: "That works perfectly, thank you!",
-    time: "11:20",
-    fullDate: "Feb 9, 2026, 11:20:00 PM",
-    sender: "me",
-  },
-  {
-    id: 4,
-    text: "Seen You Soon!",
-    time: "11:20",
-    fullDate: "Feb 9, 2026, 11:20:00 PM",
-    sender: "me",
-  },
-];
 
 const MessageBubble = ({ message }) => {
   const isMe = message.sender === "me";
@@ -67,15 +30,15 @@ const MessageBubble = ({ message }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        alignItems: isMe ? "flex-start" : "flex-end",
+        alignItems: isMe ? "flex-end" : "flex-start",
         mb: 1,
       }}
     >
       <Box
         sx={{
           maxWidth: "60%",
-          bgcolor: isMe ? "#f0f0f0" : "primary.main",
-          color: isMe ? "text.primary" : "#fff",
+          bgcolor: isMe ? "primary.main" : "#f0f0f0",
+          color: isMe ? "#fff" : "text.primary",
           borderRadius: 2,
           px: 2,
           py: 1.2,
@@ -104,8 +67,8 @@ const MessageBubble = ({ message }) => {
   );
 };
 
-const ChatView = ({ contact, messageText, setMessageText }) => (
-  <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 340px)", minHeight: 300 }}>
+const ChatView = ({ contact, messageText, setMessageText, onSendMessage, messages, scrollContainerRef, onScroll, isFetchingMore }) => (
+  <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
     <Stack direction="row" spacing={2} alignItems="center" mb={2} flexShrink={0}>
       <Avatar
         sx={{
@@ -128,6 +91,8 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
     </Stack>
 
     <Box
+      ref={scrollContainerRef}
+      onScroll={onScroll}
       sx={{
         flex: 1,
         overflowY: "auto",
@@ -140,12 +105,17 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
         },
       }}
     >
-      {mockMessages.map((msg) => (
+      {isFetchingMore && (
+        <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+          <CircularProgress size={20} />
+        </Box>
+      )}
+      {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} />
       ))}
     </Box>
 
-    <Stack direction="row" spacing={1} alignItems="center">
+    <Stack direction="row" spacing={1} alignItems="flex-end">
       <TextField
         fullWidth
         multiline
@@ -153,6 +123,12 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
         placeholder="Type your message..."
         value={messageText}
         onChange={(e) => setMessageText(e.target.value)}
+        onKeyPress={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSendMessage();
+          }
+        }}
         sx={{
           flex: 1,
           "& .MuiOutlinedInput-root": {
@@ -162,6 +138,7 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
         }}
       />
       <IconButton
+        onClick={onSendMessage}
         sx={{
           flexShrink: 0,
           bgcolor: "primary.main",
@@ -179,13 +156,239 @@ const ChatView = ({ contact, messageText, setMessageText }) => (
 );
 
 const Message = () => {
+  const config = new Configuration();
+  const dataService = new DataServices();
+  const resources = new Resources();
+
+
   const [selectedContact, setSelectedContact] = useState(null);
   const [messageText, setMessageText] = useState("");
-  const [isStudent] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const token = Cookies.get(config.COOKIE_NAME_TOKEN);
+  const user = Cookies.get(config.COOKIE_NAME_USER) ? JSON.parse(Cookies.get(config.COOKIE_NAME_USER)) : null;
+  const isStudent = user?.role === "STUDENT";
+  const [conversations, setConversations] = useState([]);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const shouldScrollToBottom = useRef(true); // true for fresh/new messages, false when prepending old ones
+
+
+
+
+  let myId = null;
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      myId = payload.id || payload.sub || payload.userId;
+    } catch (e) { }
+  }
+
+  const fetchMessages = useCallback(async (pageNumber = 1) => {
+    if (pageNumber === 1) {
+      setIsLoading(true);
+    } else {
+      setIsFetchingMore(true);
+    }
+
+    try {
+      const endpoint = `${config.SERVICE_GET_MESSAGES}?page=${pageNumber}&limit=10`;
+      const response = await dataService.retrieve(config.SERVICE_NAME, endpoint);
+
+      if (response?.status === 'success') {
+        const apiMessages = Array.isArray(response.data?.data)
+          ? response.data.data
+          : (Array.isArray(response.data) ? response.data : []);
+
+        const pagination = response.data?.pagination || {};
+        setHasNextPage(pagination.hasNextPage ?? false);
+        setPage(pageNumber);
+
+        const formatted = apiMessages.map((msg) => ({
+          id: msg.id,
+          text: msg.content,
+          time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          fullDate: new Date(msg.createdAt).toLocaleString(),
+          sender: msg.senderId === myId ? "me" : "other",
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+        })).reverse();
+
+        if (pageNumber === 1) {
+          shouldScrollToBottom.current = true;
+          setMessages(formatted);
+        } else {
+          shouldScrollToBottom.current = false;
+          const container = scrollContainerRef.current;
+          const prevScrollHeight = container ? container.scrollHeight : 0;
+          setMessages((prev) => [...formatted, ...prev]);
+          requestAnimationFrame(() => {
+            if (container) {
+              container.scrollTop = container.scrollHeight - prevScrollHeight;
+            }
+          });
+        }
+      } else {
+        setErrorMessage("Failed to fetch messages");
+      }
+    } catch (err) {
+      setErrorMessage("Network error: Cannot connect to server");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+      setIsFetchingMore(false);
+    }
+  }, [myId]);
+
+  // Fetch page 1 on mount
+  useEffect(() => {
+    fetchMessages(1);
+  }, []);
+
+  useEffect(() => {
+    if (shouldScrollToBottom.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    if (container.scrollTop === 0 && hasNextPage && !isFetchingMore) {
+      fetchMessages(page + 1);
+    }
+  }, [hasNextPage, isFetchingMore, page, fetchMessages]);
+
+
+
+  // Fetch conversations on component mount
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_CONVERSATIONS);
+        if (response?.status === 'success') {
+          if (isStudent) {
+            setSelectedContact(response.data[0] || null);
+          } else {
+            setConversations(response.data || []);
+          }
+          console.log("Fetched conversations:", response.data[0]);
+        } else {
+          setErrorMessage("Failed to fetch conversations");
+        }
+      } catch (err) {
+        setErrorMessage("Network error: Cannot connect to server");
+        console.error(err);
+      }
+    };
+
+    fetchConversations();
+  }, []);
+
+  // Initialize socket connection on component mount
+  useEffect(() => {
+
+    if (token) {
+      SocketService.init(token, resources.BACKEND_SIDE_SOCKET_URL);
+
+      SocketService.joinUserRoom();
+
+      // Listen for incoming messages
+      const handleReceiveMessage = (data) => {
+        console.log("New message received via socket:", data.content);
+        fetchMessages(1);
+      };
+
+      SocketService.onMessageReceived(handleReceiveMessage);
+
+      return () => {
+        SocketService.offMessageReceived();
+      };
+    }
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (messageText.trim() && selectedContact) {
+      const text = messageText;
+      setMessageText("");
+
+      // Send via socket
+      SocketService.sendMessage(selectedContact.id, text);
+
+      // Send via API
+      try {
+        const payload = {
+          conversationId: selectedContact.id,
+          content: text,
+        };
+        const response = await dataService.retrievePOST(
+          payload,
+          config.SERVICE_NAME + config.SERVICE_SEND_MESSAGE
+        );
+        if (response?.status !== "success") {
+          console.error("Failed to send message via API", response);
+        }
+      } catch (err) {
+        console.error("Network error: Cannot send message", err);
+      }
+
+      // Add to local messages
+      const newMessage = {
+        id: (Array.isArray(messages) ? messages.length : 0) + 1,
+        text: text,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        fullDate: new Date().toLocaleString(),
+        sender: "me",
+      };
+      setMessages((prev) => (Array.isArray(prev) ? [...prev, newMessage] : [newMessage]));
+    }
+  };
 
   if (isStudent) {
+    if (!selectedContact) {
+      return (
+        <Box>
+          <Typography variant="h5" fontWeight={700}>
+            Messages
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Chat with your tutor
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 340,
+              color: "text.secondary",
+            }}
+          >
+            <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: 48, mb: 2 }} />
+            <Typography fontWeight={600} color="text.primary">
+              No Conversation Yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              You have not been assigned a tutor yet. Please check back later.
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
+    const tutor = {
+      name: selectedContact?.tutorName || '',
+      initials: selectedContact?.tutorInitialName || '',
+      role: "Personal Tutor",
+    };
     return (
-      <Box>
+      <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
         <Typography variant="h5" fontWeight={700}>
           Messages
         </Typography>
@@ -197,19 +400,30 @@ const Message = () => {
           contact={tutor}
           messageText={messageText}
           setMessageText={setMessageText}
+          onSendMessage={handleSendMessage}
+          messages={messages}
+          scrollContainerRef={scrollContainerRef}
+          onScroll={handleScroll}
+          isFetchingMore={isFetchingMore}
         />
       </Box>
     );
   }
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "calc(100vh - 120px)" }}>
       <Typography variant="h5" fontWeight={700}>
         Messages
       </Typography>
       <Typography variant="body2" color="text.secondary" mb={2}>
         Communicate with your students
       </Typography>
+
+      {errorMessage && (
+        <Typography color="error" variant="body2" mb={2}>
+          {errorMessage}
+        </Typography>
+      )}
 
       <TextField
         fullWidth
@@ -244,7 +458,7 @@ const Message = () => {
           scrollbarWidth: "none",
         }}
       >
-        {contacts.map((c) => (
+        {(conversations).map((c) => (
           <Box
             key={c.id}
             onClick={() => setSelectedContact(c)}
@@ -273,7 +487,7 @@ const Message = () => {
                     : "2px solid transparent",
               }}
             >
-              {c.initials}
+              {c.initialName}
             </Avatar>
             <Typography
               variant="caption"
@@ -281,7 +495,7 @@ const Message = () => {
               noWrap
               sx={{ width: 110 }}
             >
-              {c.name}
+              {c.studentName}
             </Typography>
           </Box>
         ))}
@@ -307,11 +521,86 @@ const Message = () => {
           </Typography>
         </Box>
       ) : (
-        <ChatView
-          contact={selectedContact}
-          messageText={messageText}
-          setMessageText={setMessageText}
-        />
+        <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <Stack direction="row" spacing={2} alignItems="center" mb={3}>
+            <Avatar
+              sx={{
+                width: 44,
+                height: 44,
+                bgcolor: "#fce4ec",
+                color: "#e91e63",
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              {selectedContact.initialName}
+            </Avatar>
+            <Box>
+              <Typography fontWeight={600}>{selectedContact.studentName}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Student
+              </Typography>
+            </Box>
+          </Stack>
+
+          <Box
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              px: 1,
+              mb: 2,
+              "&::-webkit-scrollbar": { width: 6 },
+              "&::-webkit-scrollbar-thumb": { bgcolor: "#ccc", borderRadius: 3 },
+            }}
+          >
+            {isFetchingMore && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+                <CircularProgress size={20} />
+              </Box>
+            )}
+            {messages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))}
+          </Box>
+
+          <Stack direction="row" spacing={1} alignItems="flex-end">
+            <TextField
+              fullWidth
+              multiline
+              maxRows={3}
+              placeholder="Type your message..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 1,
+                  bgcolor: "background.paper",
+                },
+              }}
+            />
+            <IconButton
+              onClick={handleSendMessage}
+              sx={{
+                bgcolor: "primary.main",
+                color: "#fff",
+                width: 48,
+                height: 48,
+                borderRadius: 1,
+                "&:hover": { bgcolor: "primary.dark" },
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Stack>
+        </Box>
       )}
     </Box>
   );

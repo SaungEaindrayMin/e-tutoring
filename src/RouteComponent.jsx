@@ -14,6 +14,7 @@ import BlogList from "./views/blog/BlogList";
 import BlogDetail from "./views/blog/BlogDetail";
 import Allocate from "./views/allocate/Allocate";
 
+
 const RouteComponent = () => {
   return (
     <Routes>
