@@ -12,87 +12,28 @@ import {
   MenuItem,
   TableContainer,
   Paper,
+  Pagination,
+  CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import InputField from "../../layouts/main/components/InputFields";
-
-const studentsData = [
-  {
-    id: 1,
-    name: "Zue Zue",
-    email: "zue@university.edu",
-    tutor: "Dr.Sarah Brown",
-    assigned: true,
-  },
-  {
-    id: 2,
-    name: "Hmue",
-    email: "hmue@university.edu",
-    tutor: "Dr.Sarah Brown",
-    assigned: true,
-  },
-  {
-    id: 3,
-    name: "Gue Gue",
-    email: "gue@university.edu",
-    tutor: "Prof.Michael Chen",
-    assigned: true,
-  },
-  {
-    id: 4,
-    name: "Ni Ni",
-    email: "ni@university.edu",
-    tutor: "Prof.Michael Chen",
-    assigned: true,
-  },
-  {
-    id: 5,
-    name: "Ngu",
-    email: "ngu@university.edu",
-    tutor: "Dr.Sarah Brown",
-    assigned: true,
-  },
-  {
-    id: 6,
-    name: "Khin",
-    email: "khin@university.edu",
-    tutor: null,
-    assigned: false,
-  },
-  {
-    id: 7,
-    name: "Phue Phue",
-    email: "phue@university.edu",
-    tutor: null,
-    assigned: false,
-  },
-  {
-    id: 8,
-    name: "Eaint Eaint",
-    email: "eaint@university.edu",
-    tutor: null,
-    assigned: false,
-  },
-  {
-    id: 9,
-    name: "Aung Aung",
-    email: "aung@university.edu",
-    tutor: null,
-    assigned: false,
-  },
-  {
-    id: 10,
-    name: "Jhon",
-    email: "jhon@university.edu",
-    tutor: null,
-    assigned: false,
-  },
-];
+import Configuration from "../../services/configuration";
+import DataServices from "../../services/data-services";
 
 const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
+
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const config = new Configuration();
+  const dataService = new DataServices();
 
   const handleSelect = (id) => {
     if (selectedStudents.includes(id)) {
@@ -102,19 +43,53 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
     }
   };
 
-  const filteredStudents = studentsData.filter((student) => {
-    const matchesSearch =
-      student.name.toLowerCase().includes(search.toLowerCase()) ||
-      student.email.toLowerCase().includes(search.toLowerCase());
+  const fetchStudents = async (pageNumber = 1, searchValue = "") => {
+    setLoading(true);
 
-    const matchesFilter =
-      filter === "all"
-        ? true
-        : filter === "assigned"
-          ? student.assigned
-          : !student.assigned;
+    try {
+      const params = new URLSearchParams();
+      params.append("page", pageNumber);
+      params.append("limit", limit);
+      params.append("role", "STUDENT");
 
-    return matchesSearch && matchesFilter;
+      if (searchValue) {
+        params.append("search", searchValue);
+      }
+
+      const serviceAction = `${config.SERVICE_USERS}?${params.toString()}`;
+
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        serviceAction,
+      );
+
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        setStudents(res.data);
+        setTotalPages(res?.pagination?.totalPages || 1);
+      } else {
+        setStudents([]);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error("Failed to fetch students:", error);
+      setStudents([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents(page, search);
+  }, [page, search]);
+
+  const filteredStudents = students.filter((student) => {
+    const assigned = !!student.studentProfile?.tutorId;
+
+    if (filter === "assigned") return assigned;
+    if (filter === "unassigned") return !assigned;
+
+    return true;
   });
 
   return (
@@ -143,7 +118,10 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
             size="small"
             icon={SearchIcon}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
           />
         </Box>
 
@@ -175,7 +153,6 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
           <TableHead>
             <TableRow>
               <TableCell>
-                {" "}
                 <Checkbox />
               </TableCell>
               <TableCell>Student name</TableCell>
@@ -190,50 +167,95 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
               "& .MuiTableCell-root": { borderBottom: "none" },
             }}
           >
-            {filteredStudents.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedStudents.includes(student.id)}
-                    onChange={() => handleSelect(student.id)}
-                  />
-                </TableCell>
-
-                <TableCell>{student.name}</TableCell>
-                <TableCell>{student.email}</TableCell>
-                <TableCell
-                  sx={{
-                    color: student.tutor ? "text.primary" : "text.secondary",
-                    fontWeight: student.tutor ? 400 : 500,
-                  }}
-                >
-                  {student.tutor || "Not assigned"}
-                </TableCell>
-                <TableCell>
-                  {student.assigned ? (
-                    <Chip
-                      label="Assigned"
-                      size="small"
-                      sx={{
-                        px: 1,
-                        color: "text.assign",
-                        bgcolor: "icon.assign",
-                      }}
-                    />
-                  ) : (
-                    <Chip
-                      label="Unassigned"
-                      color="error"
-                      size="small"
-                      sx={{ px: 1 }}
-                    />
-                  )}
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredStudents.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    No students found
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredStudents.map((student) => {
+                const tutorName = student.studentProfile?.tutorName;
+                const assigned = !!student.studentProfile?.tutorId;
+
+                return (
+                  <TableRow key={student.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedStudents.includes(student.id)}
+                        onChange={() => handleSelect(student.id)}
+                      />
+                    </TableCell>
+
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>{student.email}</TableCell>
+
+                    <TableCell
+                      sx={{
+                        color: tutorName ? "text.primary" : "text.secondary",
+                        fontWeight: tutorName ? 400 : 500,
+                      }}
+                    >
+                      {tutorName || "Not assigned"}
+                    </TableCell>
+
+                    <TableCell>
+                      {assigned ? (
+                        <Chip
+                          label="Assigned"
+                          size="small"
+                          sx={{
+                            px: 1,
+                            color: "text.assign",
+                            bgcolor: "icon.assign",
+                          }}
+                        />
+                      ) : (
+                        <Chip
+                          label="Unassigned"
+                          color="error"
+                          size="small"
+                          sx={{ px: 1 }}
+                        />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Box display="flex" justifyContent="center" mt={4}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(event, value) => setPage(value)}
+          shape="rounded"
+          sx={{
+            "& .MuiPaginationItem-root": {
+              border: "1px solid",
+              borderColor: "text.input",
+              borderRadius: 0.5,
+              p: 0.5,
+            },
+            "& .Mui-selected": {
+              bgcolor: "primary.active",
+              color: "primary.main",
+              borderColor: "primary.main",
+            },
+          }}
+        />
+      </Box>
     </Card>
   );
 };

@@ -31,7 +31,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Map backend tab name → full config
   const tabConfig = {
     dashboard: {
       path: "/admin",
@@ -84,8 +83,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
           `?role=${role}`,
         );
 
-        console.log("Sidebar API:", response);
-
         if (
           response?.status === "success" &&
           Array.isArray(response.data?.tabs)
@@ -107,7 +104,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth }}>
-      {/* Logo */}
       <Box sx={{ px: 3, display: "flex", gap: 1, my: 2 }}>
         <img src={logo} width={45} alt="logo" />
         <Box>

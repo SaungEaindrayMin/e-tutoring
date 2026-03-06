@@ -80,6 +80,7 @@ const Allocate = () => {
       <AssignTutorDialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
+        selectedStudents={selectedStudents}
       />
     </Box>
   );
