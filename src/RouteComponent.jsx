@@ -6,8 +6,14 @@ import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
-import Meeting from "./views/meeting/Meeting";
 import Dashboard from "./views/Dashboard/Dashboard";
+import Meeting from "./views/meeting/Meeting";
+import UserList from "./views/user/UserList";
+import Message from "./views/message/Message";
+import BlogList from "./views/blog/BlogList";
+import BlogDetail from "./views/blog/BlogDetail";
+import Allocate from "./views/allocate/Allocate";
+
 
 const RouteComponent = () => {
   return (
@@ -22,7 +28,12 @@ const RouteComponent = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Main />}>
           <Route index element={<Dashboard />} />
-          <Route path="admin/meetings" element={<Meeting />} />
+          <Route path="/admin/meetings" element={<Meeting />} />
+          <Route path="/admin/users" element={<UserList />} />
+          <Route path="/admin/messages" element={<Message />} />
+          <Route path="/admin/blog" element={<BlogList />} />
+          <Route path="/admin/blog/:slug" element={<BlogDetail />} />
+          <Route path="/admin/allocate-tutor" element={<Allocate />} />
         </Route>
       </Route>
     </Routes>

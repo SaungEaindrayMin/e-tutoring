@@ -5,7 +5,16 @@ import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined
 
 const InputField = forwardRef(
   (
-    { icon: Icon, type = "text", placeholder, otp = false, sx, ...props },
+    {
+      icon: Icon,
+      type = "text",
+      placeholder,
+      otp = false,
+      sx,
+      select = false, 
+      children,
+      ...props
+    },
     ref,
   ) => {
     const isPassword = type === "password";
@@ -14,6 +23,7 @@ const InputField = forwardRef(
     return (
       <TextField
         ref={ref}
+        select={select}
         fullWidth={!otp}
         type={isPassword && showPassword ? "text" : type}
         placeholder={placeholder}
@@ -21,7 +31,7 @@ const InputField = forwardRef(
         variant="outlined"
         InputProps={{
           startAdornment:
-            Icon && !otp ? (
+            Icon && !otp && !select ? ( // ❗ don't show icon for dropdown
               <InputAdornment position="start">
                 <Icon fontSize="small" />
               </InputAdornment>
@@ -46,13 +56,37 @@ const InputField = forwardRef(
         }}
         sx={{
           "& .MuiOutlinedInput-root": {
-            borderRadius: "5px",
-            backgroundColor: "background.paper",
+            borderRadius: 0.5,
+
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "text.input",
+            },
+
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "primary.main",
+            },
+
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderColor: "primary.main",
+              borderWidth: "2px",
+            },
+
+            "&.Mui-error .MuiOutlinedInput-notchedOutline": {
+              borderColor: "error.main",
+            },
           },
+
+          "& .MuiInputBase-input::placeholder": {
+            color: "text.secondary",
+            opacity: 1,
+          },
+
           ...sx,
         }}
         {...props}
-      />
+      >
+        {children}
+      </TextField>
     );
   },
 );

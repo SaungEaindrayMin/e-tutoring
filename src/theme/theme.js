@@ -10,8 +10,8 @@ const theme = createTheme({
     primary: {
       main: "#1686D7",
       light: "#60A5FA",
-      dark: "#1E40AF",
-      active: "#e0f2fe"
+      dark: "#006AB5",
+      active: "#e0f2fe",
     },
 
     secondary: {
@@ -21,6 +21,7 @@ const theme = createTheme({
     background: {
       default: "#F8FAFC",
       paper: "#FFFFFF",
+      switch: "#F5F5F5",
     },
 
     text: {
@@ -29,15 +30,18 @@ const theme = createTheme({
       input: "#E0E0E0",
       muted: "#616161",
       active: "#2563eb",
-      message : "#43A047",
-      document:"#7E57C2",
-      meeting:"#E65100"
+      message: "#43A047",
+      document: "#7E57C2",
+      meeting: "#E65100",
+      danger: "#F44336",
+      assign : "#2FAB30"
     },
 
     icon: {
-      message : "#C8E6C9",
-      document:"#EDE7F6",
-      meeting:"#FBE9E7"
+      message: "#C8E6C9",
+      document: "#EDE7F6",
+      meeting: "#FBE9E7",
+      assign : "#C3FFBF"
     },
     error: {
       main: "#EF4444",

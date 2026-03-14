@@ -28,8 +28,8 @@ const Login = () => {
 
   const handleSignIn = async () => {
     const newErrors = {};
-    if (!email) newErrors.email = "Email is required";
-    if (!password) newErrors.password = "Password is required";
+    if (!email) newErrors.email = "Please fill your email !";
+    if (!password) newErrors.password = "Please fill your password !";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -42,12 +42,21 @@ const Login = () => {
     };
 
     try {
-      const response = await dataService.authorize(param, config.SERVICE_NAME + config.SERVICE_USER);
+      const response = await dataService.authorize(
+        param,
+        config.SERVICE_NAME + config.SERVICE_USER,
+      );
       setLoading(false);
 
       if (response?.status === "success" && response.token) {
         Cookies.set(config.COOKIE_NAME_TOKEN, response.token, { path: "/" });
+        Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), { path: "/" });
         sessionStorage.setItem(config.COOKIE_NAME_TOKEN, response.token);
+        sessionStorage.setItem(config.COOKIE_NAME_USER, JSON.stringify(response.user));
+
+        sessionStorage.setItem("userRole", response.user.role);
+
+        sessionStorage.setItem("userName", response.user.name);
 
         navigate("/admin");
       } else {
@@ -56,6 +65,12 @@ const Login = () => {
     } catch (err) {
       setLoading(false);
       setErrorMessage("Network error: Cannot connect to server");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !loading) {
+      handleSignIn();
     }
   };
 
@@ -76,12 +91,12 @@ const Login = () => {
       </Typography>
 
       {errorMessage && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 1 }}>
           {errorMessage}
         </Alert>
       )}
 
-      <Box mb={3}>
+      <Box mb={2}>
         <Typography variant="body2" fontWeight={600}>
           University Email
         </Typography>
@@ -90,6 +105,8 @@ const Login = () => {
           placeholder="name@university.edu"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
           error={!!errors.email}
           helperText={errors.email}
         />
@@ -105,6 +122,8 @@ const Login = () => {
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
           error={!!errors.password}
           helperText={errors.password}
         />
@@ -126,9 +145,44 @@ const Login = () => {
       </Button>
 
       <Box textAlign="center" mt={1}>
-        <Link component="button" onClick={handleNavigation} variant="body2">
+        <Link
+          component="button"
+          onClick={handleNavigation}
+          variant="body1"
+          underline="none"
+          color="primary.dark"
+        >
           Forgot your password?
         </Link>
+      </Box>
+
+      <Box textAlign="center" mt={1} px={5}>
+        <Typography variant="body3" color="text.muted">
+          By signing in, you aggree to our{" "}
+          <Link
+            underline="always"
+            sx={{
+              cursor: "pointer",
+              color: "text.muted",
+              textDecoration: "underline",
+              textDecorationColor: "text.muted",
+            }}
+          >
+            Terms of Service
+          </Link>
+          and{" "}
+          <Link
+            underline="always"
+            sx={{
+              cursor: "pointer",
+              color: "text.muted",
+              textDecoration: "underline",
+              textDecorationColor: "text.muted",
+            }}
+          >
+            Privacy Policy
+          </Link>
+        </Typography>
       </Box>
     </AuthContainer>
   );
