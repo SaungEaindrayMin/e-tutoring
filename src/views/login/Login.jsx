@@ -50,11 +50,17 @@ const Login = () => {
 
       if (response?.status === "success" && response.token) {
         Cookies.set(config.COOKIE_NAME_TOKEN, response.token, { path: "/" });
-        Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), { path: "/" });
+        Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), {
+          path: "/",
+        });
         sessionStorage.setItem(config.COOKIE_NAME_TOKEN, response.token);
-        sessionStorage.setItem(config.COOKIE_NAME_USER, JSON.stringify(response.user));
+        sessionStorage.setItem(
+          config.COOKIE_NAME_USER,
+          JSON.stringify(response.user),
+        );
 
         sessionStorage.setItem("userRole", response.user.role);
+        sessionStorage.setItem("userId", response.user.id);
 
         sessionStorage.setItem("userName", response.user.name);
 
