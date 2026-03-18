@@ -51,6 +51,7 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
       setLoading(false);
     }
   };
+
   const handleAssignTutor = async () => {
     if (!selectedTutor || selectedStudents.length === 0) return;
 
@@ -92,6 +93,7 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
       open={open}
       onClose={onClose}
       maxWidth="sm"
+      fullWidth
       title="Allocate Personal Tutor"
       titleAlign="start"
       actions={
@@ -99,7 +101,7 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
           variant="contained"
           onClick={handleAssignTutor}
           disabled={!selectedTutor || selectedStudents.length === 0}
-          sx={{ px: 5 }}
+          sx={{ px: { xs: 3, sm: 5 }, width: { xs: "100%", sm: "auto" } }}
         >
           {assignLoading ? <CircularProgress size={20} /> : "Assign"}
         </Button>
@@ -126,13 +128,16 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
           borderRadius: 0.5,
           overflow: "hidden",
           boxShadow: "none",
+          overflowX: "auto",
         }}
       >
-        <Table>
+        <Table sx={{ minWidth: { xs: 280, sm: 400 } }}>
           <TableHead>
             <TableRow>
               <TableCell>Tutor name</TableCell>
-              <TableCell>University email</TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                University email
+              </TableCell>
             </TableRow>
           </TableHead>
 
@@ -167,9 +172,12 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
                         : "inherit",
                   }}
                 >
-                  {" "}
                   <TableCell>{tutor.name}</TableCell>
-                  <TableCell>{tutor.email}</TableCell>
+                  <TableCell
+                    sx={{ display: { xs: "none", sm: "table-cell" } }}
+                  >
+                    {tutor.email}
+                  </TableCell>
                 </TableRow>
               ))
             )}

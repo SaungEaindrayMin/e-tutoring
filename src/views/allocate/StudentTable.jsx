@@ -96,7 +96,7 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
     <Card
       sx={{
         mt: 4,
-        p: 3,
+        p: { xs: 2, sm: 3 },
         boxShadow: "none",
         border: 0.5,
         borderColor: "text.input",
@@ -111,7 +111,12 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
         Select students and assign them to personal tutors (up to 10 at a time)
       </Typography>
 
-      <Box display="flex" gap={2} mb={3}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        gap={2}
+        mb={3}
+      >
         <Box flex={3}>
           <InputField
             placeholder="Search..."
@@ -125,7 +130,7 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
           />
         </Box>
 
-        <Box flex={1}>
+        <Box flex={{ xs: 1, sm: 1 }}>
           <InputField
             select
             size="small"
@@ -147,17 +152,22 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
           borderRadius: 0.5,
           overflow: "hidden",
           boxShadow: "none",
+          overflowX: "auto",
         }}
       >
-        <Table>
+        <Table sx={{ minWidth: { xs: 480, sm: 600 } }}>
           <TableHead>
             <TableRow>
-              <TableCell>
+              <TableCell padding="checkbox">
                 <Checkbox />
               </TableCell>
               <TableCell>Student name</TableCell>
-              <TableCell>University email</TableCell>
-              <TableCell>Current tutor</TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                University email
+              </TableCell>
+              <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                Current tutor
+              </TableCell>
               <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
@@ -188,7 +198,7 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
 
                 return (
                   <TableRow key={student.id}>
-                    <TableCell>
+                    <TableCell padding="checkbox">
                       <Checkbox
                         checked={selectedStudents.includes(student.id)}
                         onChange={() => handleSelect(student.id)}
@@ -196,10 +206,22 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
                     </TableCell>
 
                     <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
 
                     <TableCell
                       sx={{
+                        display: { xs: "none", sm: "table-cell" },
+                        maxWidth: { sm: 160, md: "unset" },
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {student.email}
+                    </TableCell>
+
+                    <TableCell
+                      sx={{
+                        display: { xs: "none", md: "table-cell" },
                         color: tutorName ? "text.primary" : "text.secondary",
                         fontWeight: tutorName ? 400 : 500,
                       }}
@@ -241,6 +263,7 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
           page={page}
           onChange={(event, value) => setPage(value)}
           shape="rounded"
+          size="small"
           sx={{
             "& .MuiPaginationItem-root": {
               border: "1px solid",

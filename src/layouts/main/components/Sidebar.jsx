@@ -57,7 +57,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       icon: <FiBookOpen />,
       label: "Blog",
     },
-    "allocate tutor": {
+    allocate: {
       path: "/admin/allocate-tutor",
       icon: <FiUsers />,
       label: "Allocate Tutor",
@@ -66,6 +66,11 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       path: "/admin/users",
       icon: <FiUsers />,
       label: "Create Account",
+    },
+    analytics: {
+      path: "/admin/visit-analytics",
+      icon: <FiUsers />,
+      label: "Visit Analytics",
     },
   };
 

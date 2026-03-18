@@ -72,13 +72,18 @@ const SummaryCards = () => {
   ];
 
   return (
-    <Box display="flex" gap={3} mt={3}>
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
+      gap={2}
+      mt={3}
+    >
       {cards.map((card, index) => (
         <Card
           key={index}
           sx={{
             flex: 1,
-            p: 3,
+            p: { xs: 2, sm: 3 },
             boxShadow: "xs",
             border: 0.5,
             borderColor: "text.input",

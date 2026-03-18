@@ -13,6 +13,7 @@ import Message from "./views/message/Message";
 import BlogList from "./views/blog/BlogList";
 import BlogDetail from "./views/blog/BlogDetail";
 import Allocate from "./views/allocate/Allocate";
+import Analytics from "./views/analytics/Analytics";
 
 
 const RouteComponent = () => {
@@ -34,6 +35,7 @@ const RouteComponent = () => {
           <Route path="/admin/blog" element={<BlogList />} />
           <Route path="/admin/blog/:slug" element={<BlogDetail />} />
           <Route path="/admin/allocate-tutor" element={<Allocate />} />
+          <Route path="/admin/visit-analytics" element={<Analytics />} />
         </Route>
       </Route>
     </Routes>
