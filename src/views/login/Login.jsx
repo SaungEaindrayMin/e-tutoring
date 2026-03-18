@@ -65,6 +65,7 @@ const Login = () => {
         );
 
         sessionStorage.setItem("userRole", response.user.role);
+        sessionStorage.setItem("userId", response.user.id);
 
         sessionStorage.setItem("userName", response.user.name);
 
