@@ -16,7 +16,7 @@ const Main = () => {
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "background.paper" }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
 
       <Sidebar

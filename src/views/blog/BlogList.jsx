@@ -3,6 +3,7 @@ import {
   Card,
   Chip,
   Grid,
+  Skeleton,
   Stack,
   Typography,
   CircularProgress,
@@ -29,8 +30,9 @@ const BlogList = () => {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true); // for skeleton
+  const [initialLoading, setInitialLoading] = useState(true);
   const [tags, setTags] = useState([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState(null);
   const [searchTitle, setSearchTitle] = useState("");
   const [totalBlogs, setTotalBlogs] = useState(0);
@@ -40,6 +42,7 @@ const BlogList = () => {
   const searchTimerRef = useRef(null);
 
   const fetchTags = async () => {
+    setTagsLoading(true);
     try {
       const res = await dataService.retrieve(config.SERVICE_NAME, "tags");
       if (res?.status === "success" && Array.isArray(res.data)) {
@@ -47,6 +50,8 @@ const BlogList = () => {
       }
     } catch (err) {
       console.error("Failed to fetch tags", err);
+    } finally {
+      setTagsLoading(false);
     }
   };
 
@@ -71,7 +76,6 @@ const BlogList = () => {
           setBlogs((prev) =>
             cursorParam === null ? res.data : [...prev, ...res.data],
           );
-
           const nextCursor = res.pagination?.nextCursor ?? null;
           setCursor(nextCursor);
           setHasMore(!!(nextCursor && res.pagination?.hasNextPage));
@@ -185,13 +189,17 @@ const BlogList = () => {
                 >
                   Total Posts
                 </Typography>
-                <Typography
-                  variant="subtitle1"
-                  gutterBottom
-                  sx={{ color: "text.danger" }}
-                >
-                  {totalBlogs}
-                </Typography>
+                {initialLoading ? (
+                  <Skeleton variant="text" width={40} height={28} />
+                ) : (
+                  <Typography
+                    variant="subtitle1"
+                    gutterBottom
+                    sx={{ color: "text.danger" }}
+                  >
+                    {totalBlogs}
+                  </Typography>
+                )}
               </Box>
             </Card>
 
@@ -215,27 +223,37 @@ const BlogList = () => {
                     marginTop: 2,
                   }}
                 >
-                  {tags.map((tag) => {
-                    const isActive = selectedTag === tag.title;
-                    return (
-                      <Chip
-                        key={tag.id}
-                        label={tag.title}
-                        onClick={() => handleTagClick(tag.title)}
-                        variant={isActive ? "filled" : "outlined"}
-                        sx={{
-                          borderRadius: "6px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          ...(isActive && {
-                            bgcolor: "primary.active",
-                            color: "primary.main",
-                            borderColor: "primary.main",
-                          }),
-                        }}
-                      />
-                    );
-                  })}
+                  {tagsLoading
+                    ? Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          variant="rounded"
+                          width={Math.floor(Math.random() * 30) + 50}
+                          height={32}
+                          sx={{ borderRadius: "6px" }}
+                        />
+                      ))
+                    : tags.map((tag) => {
+                        const isActive = selectedTag === tag.title;
+                        return (
+                          <Chip
+                            key={tag.id}
+                            label={tag.title}
+                            onClick={() => handleTagClick(tag.title)}
+                            variant={isActive ? "filled" : "outlined"}
+                            sx={{
+                              borderRadius: "6px",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              ...(isActive && {
+                                bgcolor: "primary.active",
+                                color: "primary.main",
+                                borderColor: "primary.main",
+                              }),
+                            }}
+                          />
+                        );
+                      })}
                 </Box>
               </Box>
             </Card>
@@ -245,7 +263,6 @@ const BlogList = () => {
         {/* ── Blog Feed ── */}
         <Grid size={{ xs: 12, md: 8 }} order={{ xs: 2 }}>
           <Stack spacing={3}>
-            {/* Initial skeleton loading */}
             {initialLoading
               ? Array.from({ length: 3 }).map((_, i) => (
                   <BlogCard key={i} loading />
@@ -269,14 +286,12 @@ const BlogList = () => {
                   />
                 ))}
 
-            {/* Load more spinner */}
             {!initialLoading && loading && (
               <Box display="flex" justifyContent="center" py={2}>
                 <CircularProgress size={28} />
               </Box>
             )}
 
-            {/* End of list */}
             {!hasMore && blogs.length > 0 && (
               <Typography
                 variant="body2"
@@ -288,7 +303,6 @@ const BlogList = () => {
               </Typography>
             )}
 
-            {/* Empty state */}
             {!initialLoading && !loading && blogs.length === 0 && (
               <Typography
                 variant="body2"
@@ -300,7 +314,6 @@ const BlogList = () => {
               </Typography>
             )}
 
-            {/* Sentinel for IntersectionObserver */}
             <Box ref={observerRef} sx={{ height: 1 }} />
           </Stack>
         </Grid>

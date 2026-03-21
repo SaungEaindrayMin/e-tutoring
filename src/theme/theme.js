@@ -11,6 +11,7 @@ const theme = createTheme({
       main: "#1686D7",
       light: "#60A5FA",
       dark: "#006AB5",
+      analytics: "#7CC2FF",
       active: "#e0f2fe",
     },
 
@@ -22,6 +23,7 @@ const theme = createTheme({
       default: "#F8FAFC",
       paper: "#FFFFFF",
       switch: "#F5F5F5",
+      analytics: "#8C9EFF",
     },
 
     text: {
@@ -34,14 +36,15 @@ const theme = createTheme({
       document: "#7E57C2",
       meeting: "#E65100",
       danger: "#F44336",
-      assign : "#2FAB30"
+      assign: "#2FAB30",
+      analytics :"#005094"
     },
 
     icon: {
       message: "#C8E6C9",
       document: "#EDE7F6",
       meeting: "#FBE9E7",
-      assign : "#C3FFBF"
+      assign: "#C3FFBF",
     },
     error: {
       main: "#EF4444",

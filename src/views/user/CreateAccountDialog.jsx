@@ -1,16 +1,10 @@
-import {
-  Box,
-  MenuItem,
-  Button,
-  Typography,
-  Alert,
-  Snackbar,
-} from "@mui/material";
+import { Box, MenuItem, Button, Typography, Snackbar } from "@mui/material";
 import CustomDialog from "../../layouts/main/components/CustomDialog";
 import InputField from "../../layouts/main/components/InputFields";
 import DataServices from "../../services/data-services";
 import Configuration from "../../services/configuration";
 import { useState } from "react";
+import AppAlert from "../../layouts/main/components/AppAlert";
 
 const CreateAccountDialog = ({ open, onClose }) => {
   const dataService = new DataServices();
@@ -30,6 +24,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
     type: "success",
     message: "",
   });
+
   const handleChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -89,6 +84,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
       setLoading(false);
     }
   };
+
   return (
     <>
       <CustomDialog
@@ -106,7 +102,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
           </Typography>
         }
       >
-        <Box p={2}>
+        <Box p={{ xs: 1, sm: 2 }}>
           <Typography textAlign="center" color="text.secondary" mb={3}>
             Create your account to access the personal tutoring platform
           </Typography>
@@ -124,7 +120,12 @@ const CreateAccountDialog = ({ open, onClose }) => {
             <MenuItem value="ADMIN">Admin</MenuItem>
           </InputField>
 
-          <Box display="flex" gap={2}>
+          {/* Stack fields vertically on mobile, side by side on sm+ */}
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            gap={2}
+          >
             <InputField
               label="Full Name *"
               value={formData.name}
@@ -139,7 +140,11 @@ const CreateAccountDialog = ({ open, onClose }) => {
             />
           </Box>
 
-          <Box display="flex" gap={2}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            gap={2}
+          >
             <InputField
               label="Password *"
               type="password"
@@ -155,6 +160,7 @@ const CreateAccountDialog = ({ open, onClose }) => {
               onChange={(e) => handleChange("confirmPassword", e.target.value)}
             />
           </Box>
+
           <Button
             fullWidth
             size="large"
@@ -171,21 +177,13 @@ const CreateAccountDialog = ({ open, onClose }) => {
           </Button>
         </Box>
       </CustomDialog>
-      <Snackbar
+
+      <AppAlert
         open={snackbar.open}
-        autoHideDuration={3000}
+        severity={snackbar.type}
+        message={snackbar.message}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      >
-        <Alert
-          severity={snackbar.type}
-          variant="filled"
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      />
     </>
   );
 };
