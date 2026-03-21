@@ -7,7 +7,7 @@ import {
   IconButton,
   Button,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
 import { useNavigate } from "react-router-dom";
@@ -16,8 +16,12 @@ import CustomDialog from "../../main/components/CustomDialog";
 
 const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
   const config = new Configuration();
   const dataService = new DataServices();
+  const formatRole = (role) =>
+    role ? role.charAt(0) + role.slice(1).toLowerCase() : "";
 
   const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
 
@@ -39,6 +43,14 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
       navigate("/login");
     }
   };
+
+  useEffect(() => {
+    const name = sessionStorage.getItem("userName");
+    const role = sessionStorage.getItem("userRole");
+
+    if (name) setUserName(name);
+    if (role) setUserRole(role);
+  }, []);
 
   return (
     <>
@@ -68,8 +80,9 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
             )}
 
             <Box>
-              <Typography fontWeight={600}>Welcome, Alice!</Typography>
-
+              <Typography fontWeight={600}>
+                Welcome, {userName || "User"}!
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 Here your personal tutoring overview
               </Typography>
@@ -78,13 +91,12 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
 
           <Box display="flex" alignItems="center" gap={2}>
             <Box textAlign="right">
-              <Typography fontWeight={500}>Alice Johnson</Typography>
+              <Typography fontWeight={500}>{userName || "User"}</Typography>{" "}
               <Typography variant="body2" color="text.secondary">
-                Student
+                {formatRole(userRole) || "Role"}
               </Typography>
             </Box>
 
-            {/* Logout button */}
             <IconButton onClick={() => setOpenLogoutDialog(true)}>
               <LogoutOutlined />
             </IconButton>
@@ -92,7 +104,6 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Logout Dialog */}
       <CustomDialog
         open={openLogoutDialog}
         onClose={() => setOpenLogoutDialog(false)}

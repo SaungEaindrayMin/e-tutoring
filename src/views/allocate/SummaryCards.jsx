@@ -10,7 +10,7 @@ import Configuration from "../../services/configuration";
 import DataServices from "../../services/data-services";
 import StatsCard from "../../layouts/main/components/StatsCard";
 
-const SummaryCards = () => {
+const SummaryCards = ({ refreshKey }) => {
   const [counts, setCounts] = useState({
     totalStudents: 0,
     totalAssigned: 0,
@@ -51,7 +51,7 @@ const SummaryCards = () => {
 
   useEffect(() => {
     fetchCounts();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <Box

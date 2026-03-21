@@ -9,6 +9,7 @@ import { PersonAddAlt1Outlined } from "@mui/icons-material";
 const Allocate = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleAssignClick = () => {
     if (selectedStudents.length > 0) {
@@ -27,7 +28,7 @@ const Allocate = () => {
         subtitle="Assign or reassign personal tutors to students"
       />
 
-      <SummaryCards />
+      <SummaryCards refreshKey={refreshKey} />
 
       {selectedStudents.length > 0 && (
         <Card
@@ -86,12 +87,17 @@ const Allocate = () => {
       <StudentTable
         selectedStudents={selectedStudents}
         setSelectedStudents={setSelectedStudents}
+        refreshKey={refreshKey}
       />
 
       <AssignTutorDialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
         selectedStudents={selectedStudents}
+        onAssigned={() => {
+          setSelectedStudents([]);
+          setRefreshKey((prev) => prev + 1);
+        }}
       />
     </Box>
   );
