@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Login from "./views/login/Login";
 import ForgetPassword from "./views/login/ForgetPassword";
 import OtpVerify from "./views/login/OtpVerify";
@@ -7,7 +7,6 @@ import ChangePassword from "./views/login/ChangePassword";
 import Verify from "./views/login/Verify";
 import Main from "./layouts/main/Main";
 import ProtectedRoute from "./layouts/main/ProtectedRoute";
-import Dashboard from "./views/Dashboard/Dashboard";
 import Meeting from "./views/meeting/Meeting";
 import UserList from "./views/user/UserList";
 import Message from "./views/message/Message";
@@ -67,6 +66,23 @@ const getPageNameFromPath = (pathname) => {
   }
 
   return toTitleCase(segments[segments.length - 1]);
+};import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
+import AdminDashboard from "./views/Dashboard/admin/AdminDashboard";
+import Dashboard from "./views/Dashboard/student/Dashboard";
+
+const getDefaultRoute = () => {
+  const role = sessionStorage.getItem("userRole");
+
+  switch (role) {
+    case "ADMIN":
+      return "admin-dashboard";
+    case "TUTOR":
+      return "tutor-dashboard";
+    case "STUDENT":
+      return "student-dashboard";
+    default:
+      return "/login";
+  }
 };
 
 const RouteComponent = () => {
@@ -96,8 +112,11 @@ const RouteComponent = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/admin" element={<Main />}>
-          <Route index element={<Dashboard />} />
-          <Route path="/admin/meetings" element={<Meeting />} />
+          <Route index element={<Navigate to={getDefaultRoute()} replace />} />
+          <Route path="/admin/student-dashboard" element={<Dashboard />} />
+          <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
+          <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
+          <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserList />} />
           <Route path="/admin/messages" element={<Message />} />
           <Route path="/admin/blog" element={<BlogList />} />

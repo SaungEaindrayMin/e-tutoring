@@ -21,7 +21,11 @@ import InputField from "../../layouts/main/components/InputFields";
 import Configuration from "../../services/configuration";
 import DataServices from "../../services/data-services";
 
-const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
+const StudentTable = ({
+  selectedStudents,
+  setSelectedStudents,
+  refreshKey,
+}) => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
 
@@ -81,7 +85,7 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
 
   useEffect(() => {
     fetchStudents(page, search);
-  }, [page, search]);
+  }, [page, search, refreshKey]);
 
   const filteredStudents = students.filter((student) => {
     const assigned = !!student.studentProfile?.tutorId;
@@ -92,6 +96,23 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
     return true;
   });
 
+  const allSelected =
+    filteredStudents.length > 0 &&
+    filteredStudents.every((s) =>
+      selectedStudents.includes(s.studentProfile?.id),
+    );
+
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      const allIds = filteredStudents
+        .map((s) => s.studentProfile?.id)
+        .filter(Boolean);
+
+      setSelectedStudents(allIds);
+    } else {
+      setSelectedStudents([]);
+    }
+  };
   return (
     <Card
       sx={{
@@ -159,7 +180,11 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
           <TableHead>
             <TableRow>
               <TableCell padding="checkbox">
-                <Checkbox />
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={selectedStudents.length > 0 && !allSelected}
+                  onChange={handleSelectAll}
+                />
               </TableCell>
               <TableCell>Student name</TableCell>
               <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
@@ -193,20 +218,19 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
               </TableRow>
             ) : (
               filteredStudents.map((student) => {
-                const tutorName = student.studentProfile?.tutorName;
+                const tutorName = student.studentProfile?.tutor?.name;
                 const assigned = !!student.studentProfile?.tutorId;
+                const studentProfileId = student.studentProfile?.id;
 
                 return (
-                  <TableRow key={student.id}>
+                  <TableRow key={studentProfileId}>
                     <TableCell padding="checkbox">
                       <Checkbox
-                        checked={selectedStudents.includes(student.id)}
-                        onChange={() => handleSelect(student.id)}
+                        checked={selectedStudents.includes(studentProfileId)}
+                        onChange={() => handleSelect(studentProfileId)}
                       />
                     </TableCell>
-
                     <TableCell>{student.name}</TableCell>
-
                     <TableCell
                       sx={{
                         display: { xs: "none", sm: "table-cell" },
@@ -218,17 +242,14 @@ const StudentTable = ({ selectedStudents, setSelectedStudents }) => {
                     >
                       {student.email}
                     </TableCell>
-
                     <TableCell
                       sx={{
                         display: { xs: "none", md: "table-cell" },
-                        color: tutorName ? "text.primary" : "text.secondary",
-                        fontWeight: tutorName ? 400 : 500,
+                        color: assigned ? "text.primary" : "text.secondary",
                       }}
                     >
                       {tutorName || "Not assigned"}
                     </TableCell>
-
                     <TableCell>
                       {assigned ? (
                         <Chip

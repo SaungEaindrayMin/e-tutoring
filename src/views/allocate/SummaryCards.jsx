@@ -1,4 +1,4 @@
-import { Box, Card, Typography, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import {
   CheckCircleOutline,
   ErrorOutline,
@@ -8,8 +8,9 @@ import { useEffect, useState } from "react";
 
 import Configuration from "../../services/configuration";
 import DataServices from "../../services/data-services";
+import StatsCard from "../../layouts/main/components/StatsCard";
 
-const SummaryCards = () => {
+const SummaryCards = ({ refreshKey }) => {
   const [counts, setCounts] = useState({
     totalStudents: 0,
     totalAssigned: 0,
@@ -23,7 +24,6 @@ const SummaryCards = () => {
 
   const fetchCounts = async () => {
     setLoading(true);
-
     try {
       const params = new URLSearchParams();
       params.append("page", 1);
@@ -51,25 +51,7 @@ const SummaryCards = () => {
 
   useEffect(() => {
     fetchCounts();
-  }, []);
-
-  const cards = [
-    {
-      title: "Total Students",
-      value: counts.totalStudents,
-      icon: <PeopleAltOutlined color="primary" />,
-    },
-    {
-      title: "Assigned",
-      value: counts.totalAssigned,
-      icon: <CheckCircleOutline sx={{ color: "green" }} />,
-    },
-    {
-      title: "Unassigned",
-      value: counts.totalUnassigned,
-      icon: <ErrorOutline sx={{ color: "red" }} />,
-    },
-  ];
+  }, [refreshKey]);
 
   return (
     <Box
@@ -78,38 +60,26 @@ const SummaryCards = () => {
       gap={2}
       mt={3}
     >
-      {cards.map((card, index) => (
-        <Card
-          key={index}
-          sx={{
-            flex: 1,
-            p: { xs: 2, sm: 3 },
-            boxShadow: "xs",
-            border: 0.5,
-            borderColor: "text.input",
-            borderRadius: 0.5,
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {card.title}
-          </Typography>
+      <StatsCard
+        title="Total Students"
+        value={counts.totalStudents}
+        icon={<PeopleAltOutlined color="primary" />}
+        loading={loading}
+      />
 
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mt={1}
-          >
-            {loading ? (
-              <CircularProgress size={24} />
-            ) : (
-              <Typography variant="h4">{card.value}</Typography>
-            )}
+      <StatsCard
+        title="Assigned"
+        value={counts.totalAssigned}
+        icon={<CheckCircleOutline sx={{ color: "green" }} />}
+        loading={loading}
+      />
 
-            {card.icon}
-          </Box>
-        </Card>
-      ))}
+      <StatsCard
+        title="Unassigned"
+        value={counts.totalUnassigned}
+        icon={<ErrorOutline sx={{ color: "red" }} />}
+        loading={loading}
+      />
     </Box>
   );
 };

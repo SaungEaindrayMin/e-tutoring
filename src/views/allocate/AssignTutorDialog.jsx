@@ -18,7 +18,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Configuration from "../../services/configuration";
 import DataServices from "../../services/data-services";
 
-const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
+const AssignTutorDialog = ({ open, onClose, selectedStudents, onAssigned }) => {
   const [tutors, setTutors] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,6 +69,7 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
       );
 
       if (res?.status === "success") {
+        onAssigned?.();
         onClose();
       }
     } catch (error) {
@@ -161,21 +162,19 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents }) => {
             ) : (
               filteredTutors.map((tutor) => (
                 <TableRow
-                  key={tutor.id}
+                  key={tutor.tutorProfile?.id}
                   hover
-                  onClick={() => setSelectedTutor(tutor.id)}
+                  onClick={() => setSelectedTutor(tutor.tutorProfile?.id)}
                   sx={{
                     cursor: "pointer",
                     bgcolor:
-                      selectedTutor === tutor.id
+                      selectedTutor === tutor.tutorProfile?.id
                         ? "action.selected"
                         : "inherit",
                   }}
                 >
                   <TableCell>{tutor.name}</TableCell>
-                  <TableCell
-                    sx={{ display: { xs: "none", sm: "table-cell" } }}
-                  >
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
                     {tutor.email}
                   </TableCell>
                 </TableRow>
