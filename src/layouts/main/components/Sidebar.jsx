@@ -33,7 +33,17 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
 
   const tabConfig = {
     dashboard: {
-      path: "/admin",
+      path: "/admin/admin-dashboard",
+      icon: <FiGrid />,
+      label: "Dashboard",
+    },
+    tutor_dashboard: {
+      path: "/admin/tutor-dashboard",
+      icon: <FiGrid />,
+      label: "Dashboard",
+    },
+    student_dashboard: {
+      path: "/admin/student-dashboard",
       icon: <FiGrid />,
       label: "Dashboard",
     },
@@ -131,8 +141,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
 
             if (!configItem) return null;
 
-            const active = location.pathname === configItem.path;
-
+            const active = location.pathname.startsWith(configItem.path);
             return (
               <ListItemButton
                 key={key}

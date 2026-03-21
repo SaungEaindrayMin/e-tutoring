@@ -16,39 +16,9 @@ import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutline
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import AccessTimeOutlinedIcon from "@mui/icons-material/AccessTimeOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
+import StatsCard from "../../../layouts/main/components/StatsCard";
 const LEFT_COL = { xs: "1 1 100%", md: "1 1 0" };
 const RIGHT_COL = { xs: "1 1 100%", md: "0 0 560px" };
-
-const StatCard = ({ title, value, icon, color }) => (
-  <Card sx={{ borderRadius: 1 }}>
-    <CardContent>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Box>
-          <Typography variant="body2" color="text.secondary">
-            {title}
-          </Typography>
-          <Typography variant="h4" fontWeight={700}>
-            {value}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            width: 52,
-            height: 52,
-            borderRadius: 1,
-            bgcolor: color,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {icon}
-        </Box>
-      </Stack>
-    </CardContent>
-  </Card>
-);
 
 const ProgressRow = ({ label, value }) => (
   <Box>
@@ -69,40 +39,40 @@ const Dashboard = () => {
     <Box>
       <Stack direction="row" spacing={2} flexWrap="wrap">
         <Box flex={{ xs: "1 1 100%", md: "1 1 calc(25% - 12px)" }}>
-          <StatCard
+          <StatsCard
             title="Upcoming Meetings"
             value="2"
             icon={<CalendarTodayOutlinedIcon sx={{ color: "text.active" }} />}
-            color="primary.active"
+            iconBg="primary.active"
           />
         </Box>
 
         <Box flex={{ xs: "1 1 100%", md: "1 1 calc(25% - 12px)" }}>
-          <StatCard
+          <StatsCard
             title="Unread Messages"
             value="0"
             icon={
               <ChatBubbleOutlineOutlinedIcon sx={{ color: "text.message" }} />
             }
-            color="icon.message"
+            iconBg="icon.message"
           />
         </Box>
 
         <Box flex={{ xs: "1 1 100%", md: "1 1 calc(25% - 12px)" }}>
-          <StatCard
+          <StatsCard
             title="Documents"
             value="2"
             icon={<DescriptionOutlinedIcon sx={{ color: "text.document" }} />}
-            color="icon.document"
+            iconBg="icon.document"
           />
         </Box>
 
         <Box flex={{ xs: "1 1 100%", md: "1 1 calc(25% - 12px)" }}>
-          <StatCard
+          <StatsCard
             title="Meeting Hours"
             value="12"
             icon={<AccessTimeOutlinedIcon sx={{ color: "text.meeting" }} />}
-            color="icon.meeting"
+            iconBg="icon.meeting"
           />
         </Box>
       </Stack>
