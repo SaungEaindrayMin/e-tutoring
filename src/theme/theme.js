@@ -37,7 +37,8 @@ const theme = createTheme({
       meeting: "#E65100",
       danger: "#F44336",
       assign: "#2FAB30",
-      analytics :"#005094"
+      analytics :"#005094",
+      warning:"#F3AF39"
     },
 
     icon: {
