@@ -32,6 +32,8 @@ const BlogCreateDialog = ({ open, onClose, onCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const userId = sessionStorage.getItem("userId");
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "image/*": [], "video/*": [] },
     maxFiles: 1,
@@ -89,6 +91,7 @@ const BlogCreateDialog = ({ open, onClose, onCreated }) => {
       setLoading(true);
 
       const formData = new FormData();
+      formData.append("userId", userId);
       formData.append("title", title);
       formData.append("content", content);
       if (file) formData.append("file", file);

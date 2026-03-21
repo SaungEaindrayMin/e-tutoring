@@ -103,6 +103,7 @@ const RouteComponent = () => {
           <Route path="/admin/blog" element={<BlogList />} />
           <Route path="/admin/blog/:slug" element={<BlogDetail />} />
           <Route path="/admin/allocate-tutor" element={<Allocate />} />
+          <Route path="/admin/visit-analytics" element={<Analytics />} />
         </Route>
       </Route>
     </Routes>

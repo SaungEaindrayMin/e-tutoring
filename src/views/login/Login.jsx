@@ -9,6 +9,7 @@ import Configuration from "../../services/configuration";
 import DataServices from "../../services/data-services";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import AppAlert from "../../layouts/main/components/AppAlert";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,7 +18,11 @@ const Login = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
+  const [alert, setAlert] = useState({
+    open: false,
+    message: "",
+    type: "error",
+  });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -50,11 +55,17 @@ const Login = () => {
 
       if (response?.status === "success" && response.token) {
         Cookies.set(config.COOKIE_NAME_TOKEN, response.token, { path: "/" });
-        Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), { path: "/" });
+        Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), {
+          path: "/",
+        });
         sessionStorage.setItem(config.COOKIE_NAME_TOKEN, response.token);
-        sessionStorage.setItem(config.COOKIE_NAME_USER, JSON.stringify(response.user));
+        sessionStorage.setItem(
+          config.COOKIE_NAME_USER,
+          JSON.stringify(response.user),
+        );
 
         sessionStorage.setItem("userRole", response.user.role);
+        sessionStorage.setItem("userId", response.user.id);
 
         sessionStorage.setItem("userName", response.user.name);
 
@@ -64,7 +75,11 @@ const Login = () => {
       }
     } catch (err) {
       setLoading(false);
-      setErrorMessage("Network error: Cannot connect to server");
+      setAlert({
+        open: true,
+        message: "Network error: Cannot connect to server",
+        type: "error",
+      });
     }
   };
 
@@ -90,11 +105,12 @@ const Login = () => {
         University Personal Tutoring Platform
       </Typography>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 1 }}>
-          {errorMessage}
-        </Alert>
-      )}
+      <AppAlert
+        open={alert.open}
+        severity={alert.type}
+        message={alert.message}
+        onClose={() => setAlert({ ...alert, open: false })}
+      />
 
       <Box mb={2}>
         <Typography variant="body2" fontWeight={600}>
@@ -169,7 +185,7 @@ const Login = () => {
             }}
           >
             Terms of Service
-          </Link>
+          </Link>{" "}
           and{" "}
           <Link
             underline="always"

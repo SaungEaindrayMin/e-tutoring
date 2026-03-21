@@ -35,8 +35,10 @@ const Allocate = () => {
             p: 2,
             mt: 3,
             display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            alignItems: "center",
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: { xs: 2, sm: 0 },
             bgcolor: "primary.active",
             color: "text.secondary",
             borderRadius: 0.5,
@@ -49,10 +51,18 @@ const Allocate = () => {
             </Typography>
           </Box>
 
-          <Box>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 1,
+              width: { xs: "100%", sm: "auto" },
+            }}
+          >
             <Button
               variant="contained"
-              sx={{ mr: 2 }}
+              fullWidth={false}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
               onClick={handleAssignClick}
             >
               Assign selected
@@ -63,6 +73,7 @@ const Allocate = () => {
                 bgcolor: "background.paper",
                 border: 0.5,
                 borderColor: "text.input",
+                width: { xs: "100%", sm: "auto" },
               }}
               onClick={handleClearSelection}
             >
@@ -80,6 +91,7 @@ const Allocate = () => {
       <AssignTutorDialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
+        selectedStudents={selectedStudents}
       />
     </Box>
   );

@@ -31,7 +31,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Map backend tab name → full config
   const tabConfig = {
     dashboard: {
       path: "/admin",
@@ -58,7 +57,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       icon: <FiBookOpen />,
       label: "Blog",
     },
-    "allocate tutor": {
+    allocate: {
       path: "/admin/allocate-tutor",
       icon: <FiUsers />,
       label: "Allocate Tutor",
@@ -67,6 +66,11 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       path: "/admin/users",
       icon: <FiUsers />,
       label: "Create Account",
+    },
+    analytics: {
+      path: "/admin/visit-analytics",
+      icon: <FiUsers />,
+      label: "Visit Analytics",
     },
   };
 
@@ -83,8 +87,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
           config.SERVICE_NAME + config.SERVICE_SIDEBAR,
           `?role=${role}`,
         );
-
-        console.log("Sidebar API:", response);
 
         if (
           response?.status === "success" &&
@@ -107,7 +109,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth }}>
-      {/* Logo */}
       <Box sx={{ px: 3, display: "flex", gap: 1, my: 2 }}>
         <img src={logo} width={45} alt="logo" />
         <Box>

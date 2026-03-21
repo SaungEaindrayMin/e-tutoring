@@ -24,6 +24,7 @@ import DataServices from "../../services/data-services";
 
 const config = new Configuration();
 const dataService = new DataServices();
+const userId = sessionStorage.getItem("userId");
 
 const COMMENT_LIMIT = 10;
 
@@ -33,13 +34,10 @@ const BlogDetail = () => {
 
   const [openCreate, setOpenCreate] = useState(false);
 
-  // Blog state
   const [blog, setBlog] = useState(null);
-  const [blogLoading, setBlogLoading] = useState(true);
-
-  // Comment state
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
+  const [pageLoading, setPageLoading] = useState(true);
   const [commentLoading, setCommentLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cursor, setCursor] = useState(null);
@@ -48,64 +46,78 @@ const BlogDetail = () => {
   const observerRef = useRef(null);
   const isFetchingRef = useRef(false);
 
-  // Fetch blog
-  const fetchBlog = useCallback(async () => {
-    setBlogLoading(true);
+  const fetchComments = useCallback(async (blogId, cursorParam = null) => {
+    if (isFetchingRef.current || !blogId) return;
+    isFetchingRef.current = true;
+    if (cursorParam !== null) setCommentLoading(true);
     try {
+      let serviceAction = `blogs/${blogId}/comments?limit=${COMMENT_LIMIT}`;
+      if (cursorParam) serviceAction += `&cursor=${cursorParam}`;
+
       const res = await dataService.retrieve(
         config.SERVICE_NAME,
-        `blogs/${slug}`,
+        serviceAction,
       );
-      if (res?.status === "success") {
-        setBlog(res.data);
+
+      if (res?.status === "success" && Array.isArray(res.data)) {
+        setComments((prev) =>
+          cursorParam === null ? res.data : [...prev, ...res.data],
+        );
+        const nextCursor = res.pagination?.nextCursor ?? null;
+        setCursor(nextCursor);
+        setHasMore(!!(nextCursor && res.pagination?.hasNextPage));
       }
     } catch (err) {
-      console.error("Failed to fetch blog", err);
+      console.error("Failed to fetch comments", err);
     } finally {
-      setBlogLoading(false);
+      setCommentLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [slug]);
+  }, []);
 
-  // Fetch comments
-  const fetchComments = useCallback(
-    async (cursorParam = null) => {
-      if (isFetchingRef.current || !blog?.id) return;
-      isFetchingRef.current = true;
-      setCommentLoading(true);
+  useEffect(() => {
+    const fetchAll = async () => {
+      setPageLoading(true);
       try {
-        let serviceAction = `blogs/${blog.id}/comments?limit=${COMMENT_LIMIT}`;
-        if (cursorParam) serviceAction += `&cursor=${cursorParam}`;
-
         const res = await dataService.retrieve(
           config.SERVICE_NAME,
-          serviceAction,
+          `blogs/${slug}`,
         );
-
-        if (res?.status === "success" && Array.isArray(res.data)) {
-          setComments((prev) =>
-            cursorParam === null ? res.data : [...prev, ...res.data],
-          );
-          const nextCursor = res.pagination?.nextCursor ?? null;
-          setCursor(nextCursor);
-          setHasMore(!!(nextCursor && res.pagination?.hasNextPage));
+        if (res?.status === "success") {
+          setBlog(res.data);
+          await fetchComments(res.data.id, null);
         }
       } catch (err) {
-        console.error("Failed to fetch comments", err);
+        console.error("Failed to fetch blog", err);
       } finally {
-        setCommentLoading(false);
-        isFetchingRef.current = false;
+        setPageLoading(false);
       }
-    },
-    [blog?.id],
-  );
+    };
 
-  // Submit comment
+    fetchAll();
+  }, [slug, fetchComments]);
+
+  useEffect(() => {
+    const sentinel = observerRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingRef.current) {
+          fetchComments(blog?.id, cursor);
+        }
+      },
+      { threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [cursor, hasMore, fetchComments, blog?.id]);
+
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !blog?.id) return;
     setSubmitting(true);
     try {
       const res = await dataService.retrievePOST(
-        { content: commentText },
+        { content: commentText, userId },
         `${config.SERVICE_NAME}blogs/${blog.id}/comments`,
       );
       if (res?.status === "success") {
@@ -122,34 +134,6 @@ const BlogDetail = () => {
       setSubmitting(false);
     }
   };
-
-  // Initial fetch
-  useEffect(() => {
-    fetchBlog();
-  }, [fetchBlog]);
-
-  // Fetch comments once blog is loaded
-  useEffect(() => {
-    if (blog?.id) {
-      fetchComments(null);
-    }
-  }, [blog?.id, fetchComments]);
-
-  // IntersectionObserver for comment infinite scroll
-  useEffect(() => {
-    const sentinel = observerRef.current;
-    if (!sentinel) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingRef.current) {
-          fetchComments(cursor);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [cursor, hasMore, fetchComments]);
 
   const renderMedia = () => {
     if (!blog?.assetUrl) return null;
@@ -200,8 +184,7 @@ const BlogDetail = () => {
             <KeyboardBackspaceIcon fontSize="inherit" />
           </IconButton>
 
-          {/* Author */}
-          {blogLoading ? (
+          {pageLoading ? (
             <Skeleton variant="text" width={160} height={32} />
           ) : (
             <Typography variant="h5" gutterBottom>
@@ -209,8 +192,7 @@ const BlogDetail = () => {
             </Typography>
           )}
 
-          {/* Date */}
-          {blogLoading ? (
+          {pageLoading ? (
             <Skeleton variant="text" width={140} height={24} />
           ) : (
             <Typography
@@ -236,8 +218,7 @@ const BlogDetail = () => {
           )}
 
           <Stack direction="column" gap={2} sx={{ marginTop: 4 }}>
-            {/* Title */}
-            {blogLoading ? (
+            {pageLoading ? (
               <Skeleton variant="text" width="80%" height={32} />
             ) : (
               <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
@@ -245,15 +226,13 @@ const BlogDetail = () => {
               </Typography>
             )}
 
-            {/* Media */}
-            {blogLoading ? (
+            {pageLoading ? (
               <Skeleton variant="rounded" width="100%" height={300} />
             ) : (
               renderMedia()
             )}
 
-            {/* Content */}
-            {blogLoading ? (
+            {pageLoading ? (
               <>
                 <Skeleton variant="text" width="100%" />
                 <Skeleton variant="text" width="100%" />
@@ -265,8 +244,7 @@ const BlogDetail = () => {
               </Typography>
             )}
 
-            {/* Tags */}
-            {!blogLoading && blog?.tags?.length > 0 && (
+            {!pageLoading && blog?.tags?.length > 0 && (
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
                 {blog.tags.map((tag) => (
                   <Chip
@@ -281,24 +259,37 @@ const BlogDetail = () => {
 
             <Divider />
 
-            {/* Comment count */}
-            <Typography
-              variant="body1"
-              gutterBottom
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                color: "text.muted",
-                fontWeight: "semibold",
-              }}
-            >
-              <ChatBubbleOutlineIcon />
-              Comments ({blog?._count?.comments ?? 0})
-            </Typography>
+            {pageLoading ? (
+              <Skeleton variant="text" width={160} height={28} />
+            ) : (
+              <Typography
+                variant="body1"
+                gutterBottom
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  color: "text.muted",
+                  fontWeight: "semibold",
+                }}
+              >
+                <ChatBubbleOutlineIcon />
+                Comments ({blog?._count?.comments ?? 0})
+              </Typography>
+            )}
 
-            {/* Comment list */}
-            {comments.length === 0 && !commentLoading ? (
+            {pageLoading ? (
+              <Stack spacing={2}>
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    variant="rounded"
+                    width="100%"
+                    height={90}
+                  />
+                ))}
+              </Stack>
+            ) : comments.length === 0 ? (
               <Box
                 sx={{
                   display: "flex",
@@ -360,19 +351,16 @@ const BlogDetail = () => {
                   </Box>
                 ))}
 
-                {/* Load more spinner */}
                 {commentLoading && (
                   <Box display="flex" justifyContent="center" py={2}>
                     <CircularProgress size={24} />
                   </Box>
                 )}
 
-                {/* Sentinel */}
                 <Box ref={observerRef} sx={{ height: 1 }} />
               </Stack>
             )}
 
-            {/* Comment input */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <TextField
                 fullWidth
