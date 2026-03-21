@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Login from "./views/login/Login";
 import ForgetPassword from "./views/login/ForgetPassword";
 import OtpVerify from "./views/login/OtpVerify";

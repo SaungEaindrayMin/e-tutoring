@@ -68,7 +68,7 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
             )}
 
             <Box>
-              <Typography fontWeight={600}>Welcome back, Alice!</Typography>
+              <Typography fontWeight={600}>Welcome, Alice!</Typography>
 
               <Typography variant="body2" color="text.secondary">
                 Here your personal tutoring overview
