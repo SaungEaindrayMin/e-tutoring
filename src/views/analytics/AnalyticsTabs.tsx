@@ -3,7 +3,49 @@ import { useState } from "react";
 import MostActiveUsersTable from "./MostActiveUsersTable";
 import DetailedStatsTable from "./DetailedStatsTable";
 
-const AnalyticsTabs = () => {
+type DetailRow = {
+  page: string;
+  browser: string;
+  visits: number;
+};
+
+type LeaderboardRow = {
+  rank?: number;
+  name: string;
+  email: string;
+  role: string;
+  visits: number;
+};
+
+type AnalyticsTabsProps = {
+  detailsData: DetailRow[];
+  leaderboardData: LeaderboardRow[];
+  detailsLoading: boolean;
+  leaderboardLoading: boolean;
+  detailsError?: string;
+  leaderboardError?: string;
+  detailsPage: number;
+  detailsTotalPages: number;
+  leaderboardPage: number;
+  leaderboardTotalPages: number;
+  onDetailsPageChange: (page: number) => void;
+  onLeaderboardPageChange: (page: number) => void;
+};
+
+const AnalyticsTabs = ({
+  detailsData,
+  leaderboardData,
+  detailsLoading,
+  leaderboardLoading,
+  detailsError,
+  leaderboardError,
+  detailsPage,
+  detailsTotalPages,
+  leaderboardPage,
+  leaderboardTotalPages,
+  onDetailsPageChange,
+  onLeaderboardPageChange,
+}: AnalyticsTabsProps) => {
   const [tab, setTab] = useState("users");
 
   return (
@@ -61,7 +103,25 @@ const AnalyticsTabs = () => {
 
       {/* Content */}
       <Box>
-        {tab === "users" ? <MostActiveUsersTable /> : <DetailedStatsTable />}
+        {tab === "users" ? (
+          <MostActiveUsersTable
+            data={leaderboardData}
+            loading={leaderboardLoading}
+            error={leaderboardError}
+            page={leaderboardPage}
+            totalPages={leaderboardTotalPages}
+            onPageChange={onLeaderboardPageChange}
+          />
+        ) : (
+          <DetailedStatsTable
+            data={detailsData}
+            loading={detailsLoading}
+            error={detailsError}
+            page={detailsPage}
+            totalPages={detailsTotalPages}
+            onPageChange={onDetailsPageChange}
+          />
+        )}
       </Box>
     </Card>
   );

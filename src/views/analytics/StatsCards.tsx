@@ -2,30 +2,41 @@ import { Box } from "@mui/material";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import DescriptionIcon from "@mui/icons-material/Description";
 import PublicIcon from "@mui/icons-material/Public";
-import { useEffect, useState } from "react";
 import StatsCard from "../../layouts/main/components/StatsCard";
 
-const StatsCards = () => {
-  const [data, setData] = useState({
-    totalVisit: 0,
-    uniquePages: 0,
-    browsers: 0,
-  });
+type StatsData = {
+  totalVisit: number;
+  uniquePages: number;
+  browsers: number;
+};
 
-  const [loading, setLoading] = useState(false);
+type StatsCardsProps = {
+  data: StatsData;
+  loading: boolean;
+};
 
-  useEffect(() => {
-    setLoading(true);
+const StatsCards = ({ data, loading }: StatsCardsProps) => {
 
-    setTimeout(() => {
-      setData({
-        totalVisit: 40,
-        uniquePages: 4,
-        browsers: 2,
-      });
-      setLoading(false);
-    }, 800);
-  }, []);
+  const cards = [
+    {
+      title: "Total Visit",
+      value: data.totalVisit,
+      icon: <TimelineIcon sx={{ color: "#7C3AED" }} />,
+      bg: "#F3E8FF",
+    },
+    {
+      title: "Unique pages",
+      value: data.uniquePages,
+      icon: <DescriptionIcon sx={{ color: "#4F46E5" }} />,
+      bg: "#EEF2FF",
+    },
+    {
+      title: "Browsers Used",
+      value: data.browsers,
+      icon: <PublicIcon sx={{ color: "#6D28D9" }} />,
+      bg: "#F5F3FF",
+    },
+  ];
 
   return (
     <Box

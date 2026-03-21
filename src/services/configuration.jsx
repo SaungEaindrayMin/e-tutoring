@@ -13,6 +13,7 @@ class Configuration {
     SERVICE_LOGOUT = "auth/logout";
     SERVICE_USERS = "users";
     SERVICE_SIDEBAR = "sidebar"
+    SERVICE_USER_ACTIVITY = "user-activity";
     SERVICE_TUTOR_LIST = "users/lookup"
     SERVICE_ASSIGN_TUTOR = "allocate/assign-student"
     SERVICE_UNASSIGN_TUTOR = "allocate/unassign-student"

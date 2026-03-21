@@ -7,18 +7,34 @@ import {
   Typography,
   Box,
   Card,
+  CircularProgress,
+  Pagination,
 } from "@mui/material";
 import PublicIcon from "@mui/icons-material/Public";
 
-const DetailedStatsTable = () => {
-  const data = [
-    { page: "Dashboard", browser: "Chrome", visits: 23 },
-    { page: "Dashboard", browser: "Safari", visits: 6 },
-    { page: "Visit Analytics", browser: "Safari", visits: 4 },
-    { page: "Visit Analytics", browser: "Chrome", visits: 3 },
-    { page: "Blog", browser: "Chrome", visits: 3 },
-    { page: "Create Accounts", browser: "Safari", visits: 1 },
-  ];
+type DetailRow = {
+  page: string;
+  browser: string;
+  visits: number;
+};
+
+type DetailedStatsTableProps = {
+  data: DetailRow[];
+  loading: boolean;
+  error?: string;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+};
+
+const DetailedStatsTable = ({
+  data,
+  loading,
+  error,
+  page,
+  totalPages,
+  onPageChange,
+}: DetailedStatsTableProps) => {
 
   return (
     <>
@@ -55,47 +71,85 @@ const DetailedStatsTable = () => {
               "& .MuiTableCell-root": { borderBottom: "none" },
             }}
           >
-            {data.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        bgcolor: "primary.analytics",
-                        borderRadius: "50%",
-                      }}
-                    />
-                    {item.page}
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <PublicIcon fontSize="small" />
-                    {item.browser}
-                  </Box>
-                </TableCell>
-
-                <TableCell>
-                  <Box
-                    sx={{
-                      bgcolor: "background.analytics",
-                      px: 2,
-                      py: 0.5,
-                      borderRadius: 0.5,
-                      display: "inline-block",
-                    }}
-                  >
-                    {item.visits}
-                  </Box>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  <CircularProgress size={24} />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  <Typography variant="body2" color="text.secondary">
+                    {error || "No detail statistics found."}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          bgcolor: "primary.analytics",
+                          borderRadius: "50%",
+                        }}
+                      />
+                      {item.page}
+                    </Box>
+                  </TableCell>
+
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <PublicIcon fontSize="small" />
+                      {item.browser}
+                    </Box>
+                  </TableCell>
+
+                  <TableCell>
+                    <Box
+                      sx={{
+                        bgcolor: "background.analytics",
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 0.5,
+                        display: "inline-block",
+                      }}
+                    >
+                      {item.visits}
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>
+
+      <Box display="flex" justifyContent="center" mt={2}>
+        <Pagination
+          count={Math.max(1, totalPages)}
+          page={page}
+          onChange={(_, value) => onPageChange(value)}
+          shape="rounded"
+          sx={{
+            "& .MuiPaginationItem-root": {
+              border: "1px solid",
+              borderColor: "text.input",
+              borderRadius: 0.5,
+              p: 0.5,
+            },
+            "& .Mui-selected": {
+              bgcolor: "primary.active",
+              color: "primary.main",
+              borderColor: "primary.main",
+            },
+          }}
+        />
+      </Box>
     </>
   );
 };
