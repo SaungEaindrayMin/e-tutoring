@@ -9,36 +9,37 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import DownloadIcon from "@mui/icons-material/Download";
 import DocumentUploadDialog from "./DocumentUploadDialog";
 
 const initialDocuments = [
-  {
-    id: 1,
-    title: "Academic Progress Review",
-    fileName: "assignment1.pdf",
-    uploadedBy: "Zue",
-    uploadedAt: "Feb 1, 2026",
-    studentIds: [1, 2],
-  },
-  {
-    id: 2,
-    title: "Module 2 Reading Material",
-    fileName: "module-2-notes.pdf",
-    uploadedBy: "Hmu",
-    uploadedAt: "Feb 2, 2026",
-    studentIds: [3],
-  },
-  {
-    id: 3,
-    title: "Chapter 2 Notes",
-    fileName: "chapter2-notes.pdf",
-    uploadedBy: "You",
-    uploadedAt: "Feb 3, 2026",
-    studentIds: [1, 4],
-  },
+  // {
+  //   id: 1,
+  //   title: "Academic Progress Review",
+  //   fileName: "assignment1.pdf",
+  //   uploadedBy: "Zue",
+  //   uploadedAt: "Feb 1, 2026",
+  //   studentIds: [1, 2],
+  // },
+  // {
+  //   id: 2,
+  //   title: "Module 2 Reading Material",
+  //   fileName: "module-2-notes.pdf",
+  //   uploadedBy: "Hmu",
+  //   uploadedAt: "Feb 2, 2026",
+  //   studentIds: [3],
+  // },
+  // {
+  //   id: 3,
+  //   title: "Chapter 2 Notes",
+  //   fileName: "chapter2-notes.pdf",
+  //   uploadedBy: "You",
+  //   uploadedAt: "Feb 3, 2026",
+  //   studentIds: [1, 4],
+  // },
 ];
 
 const DocumentsPage = () => {
@@ -114,24 +115,24 @@ const DocumentsPage = () => {
         }}
       >
         <Box>
-          <Typography variant="h4" fontWeight="bold">
+          <Typography variant="h3" fontWeight="bold">
             Documents
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Share and manage documents with your tutor
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Share and manage documents with your students
           </Typography>
         </Box>
 
         <Button
           variant="contained"
-          startIcon={<UploadFileIcon />}
+          startIcon={<FileUploadIcon />}
           onClick={handleOpenUpload}
           sx={{
             textTransform: "none",
-            borderRadius: "999px",
+            borderRadius: "6px",
             px: 3,
-            py: 1.2,
-            fontWeight: 700,
+            py: 1,
+            fontWeight: 600,
             boxShadow: "none",
           }}
         >
@@ -154,124 +155,128 @@ const DocumentsPage = () => {
         }}
       />
 
-      <Box
-        sx={{
-          border: "1px solid #E0E0E0",
-          borderRadius: 4,
-          p: 3,
-          minHeight: 300,
-        }}
-      >
-        {documents.length === 0 ? (
-          <Box
-            sx={{
-              minHeight: 240,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
+      {documents.length === 0 ? (
+        <Box
+          sx={{
+            border: "1px solid",
+            borderColor: "text.input",
+            borderRadius: "8px",
+            p: 3,
+            minHeight: 400,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            bgcolor: "background.paper",
+          }}
+        >
             <Box
               sx={{
-                width: 70,
-                height: 70,
+                width: 64,
+                height: 64,
                 mx: "auto",
                 mb: 2,
-                borderRadius: "50%",
-                bgcolor: "#EAF3FF",
+                borderRadius: "12px",
+                bgcolor: "primary.active",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                border: "1px solid",
+                borderColor: "primary.light"
               }}
             >
-              <DescriptionOutlinedIcon sx={{ color: "#1976d2", fontSize: 32 }} />
+              <CalendarTodayOutlinedIcon sx={{ color: "primary.main", fontSize: 32 }} />
             </Box>
 
-            <Typography fontWeight={700} fontSize="1.6rem">
+            <Typography variant="body2" fontWeight={500} color="text.secondary" mb={2}>
               No Document
-            </Typography>
-
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              You haven’t uploaded any documents yet
             </Typography>
 
             <Button
               variant="outlined"
-              startIcon={<UploadFileIcon />}
               onClick={handleOpenUpload}
               sx={{
                 textTransform: "none",
-                borderRadius: 2,
+                borderRadius: "6px",
                 fontWeight: 600,
+                color: "text.primary",
+                borderColor: "text.input",
+                px: 3,
+                py: 1,
+                ":hover": {
+                  borderColor: "text.secondary",
+                  bgcolor: "background.switch"
+                }
               }}
             >
               Post Your First Document
             </Button>
           </Box>
-        ) : filteredDocuments.length === 0 ? (
-          <Box
-            sx={{
-              minHeight: 240,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
-            }}
-          >
-            <Typography color="text.secondary">
-              No matching documents found.
-            </Typography>
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                md: "repeat(2, 1fr)",
-              },
-              gap: 3,
-              alignItems: "start",
-            }}
-          >
+      ) : filteredDocuments.length === 0 ? (
+        <Box
+          sx={{
+            minHeight: 240,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+          }}
+        >
+          <Typography color="text.secondary">
+            No matching documents found.
+          </Typography>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "repeat(2, 1fr)",
+            },
+            gap: 3,
+            alignItems: "start",
+          }}
+        >
             {filteredDocuments.map((doc) => (
               <Card
                 key={doc.id}
                 sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                  border: "1px solid #EAEAEA",
+                  borderRadius: "8px",
+                  boxShadow: "none",
+                  border: "1px solid",
+                  borderColor: "text.input",
                   height: "100%",
                 }}
               >
                 <CardContent sx={{ p: 2.5 }}>
-                  <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
+                  <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                     <Box
                       sx={{
                         width: 48,
                         height: 48,
-                        borderRadius: 2,
-                        bgcolor: "#F3E8FF",
+                        borderRadius: "8px",
+                        bgcolor: "icon.document",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         flexShrink: 0,
                       }}
                     >
-                      <DescriptionOutlinedIcon sx={{ color: "#7E57C2" }} />
+                      <DescriptionOutlinedIcon sx={{ color: "text.document" }} />
                     </Box>
 
                     <Box sx={{ minWidth: 0, flex: 1 }}>
                       <Typography
                         fontWeight={700}
                         sx={{
-                          fontSize: "1rem",
+                          fontSize: "0.95rem",
                           lineHeight: 1.3,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
+                          mb: 0.5
                         }}
                       >
                         {doc.title}
@@ -281,33 +286,40 @@ const DocumentsPage = () => {
                         variant="body2"
                         color="text.secondary"
                         sx={{
-                          mt: 0.5,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
+                          mb: 2
                         }}
                       >
                         {doc.fileName}
                       </Typography>
-                    </Box>
-                  </Box>
 
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                      gap: 2,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary">
-                      Uploaded by {doc.uploadedBy}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {doc.uploadedAt}
-                    </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            bgcolor: "background.switch",
+                            px: 1.2,
+                            py: 0.4,
+                            borderRadius: "4px",
+                          }}
+                        >
+                          <Typography variant="caption" fontWeight={500} color="text.muted" sx={{ fontSize: "0.7rem" }}>
+                            Uploaded by {doc.uploadedBy}
+                          </Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
+                          {doc.uploadedAt}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
 
                   <Button
@@ -317,10 +329,10 @@ const DocumentsPage = () => {
                     onClick={() => handleDownload(doc)}
                     sx={{
                       textTransform: "none",
-                      borderRadius: "999px",
+                      borderRadius: "6px",
                       boxShadow: "none",
-                      fontWeight: 700,
-                      py: 1.2,
+                      fontWeight: 600,
+                      py: 1,
                     }}
                   >
                     Download
@@ -328,9 +340,8 @@ const DocumentsPage = () => {
                 </CardContent>
               </Card>
             ))}
-          </Box>
-        )}
-      </Box>
+        </Box>
+      )}
 
       <DocumentUploadDialog
         open={openUpload}

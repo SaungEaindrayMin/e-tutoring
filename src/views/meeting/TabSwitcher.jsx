@@ -8,8 +8,9 @@ const TabSwitcher = ({ value, onChange }) => {
       onChange={(e, newValue) => newValue && onChange(newValue)}
       sx={{
         backgroundColor: "background.switch",
-        borderRadius: 2,
+        borderRadius: "999px",
         padding: "4px",
+        mb: 3
       }}
     >
       <ToggleButton
@@ -17,11 +18,12 @@ const TabSwitcher = ({ value, onChange }) => {
         sx={{
           textTransform: "none",
           border: "none",
-          borderRadius: 2,
+          borderRadius: "999px",
           px: 3,
           "&.Mui-selected": {
             backgroundColor: "primary.main",
             color: "background.paper",
+            "&:hover": { backgroundColor: "primary.dark" }
           },
         }}
       >
@@ -33,11 +35,12 @@ const TabSwitcher = ({ value, onChange }) => {
         sx={{
           textTransform: "none",
           border: "none",
-          borderRadius:2,
+          borderRadius: "999px",
           px: 3,
           "&.Mui-selected": {
             backgroundColor: "primary.main",
             color: "background.paper",
+            "&:hover": { backgroundColor: "primary.dark" }
           },
         }}
       >

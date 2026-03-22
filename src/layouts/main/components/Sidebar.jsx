@@ -28,7 +28,14 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   const config = new Configuration();
   const dataService = new DataServices();
 
-  const [menuItems, setMenuItems] = useState([]);
+  const [menuItems, setMenuItems] = useState([
+    "Dashboard",
+    "Messages",
+    "Meetings",
+    "Documents",
+    "Blog",
+    "Allocate Tutor",
+  ]);
   const [loading, setLoading] = useState(true);
 
   // 🔥 Map backend tab name → full config
@@ -71,38 +78,8 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   };
 
   useEffect(() => {
-    const fetchSidebar = async () => {
-      const role = sessionStorage.getItem("userRole");
-      if (!role) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await dataService.retrieve(
-          config.SERVICE_NAME + config.SERVICE_SIDEBAR,
-          `?role=${role}`,
-        );
-
-        console.log("Sidebar API:", response);
-
-        if (
-          response?.status === "success" &&
-          Array.isArray(response.data?.tabs)
-        ) {
-          setMenuItems(response.data.tabs);
-        } else {
-          setMenuItems([]);
-        }
-      } catch (error) {
-        console.error("Sidebar error:", error);
-        setMenuItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSidebar();
+    // Hardcoding menu for frontend UI development since API returns Car Management System tabs
+    setLoading(false);
   }, []);
 
   const drawerContent = (
