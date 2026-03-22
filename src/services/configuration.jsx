@@ -10,6 +10,7 @@ class Configuration {
     SERVICE_GET_CONVERSATIONS = "conversation";
     SERVICE_GET_MESSAGES = "conversation/messages";
     SERVICE_SEND_MESSAGE = "conversation/send-message";
+    SERVICE_MESSAGE_STATUS = "conversation/messages/status";
     SERVICE_LOGOUT = "auth/logout";
     SERVICE_USERS = "users";
     SERVICE_SIDEBAR = "sidebar"

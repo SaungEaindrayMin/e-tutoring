@@ -19,11 +19,9 @@ import SocketService from "../../services/socket";
 import Cookies from "js-cookie";
 import Resources from "../../services/resources";
 
-
-
-
-const MessageBubble = ({ message }) => {
+const MessageBubble = ({ message, isUpdatingReadStatus }) => {
   const isMe = message.sender === "me";
+  const canToggleRead = message.canUpdateReadStatus;
 
   return (
     <Box
@@ -52,6 +50,22 @@ const MessageBubble = ({ message }) => {
           {message.time}
         </Typography>
       </Box>
+
+      {canToggleRead && (
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+          <Chip
+            label={isUpdatingReadStatus ? "Updating..." : message.isRead ? "Read" : "Unread"}
+            size="small"
+            sx={{
+              fontSize: 10,
+              height: 20,
+              bgcolor: message.isRead ? "#E8F5E9" : "#FFEBEE",
+              color: message.isRead ? "#2E7D32" : "#C62828",
+            }}
+          />
+        </Stack>
+      )}
+
       <Chip
         label={message.fullDate}
         size="small"
@@ -67,7 +81,17 @@ const MessageBubble = ({ message }) => {
   );
 };
 
-const ChatView = ({ contact, messageText, setMessageText, onSendMessage, messages, scrollContainerRef, onScroll, isFetchingMore }) => (
+const ChatView = ({
+  contact,
+  messageText,
+  setMessageText,
+  onSendMessage,
+  messages,
+  scrollContainerRef,
+  onScroll,
+  isFetchingMore,
+  readStatusLoadingIds,
+}) => (
   <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
     <Stack direction="row" spacing={2} alignItems="center" mb={2} flexShrink={0}>
       <Avatar
@@ -111,7 +135,11 @@ const ChatView = ({ contact, messageText, setMessageText, onSendMessage, message
         </Box>
       )}
       {messages.map((msg) => (
-        <MessageBubble key={msg.id} message={msg} />
+        <MessageBubble
+          key={msg.id}
+          message={msg}
+          isUpdatingReadStatus={Boolean(readStatusLoadingIds[msg.id])}
+        />
       ))}
     </Box>
 
@@ -175,6 +203,7 @@ const Message = () => {
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [readStatusLoadingIds, setReadStatusLoadingIds] = useState({});
   const scrollContainerRef = useRef(null);
   const shouldScrollToBottom = useRef(true); // true for fresh/new messages, false when prepending old ones
 
@@ -188,6 +217,44 @@ const Message = () => {
       myId = payload.id || payload.sub || payload.userId;
     } catch (e) { }
   }
+
+  const updateMessageStatus = useCallback(async (messageId, isRead) => {
+    const response = await dataService.retrievePOST(
+      {
+        messageId,
+        isRead,
+      },
+      config.SERVICE_NAME + config.SERVICE_MESSAGE_STATUS,
+    );
+
+    if (response?.status !== "success") {
+      throw new Error(response?.message || "Failed to update message status");
+    }
+
+    return response;
+  }, []);
+
+  const fetchConversations = useCallback(async () => {
+    try {
+      const response = await dataService.retrieve(
+        config.SERVICE_NAME,
+        config.SERVICE_GET_CONVERSATIONS,
+      );
+      if (response?.status === "success") {
+        const list = response.data || [];
+        if (isStudent) {
+          setSelectedContact(list[0] || null);
+        } else {
+          setConversations(list);
+        }
+      } else {
+        setErrorMessage("Failed to fetch conversations");
+      }
+    } catch (err) {
+      setErrorMessage("Network error: Cannot connect to server");
+      console.error(err);
+    }
+  }, [isStudent]);
 
   const fetchMessages = useCallback(async (pageNumber = 1) => {
     if (pageNumber === 1) {
@@ -211,12 +278,16 @@ const Message = () => {
 
         const formatted = apiMessages.map((msg) => ({
           id: msg.id,
+          conversationId: msg.conversationId,
           text: msg.content,
           time: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           fullDate: new Date(msg.createdAt).toLocaleString(),
           sender: msg.senderId === myId ? "me" : "other",
           senderId: msg.senderId,
           receiverId: msg.receiverId,
+          isRead: Boolean(msg.isRead),
+          readAt: msg.readAt,
+          canUpdateReadStatus: msg.receiverId === myId,
         })).reverse();
 
         if (pageNumber === 1) {
@@ -269,27 +340,8 @@ const Message = () => {
 
   // Fetch conversations on component mount
   useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        const response = await dataService.retrieve(config.SERVICE_NAME, config.SERVICE_GET_CONVERSATIONS);
-        if (response?.status === 'success') {
-          if (isStudent) {
-            setSelectedContact(response.data[0] || null);
-          } else {
-            setConversations(response.data || []);
-          }
-          console.log("Fetched conversations:", response.data[0]);
-        } else {
-          setErrorMessage("Failed to fetch conversations");
-        }
-      } catch (err) {
-        setErrorMessage("Network error: Cannot connect to server");
-        console.error(err);
-      }
-    };
-
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   // Initialize socket connection on component mount
   useEffect(() => {
@@ -303,6 +355,7 @@ const Message = () => {
       const handleReceiveMessage = (data) => {
         console.log("New message received via socket:", data.content);
         fetchMessages(1);
+        fetchConversations();
       };
 
       SocketService.onMessageReceived(handleReceiveMessage);
@@ -311,7 +364,74 @@ const Message = () => {
         SocketService.offMessageReceived();
       };
     }
-  }, []);
+  }, [token, fetchConversations, fetchMessages]);
+
+  useEffect(() => {
+    if (!selectedContact || messages.length === 0) return;
+
+    const unreadIncomingIds = messages
+      .filter((msg) => msg.canUpdateReadStatus && !msg.isRead)
+      .map((msg) => msg.id);
+
+    if (unreadIncomingIds.length === 0) return;
+
+    let cancelled = false;
+
+    const autoMarkAsRead = async () => {
+      setReadStatusLoadingIds((prev) => {
+        const next = { ...prev };
+        unreadIncomingIds.forEach((id) => {
+          next[id] = true;
+        });
+        return next;
+      });
+
+      try {
+        const results = await Promise.all(
+          unreadIncomingIds.map((id) =>
+            updateMessageStatus(id, true)
+              .then((res) => res?.data?.id || null)
+              .catch(() => null),
+          ),
+        );
+
+        if (cancelled) return;
+
+        const updatedIds = new Set(results.filter(Boolean));
+        if (updatedIds.size > 0) {
+          const nowIso = new Date().toISOString();
+          setMessages((prev) =>
+            prev.map((msg) =>
+              updatedIds.has(msg.id)
+                ? {
+                  ...msg,
+                  isRead: true,
+                  readAt: msg.readAt || nowIso,
+                }
+                : msg,
+            ),
+          );
+          fetchConversations();
+        }
+      } finally {
+        if (!cancelled) {
+          setReadStatusLoadingIds((prev) => {
+            const next = { ...prev };
+            unreadIncomingIds.forEach((id) => {
+              delete next[id];
+            });
+            return next;
+          });
+        }
+      }
+    };
+
+    autoMarkAsRead();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, selectedContact, updateMessageStatus, fetchConversations]);
 
   const handleSendMessage = async () => {
     if (messageText.trim() && selectedContact) {
@@ -345,8 +465,14 @@ const Message = () => {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         fullDate: new Date().toLocaleString(),
         sender: "me",
+        senderId: myId,
+        receiverId: selectedContact.studentId || selectedContact.tutorId || "",
+        isRead: false,
+        readAt: null,
+        canUpdateReadStatus: false,
       };
       setMessages((prev) => (Array.isArray(prev) ? [...prev, newMessage] : [newMessage]));
+      fetchConversations();
     }
   };
 
@@ -405,6 +531,7 @@ const Message = () => {
           scrollContainerRef={scrollContainerRef}
           onScroll={handleScroll}
           isFetchingMore={isFetchingMore}
+          readStatusLoadingIds={readStatusLoadingIds}
         />
       </Box>
     );
@@ -472,23 +599,47 @@ const Message = () => {
               transition: "opacity 0.2s",
             }}
           >
-            <Avatar
-              sx={{
-                width: 52,
-                height: 52,
-                bgcolor: "#fce4ec",
-                color: "#e91e63",
-                fontWeight: 600,
-                fontSize: 16,
-                mb: 1,
-                border:
-                  selectedContact?.id === c.id
-                    ? "2px solid #1686D7"
-                    : "2px solid transparent",
-              }}
-            >
-              {c.initialName}
-            </Avatar>
+            <Box sx={{ position: "relative", mb: 1 }}>
+              <Avatar
+                sx={{
+                  width: 52,
+                  height: 52,
+                  bgcolor: "#fce4ec",
+                  color: "#e91e63",
+                  fontWeight: 600,
+                  fontSize: 16,
+                  border:
+                    selectedContact?.id === c.id
+                      ? "2px solid #1686D7"
+                      : "2px solid transparent",
+                }}
+              >
+                {c.initialName}
+              </Avatar>
+              {Number(c.unreadCount) > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: -5,
+                    right: -5,
+                    minWidth: 18,
+                    height: 18,
+                    px: 0.5,
+                    borderRadius: "999px",
+                    bgcolor: "#d32f2f",
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
+                  {Number(c.unreadCount) > 99 ? "99+" : c.unreadCount}
+                </Box>
+              )}
+            </Box>
             <Typography
               variant="caption"
               textAlign="center"
@@ -561,7 +712,11 @@ const Message = () => {
               </Box>
             )}
             {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isUpdatingReadStatus={Boolean(readStatusLoadingIds[msg.id])}
+              />
             ))}
           </Box>
 
