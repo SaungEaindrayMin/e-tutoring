@@ -16,6 +16,7 @@ import Allocate from "./views/allocate/Allocate";
 import Analytics from "./views/analytics/Analytics";
 import DataServices from "./services/data-services";
 import Configuration from "./services/configuration";
+import DocumentCard from "./views/Documents/Documents";
 
 const dataService = new DataServices();
 const config = new Configuration();
@@ -123,6 +124,7 @@ const RouteComponent = () => {
           <Route path="/admin/blog/:slug" element={<BlogDetail />} />
           <Route path="/admin/allocate-tutor" element={<Allocate />} />
           <Route path="/admin/visit-analytics" element={<Analytics />} />
+          <Route path="/admin/documents" element={<DocumentCard />} />
         </Route>
       </Route>
     </Routes>

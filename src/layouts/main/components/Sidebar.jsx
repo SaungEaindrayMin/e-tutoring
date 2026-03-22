@@ -92,10 +92,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   };
 
   useEffect(() => {
-<<<<<<< HEAD
-    // Hardcoding menu for frontend UI development since API returns Car Management System tabs
-    setLoading(false);
-=======
     const fetchSidebar = async () => {
       const role = sessionStorage.getItem("userRole");
       if (!role) {
@@ -126,7 +122,6 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
     };
 
     fetchSidebar();
->>>>>>> origin/develop
   }, []);
 
   const drawerContent = (
