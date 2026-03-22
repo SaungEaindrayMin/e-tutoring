@@ -38,10 +38,19 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
   ]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Map backend tab name → full config
   const tabConfig = {
     dashboard: {
-      path: "/admin",
+      path: "/admin/admin-dashboard",
+      icon: <FiGrid />,
+      label: "Dashboard",
+    },
+    tutor_dashboard: {
+      path: "/admin/tutor-dashboard",
+      icon: <FiGrid />,
+      label: "Dashboard",
+    },
+    student_dashboard: {
+      path: "/admin/student-dashboard",
       icon: <FiGrid />,
       label: "Dashboard",
     },
@@ -65,7 +74,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       icon: <FiBookOpen />,
       label: "Blog",
     },
-    "allocate tutor": {
+    allocate: {
       path: "/admin/allocate-tutor",
       icon: <FiUsers />,
       label: "Allocate Tutor",
@@ -75,16 +84,53 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
       icon: <FiUsers />,
       label: "Create Account",
     },
+    analytics: {
+      path: "/admin/visit-analytics",
+      icon: <FiUsers />,
+      label: "Visit Analytics",
+    },
   };
 
   useEffect(() => {
+<<<<<<< HEAD
     // Hardcoding menu for frontend UI development since API returns Car Management System tabs
     setLoading(false);
+=======
+    const fetchSidebar = async () => {
+      const role = sessionStorage.getItem("userRole");
+      if (!role) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await dataService.retrieve(
+          config.SERVICE_NAME + config.SERVICE_SIDEBAR,
+          `?role=${role}`,
+        );
+
+        if (
+          response?.status === "success" &&
+          Array.isArray(response.data?.tabs)
+        ) {
+          setMenuItems(response.data.tabs);
+        } else {
+          setMenuItems([]);
+        }
+      } catch (error) {
+        console.error("Sidebar error:", error);
+        setMenuItems([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSidebar();
+>>>>>>> origin/develop
   }, []);
 
   const drawerContent = (
     <Box sx={{ width: drawerWidth }}>
-      {/* Logo */}
       <Box sx={{ px: 3, display: "flex", gap: 1, my: 2 }}>
         <img src={logo} width={45} alt="logo" />
         <Box>
@@ -107,8 +153,7 @@ const Sidebar = ({ drawerWidth, mobileOpen, onClose, isDesktop }) => {
 
             if (!configItem) return null;
 
-            const active = location.pathname === configItem.path;
-
+            const active = location.pathname.startsWith(configItem.path);
             return (
               <ListItemButton
                 key={key}

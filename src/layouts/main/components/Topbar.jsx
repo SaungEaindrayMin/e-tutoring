@@ -1,14 +1,29 @@
 import { LogoutOutlined, Menu } from "@mui/icons-material";
-import { AppBar, Toolbar, Box, Typography, IconButton } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  IconButton,
+  Button,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import CustomDialog from "../../main/components/CustomDialog";
 
 const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
   const config = new Configuration();
   const dataService = new DataServices();
+  const formatRole = (role) =>
+    role ? role.charAt(0) + role.slice(1).toLowerCase() : "";
+
+  const [openLogoutDialog, setOpenLogoutDialog] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -16,58 +31,114 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
       const response = await dataService.retrievePOST({}, serviceName);
 
       console.log("Logout response:", response);
+
       Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
 
-      navigate("/login"); 
-      
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
+
       Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
+
       navigate("/login");
     }
   };
+
+  useEffect(() => {
+    const name = sessionStorage.getItem("userName");
+    const role = sessionStorage.getItem("userRole");
+
+    if (name) setUserName(name);
+    if (role) setUserRole(role);
+  }, []);
+
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
-      sx={{
-        width: { lg: `calc(100% - ${drawerWidth}px)` },
-        ml: { lg: `${drawerWidth}px` },
-        bgcolor: "background.paper",
-        color: "text.primary",
-        borderBottom: "1px solid #e5e7eb",
-      }}
-    >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {!isDesktop && (
-            <IconButton onClick={onMenuClick}>
-              <Menu />
+    <>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          width: { lg: `calc(100% - ${drawerWidth}px)` },
+          ml: { lg: `${drawerWidth}px` },
+          bgcolor: "background.paper",
+          color: "text.primary",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <Toolbar
+          sx={{
+            justifyContent: "space-between",
+            px: { xs: 1, sm: 2, md: 3 },
+            py: { xs: 1, sm: 1.5 },
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1}>
+            {!isDesktop && (
+              <IconButton onClick={onMenuClick}>
+                <Menu />
+              </IconButton>
+            )}
+
+            <Box>
+              <Typography fontWeight={600}>
+                Welcome, {userName || "User"}!
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Here your personal tutoring overview
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box textAlign="right">
+              <Typography fontWeight={500}>{userName || "User"}</Typography>{" "}
+              <Typography variant="body2" color="text.secondary">
+                {formatRole(userRole) || "Role"}
+              </Typography>
+            </Box>
+
+            <IconButton onClick={() => setOpenLogoutDialog(true)}>
+              <LogoutOutlined />
             </IconButton>
-          )}
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-          <Box>
-            <Typography fontWeight={600}>Welcome back, Alice!</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Here your personal tutoring overview
-            </Typography>
+      <CustomDialog
+        open={openLogoutDialog}
+        onClose={() => setOpenLogoutDialog(false)}
+        maxWidth="xs"
+        title={
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            color="error.main"
+            textAlign="center"
+          >
+            Logout
+          </Typography>
+        }
+      >
+        <Box textAlign="center">
+          <Typography color="text.secondary" mb={3}>
+            Are you sure you want to logout?
+          </Typography>
+
+          <Box display="flex" justifyContent="center" gap={2}>
+            <Button
+              variant="outlined"
+              onClick={() => setOpenLogoutDialog(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button variant="contained" onClick={handleLogout}>
+              Confirm
+            </Button>
           </Box>
         </Box>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box textAlign="right">
-            <Typography fontWeight={500}>Alice Johnson</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Student
-            </Typography>
-          </Box>
-
-          <IconButton onClick={handleLogout}>
-            <LogoutOutlined />
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
+      </CustomDialog>
+    </>
   );
 };
 

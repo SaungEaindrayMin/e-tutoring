@@ -39,6 +39,7 @@ const UserList = () => {
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("All");
+  const [selectedEmail, setSelectedEmail] = useState("");
 
   const config = new Configuration();
   const dataService = new DataServices();
@@ -102,7 +103,6 @@ const UserList = () => {
         buttonText="Create Account"
         onButtonClick={() => setOpenCreate(true)}
       />
-
       <Stack direction="row" spacing={2} mb={3}>
         <InputField
           placeholder="Search by username or email..."
@@ -135,7 +135,6 @@ const UserList = () => {
           <MenuItem value="STAFF">Staff</MenuItem>
         </InputField>
       </Stack>
-
       <Card
         sx={{
           border: 0.5,
@@ -196,7 +195,13 @@ const UserList = () => {
                     {new Date(user.createdAt).toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <IconButton size="small" onClick={() => setOpenEdit(true)}>
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSelectedEmail(user.email);
+                        setOpenEdit(true);
+                      }}
+                    >
                       <BorderColorOutlined fontSize="small" />
                     </IconButton>
                     <IconButton
@@ -216,7 +221,6 @@ const UserList = () => {
           </TableBody>
         </Table>
       </Card>
-
       <Box display="flex" justifyContent="center" mt={4}>
         <Pagination
           count={totalPages}
@@ -238,7 +242,6 @@ const UserList = () => {
           }}
         />
       </Box>
-
       <CreateAccountDialog
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -249,8 +252,11 @@ const UserList = () => {
         userId={selectedUserId}
         onSuccess={() => fetchUsers(page)}
       />
-
-      <ResetPassword open={openEdit} onClose={() => setOpenEdit(false)} />
+      <ResetPassword
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        email={selectedEmail}
+      />{" "}
     </Box>
   );
 };

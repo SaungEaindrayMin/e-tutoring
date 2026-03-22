@@ -1,7 +1,7 @@
 import Configuration from "./configuration";
 import Resources from "./resources";
 import Cookies from "js-cookie";
-
+import { toast } from "react-toastify";
 
 class DataServices {
   constructor() {
@@ -258,26 +258,37 @@ class DataServices {
   }
 
   async handleError(error) {
-    if (error?.response) {
-      try {
-        const errorObj = await error.response.json();
-      } catch (parseErr) {}
-    } else {
+    console.error("API Error:", error);
+
+    let message = "Something went wrong";
+
+    if (error?.message) {
+      message = error.message;
     }
+    toast.error(message);
   }
 
   handleResponseError = async (response) => {
     let errorData;
+
     try {
       const contentType = response.headers.get("content-type");
+
       if (contentType && contentType.includes("application/json")) {
         errorData = await response.json();
       } else {
         errorData = { message: await response.text() };
       }
     } catch (err) {
-      errorData = { message: "Unknown error" };
+      errorData = { message: "Unknown error occurred" };
     }
+
+    const message =
+      errorData?.message ||
+      errorData?.error ||
+      `Request failed with status ${response.status}`;
+
+    toast.error(message);
 
     return errorData;
   };

@@ -1,58 +1,85 @@
-import { Box, Card, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import {
   CheckCircleOutline,
   ErrorOutline,
   PeopleAltOutlined,
 } from "@mui/icons-material";
+import { useEffect, useState } from "react";
 
-const SummaryCards = () => {
-  const cards = [
-    {
-      title: "Total Students",
-      value: 10,
-      icon: <PeopleAltOutlined color="primary" />,
-    },
-    {
-      title: "Assigned",
-      value: 5,
-      icon: <CheckCircleOutline sx={{ color: "green" }} />,
-    },
-    {
-      title: "Unassigned",
-      value: 5,
-      icon: <ErrorOutline sx={{ color: "red" }} />,
-    },
-  ];
+import Configuration from "../../services/configuration";
+import DataServices from "../../services/data-services";
+import StatsCard from "../../layouts/main/components/StatsCard";
+
+const SummaryCards = ({ refreshKey }) => {
+  const [counts, setCounts] = useState({
+    totalStudents: 0,
+    totalAssigned: 0,
+    totalUnassigned: 0,
+  });
+
+  const [loading, setLoading] = useState(false);
+
+  const config = new Configuration();
+  const dataService = new DataServices();
+
+  const fetchCounts = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.append("page", 1);
+
+      const serviceAction = `${config.SERVICE_USERS}?${params.toString()}`;
+
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        serviceAction,
+      );
+
+      if (res?.status === "success" && res?.counts) {
+        setCounts({
+          totalStudents: res.counts.totalStudents || 0,
+          totalAssigned: res.counts.totalAssigned || 0,
+          totalUnassigned: res.counts.totalUnassigned || 0,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch summary counts", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCounts();
+  }, [refreshKey]);
 
   return (
-    <Box display="flex" gap={3} mt={3}>
-      {cards.map((card, index) => (
-        <Card
-          key={index}
-          sx={{
-            flex: 1,
-            p: 3,
-            boxShadow: "xs",
-            border: 0.5,
-            borderColor: "text.input",
-            borderRadius:0.5,
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {card.title}
-          </Typography>
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
+      gap={2}
+      mt={3}
+    >
+      <StatsCard
+        title="Total Students"
+        value={counts.totalStudents}
+        icon={<PeopleAltOutlined color="primary" />}
+        loading={loading}
+      />
 
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            mt={1}
-          >
-            <Typography variant="h4">{card.value}</Typography>
-            {card.icon}
-          </Box>
-        </Card>
-      ))}
+      <StatsCard
+        title="Assigned"
+        value={counts.totalAssigned}
+        icon={<CheckCircleOutline sx={{ color: "green" }} />}
+        loading={loading}
+      />
+
+      <StatsCard
+        title="Unassigned"
+        value={counts.totalUnassigned}
+        icon={<ErrorOutline sx={{ color: "red" }} />}
+        loading={loading}
+      />
     </Box>
   );
 };
