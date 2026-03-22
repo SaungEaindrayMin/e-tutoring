@@ -116,7 +116,6 @@ const RouteComponent = () => {
           <Route index element={<Navigate to={getDefaultRoute()} replace />} />
           <Route path="/admin/student-dashboard" element={<Dashboard />} />
           <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
-          <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
           <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserList />} />
           <Route path="/admin/messages" element={<Message />} />
@@ -125,6 +124,7 @@ const RouteComponent = () => {
           <Route path="/admin/allocate-tutor" element={<Allocate />} />
           <Route path="/admin/visit-analytics" element={<Analytics />} />
           <Route path="/admin/documents" element={<DocumentCard />} />
+          <Route path="/admin/meetings" element={<Meeting />} />
         </Route>
       </Route>
     </Routes>
