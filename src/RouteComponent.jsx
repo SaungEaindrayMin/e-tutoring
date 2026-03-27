@@ -46,9 +46,7 @@ const PAGE_NAME_BY_PATH = {
 };
 
 const toTitleCase = (value) =>
-  value
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  value.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 const getPageNameFromPath = (pathname) => {
   if (pathname.startsWith("/admin/blog/")) {
@@ -66,7 +64,8 @@ const getPageNameFromPath = (pathname) => {
   }
 
   return toTitleCase(segments[segments.length - 1]);
-};import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
+};
+import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./views/Dashboard/admin/AdminDashboard";
 import Dashboard from "./views/Dashboard/student/Dashboard";
 
@@ -75,11 +74,15 @@ const getDefaultRoute = () => {
 
   switch (role) {
     case "ADMIN":
+    case "STAFF":
       return "admin-dashboard";
+
     case "TUTOR":
       return "tutor-dashboard";
+
     case "STUDENT":
       return "student-dashboard";
+
     default:
       return "/login";
   }
@@ -114,7 +117,6 @@ const RouteComponent = () => {
         <Route path="/admin" element={<Main />}>
           <Route index element={<Navigate to={getDefaultRoute()} replace />} />
           <Route path="/admin/student-dashboard" element={<Dashboard />} />
-          <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
           <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
           <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserList />} />

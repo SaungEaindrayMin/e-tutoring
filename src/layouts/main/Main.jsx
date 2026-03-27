@@ -41,7 +41,8 @@ const Main = () => {
 
         <Toolbar />
 
-        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 },
+ }}>
           <Outlet />
         </Box>
       </Box>
