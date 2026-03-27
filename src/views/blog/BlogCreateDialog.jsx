@@ -34,6 +34,8 @@ const BlogCreateDialog = ({ open, onClose, onCreated }) => {
 
   const userId = sessionStorage.getItem("userId");
 
+  console.log(userId);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { "image/*": [], "video/*": [] },
     maxFiles: 1,

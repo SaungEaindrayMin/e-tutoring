@@ -192,6 +192,32 @@ class DataServices {
     }
   }
 
+  async retrievePATCH(data, serviceName) {
+    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+
+    const makeRequest = async (token) => {
+      return fetch(url, {
+        method: "PATCH",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(data),
+      });
+    };
+
+    try {
+      let token = this.getTokenFromCookie();
+      let response = await makeRequest(token);
+
+      return await response.json();
+    } catch (error) {
+      this.handleError(error);
+      return null;
+    }
+  }
+
   async retrieveDELETE(serviceName, serviceAction) {
     const url =
       this.resources.BACKEND_SIDE_BASE_URL + serviceName + serviceAction;

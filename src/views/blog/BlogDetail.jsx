@@ -24,7 +24,6 @@ import DataServices from "../../services/data-services";
 
 const config = new Configuration();
 const dataService = new DataServices();
-const userId = sessionStorage.getItem("userId");
 
 const COMMENT_LIMIT = 10;
 
@@ -113,6 +112,8 @@ const BlogDetail = () => {
   }, [cursor, hasMore, fetchComments, blog?.id]);
 
   const handleSubmitComment = async () => {
+    const userId = sessionStorage.getItem("userId");
+
     if (!commentText.trim() || !blog?.id) return;
     setSubmitting(true);
     try {
