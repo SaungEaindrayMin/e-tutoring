@@ -22,8 +22,7 @@ class DataServices {
         // if (!response.ok) {
         // 	// this.handleResponseError(response);
         // }
-
-        return response.json();
+        return response.text().then(text => text ? JSON.parse(text) : {});
       })
       .catch((error) => {
         this.handleError(error);
@@ -62,7 +61,7 @@ class DataServices {
       }
 
       if (!response.ok) this.handleResponseError(response);
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       this.handleError(error);
       return null;
@@ -82,7 +81,7 @@ class DataServices {
         body: JSON.stringify(data),
       });
 
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       this.handleError(error);
       return null;
@@ -107,10 +106,11 @@ class DataServices {
       let token = this.getTokenFromCookie();
       let response = await makeRequest(token);
 
-      const data = await response.json();
+      const clonedResponse = response.clone();
+      const data = await response.text().then(text => text ? JSON.parse(text) : {});
 
       if (!response.ok) {
-        this.handleResponseError(response);
+        this.handleResponseError(clonedResponse);
         return {
           success: false,
           status: response.status,
@@ -147,7 +147,7 @@ class DataServices {
       let token = this.getTokenFromCookie();
       let response = await makeRequest(token);
 
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       this.handleError(error);
       return null;
@@ -185,7 +185,7 @@ class DataServices {
 
       // if (!response.ok) this.handleResponseError(response);
 
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       this.handleError(error);
       return null;
@@ -213,7 +213,7 @@ class DataServices {
 
       if (!response.ok) this.handleResponseError(response);
 
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       this.handleError(error);
       return null;
@@ -240,7 +240,7 @@ class DataServices {
 
       if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
 
-      return await response.json();
+      return await response.text().then(text => text ? JSON.parse(text) : {});
     } catch (error) {
       return null;
     }

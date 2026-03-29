@@ -1,6 +1,6 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/material";
 
-const TabSwitcher = ({ value, onChange }) => {
+const TabSwitcher = ({ value, onChange, upcomingCount = 0, pastCount = 0 }) => {
   return (
     <ToggleButtonGroup
       value={value}
@@ -27,7 +27,7 @@ const TabSwitcher = ({ value, onChange }) => {
           },
         }}
       >
-        Upcoming (0)
+        Upcoming ({upcomingCount})
       </ToggleButton>
 
       <ToggleButton
@@ -44,7 +44,7 @@ const TabSwitcher = ({ value, onChange }) => {
           },
         }}
       >
-        Past (1)
+        Past ({pastCount})
       </ToggleButton>
     </ToggleButtonGroup>
   );

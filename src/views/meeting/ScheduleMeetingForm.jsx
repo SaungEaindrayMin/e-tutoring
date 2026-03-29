@@ -1,30 +1,73 @@
-import { Box, TextField, Typography, MenuItem, IconButton } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, IconButton, InputAdornment } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-const MockCalendar = ({ value, onChange }) => {
-  const selectedDate = value || "8";
+import { useState, useEffect } from "react";
+
+const CustomCalendar = ({ value, onChange, error }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Parse value if it's passed from formData.date
+  // value might be just a day string "9", or a full date like "Feb 9, 2026"
+  let selectedDate = null;
+  if (value) {
+    if (value.toString().includes(" ")) {
+      selectedDate = new Date(value);
+    } else {
+      // If it's just a number string from the old mock, assume current month/year
+      const dayNum = parseInt(value, 10);
+      if (!isNaN(dayNum)) {
+        selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
+      }
+    }
+  }
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(currentDate);
+
+  // Get first day of month (0 = Sunday, 1 = Monday ...)
+  let firstDay = new Date(year, month, 1).getDay();
+  // Adjust to make Monday = 0, Sunday = 6
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
   const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-  const dates = [
-    ["", "", "", "1", "2", "3", "4"],
-    ["5", "6", "7", "8", "9", "10", "11"],
-    ["12", "13", "14", "15", "16", "17", "18"],
-    ["19", "20", "21", "22", "23", "24", "25"],
-    ["26", "27", "28", "", "", "", ""],
-  ];
+  
+  // We need 42 slots (6 weeks x 7 days)
+  const dates = [];
+  for (let i = 0; i < 42; i++) {
+    if (i < firstDay) {
+      dates.push("");
+    } else if (i < firstDay + daysInMonth) {
+      dates.push((i - firstDay + 1).toString());
+    } else {
+      dates.push("");
+    }
+  }
 
   return (
-    <Box sx={{ border: "1px solid", borderColor: "text.input", borderRadius: "8px", p: 2 }}>
+    <Box sx={{ border: "1px solid", borderColor: error ? "error.main" : "text.input", borderRadius: "8px", p: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography fontWeight={600} fontSize="0.95rem">
-          February
+          {monthName} {year}
         </Typography>
         <Box>
-          <IconButton size="small">
+          <IconButton size="small" onClick={handlePrevMonth}>
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small">
+          <IconButton size="small" onClick={handleNextMonth}>
             <ChevronRightIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -39,32 +82,47 @@ const MockCalendar = ({ value, onChange }) => {
       </Box>
 
       <Box display="grid" gridTemplateColumns="repeat(7, 1fr)" gap={1} rowGap={2} textAlign="center">
-        {dates.flat().map((date, i) => (
-          <Box
-            key={i}
-            onClick={() => {
-              if (date && onChange) onChange(date);
-            }}
-            sx={{
-              width: 32,
-              height: 32,
-              mx: "auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: "50%",
-              bgcolor: date === selectedDate ? "primary.main" : "transparent",
-              color: date === selectedDate ? "background.paper" : "text.secondary",
-              cursor: date ? "pointer" : "default",
-              transition: "0.2s",
-              "&:hover": {
-                bgcolor: date && date !== selectedDate ? "action.hover" : date === selectedDate ? "primary.dark" : "transparent",
-              }
-            }}
-          >
-            <Typography variant="body2">{date}</Typography>
-          </Box>
-        ))}
+        {dates.map((date, i) => {
+          const isSelected = selectedDate && date 
+            && parseInt(date, 10) === selectedDate.getDate()
+            && month === selectedDate.getMonth()
+            && year === selectedDate.getFullYear();
+
+          return (
+            <Box
+              key={i}
+              onClick={() => {
+                if (date && onChange) {
+                  const newDate = new Date(year, month, parseInt(date, 10));
+                  // Format as "MMM D, YYYY" for consistency with existing data
+                  const formatted = new Intl.DateTimeFormat('en-US', { 
+                    month: 'short', day: 'numeric', year: 'numeric' 
+                  }).format(newDate);
+                  
+                  onChange(formatted);
+                }
+              }}
+              sx={{
+                width: 32,
+                height: 32,
+                mx: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                bgcolor: isSelected ? "primary.main" : "transparent",
+                color: isSelected ? "background.paper" : "text.secondary",
+                cursor: date ? "pointer" : "default",
+                transition: "0.2s",
+                "&:hover": {
+                  bgcolor: date && !isSelected ? "action.hover" : isSelected ? "primary.dark" : "transparent",
+                }
+              }}
+            >
+              <Typography variant="body2">{date}</Typography>
+            </Box>
+          );
+        })}
       </Box>
     </Box>
   );
@@ -118,13 +176,19 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
         </Box>
 
         <Box>
-          <Typography variant="body2" fontWeight={600} mb={1}>
+          <Typography variant="body2" fontWeight={600} mb={1} color={errors.date ? "error.main" : "text.primary"}>
             Date*
           </Typography>
-          <MockCalendar
+          <CustomCalendar
             value={formData.date}
             onChange={(newDate) => setFormData({ ...formData, date: newDate })}
+            error={!!errors.date}
           />
+          {errors.date && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5, display: "block" }}>
+              {errors.date}
+            </Typography>
+          )}
         </Box>
 
         <Box>
@@ -155,7 +219,26 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
             onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
             error={!!errors.startTime}
             helperText={errors.startTime}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end" sx={{ pointerEvents: "none", mr: 1 }}>
+                  <AccessTimeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ 
+              "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
+              "& input[type='time']::-webkit-calendar-picker-indicator": {
+                opacity: 0,
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: "48px",
+                height: "100%",
+                cursor: "pointer",
+              }
+            }}
           />
         </Box>
 
@@ -170,7 +253,26 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
             onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
             error={!!errors.endTime}
             helperText={errors.endTime}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "6px" } }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end" sx={{ pointerEvents: "none", mr: 1 }}>
+                  <AccessTimeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ 
+              "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
+              "& input[type='time']::-webkit-calendar-picker-indicator": {
+                opacity: 0,
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: "48px",
+                height: "100%",
+                cursor: "pointer",
+              }
+            }}
           />
         </Box>
 
