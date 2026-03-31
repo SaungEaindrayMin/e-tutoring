@@ -144,12 +144,10 @@ const ChangePassword = () => {
         size="large"
         onClick={handleSave}
         disabled={loading}
-        sx={{
-          mt: 2,
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": { bgcolor: "primary.light" },
-        }}
+        color="primary"
+        useGradient
+             sx={{mt:2}}
+
       >
         {loading ? "Continue..." : "Continue"}
       </Button>

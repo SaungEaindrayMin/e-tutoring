@@ -64,6 +64,14 @@ const CreateAccountDialog = ({ open, onClose }) => {
           message: "Account created successfully!",
         });
 
+        setFormData({
+          role: "STUDENT",
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+
         setTimeout(() => {
           onClose();
         }, 1000);
@@ -161,20 +169,21 @@ const CreateAccountDialog = ({ open, onClose }) => {
             />
           </Box>
 
-          <Button
-            fullWidth
-            size="large"
-            onClick={handleCreateAccount}
-            disabled={loading}
-            sx={{
-              mt: 3,
-              bgcolor: "primary.main",
-              color: "background.paper",
-              ":hover": { bgcolor: "primary.light" },
-            }}
-          >
-            {loading ? "Creating..." : "Create Account"}
-          </Button>
+          <Box display="flex" justifyContent="flex-end" mt={3}>
+            <Button
+              color="primary"
+              useGradient
+              onClick={handleCreateAccount}
+              disabled={loading}
+              sx={{
+                bgcolor: "primary.main",
+                color: "background.paper",
+                ":hover": { bgcolor: "primary.light" },
+              }}
+            >
+              {loading ? "Creating..." : "Create Account"}
+            </Button>
+          </Box>
         </Box>
       </CustomDialog>
 

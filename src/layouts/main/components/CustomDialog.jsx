@@ -17,13 +17,25 @@ const CustomDialog = ({
   children,
   actions,
   maxWidth = "md",
-  titleAlign = "left",
+  titleAlign = "left", 
 }) => {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth} >
-      <DialogTitle sx={{ px: 3, pt: 3, pb: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <Box>
-          <Typography variant="h5" fontWeight="bold" textAlign={titleAlign}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth}>
+      <DialogTitle
+        sx={{
+          px: 3,
+          pt: 3,
+          pb: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: titleAlign === "center" ? "center" : "flex-start",
+          textAlign: titleAlign,
+          position: "relative",
+        }}
+      >
+        {/* Title and Subtitle */}
+        <Box sx={{ width: "100%" }}>
+          <Typography variant="h5" fontWeight="bold">
             {title}
           </Typography>
           {subtitle && (
@@ -32,7 +44,16 @@ const CustomDialog = ({
             </Typography>
           )}
         </Box>
-        <IconButton onClick={onClose} sx={{ mt: -1, mr: -1 }}>
+
+        {/* Close Button */}
+        <IconButton
+          onClick={onClose}
+          sx={{
+            position: "absolute",
+            top: 8,
+            right: 8,
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>

@@ -130,12 +130,10 @@ const ForgetPassword = () => {
         size="large"
         onClick={handleSubmit}
         disabled={loading}
-        sx={{
-          mt: 2,
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": { bgcolor: "primary.light" },
-        }}
+        color="primary"
+        useGradient
+               sx={{mt:2}}
+
       >
         {loading ? "Sending..." : "Send Instructions"}
       </Button>

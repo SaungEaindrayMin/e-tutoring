@@ -65,6 +65,12 @@ const SummaryCards = ({ refreshKey }) => {
         value={counts.totalStudents}
         icon={<PeopleAltOutlined color="primary" />}
         loading={loading}
+        sx={{
+          border: 0.5,
+          boxShadow: "none",
+          bgcolor: "background.blue",
+          color: "primary.main",
+        }}
       />
 
       <StatsCard
@@ -72,6 +78,13 @@ const SummaryCards = ({ refreshKey }) => {
         value={counts.totalAssigned}
         icon={<CheckCircleOutline sx={{ color: "green" }} />}
         loading={loading}
+        sx={{
+          border: 0.5,
+          borderColor: "text.input",
+          boxShadow: "none",
+          bgcolor: "background.green",
+          color: "text.message",
+        }}
       />
 
       <StatsCard
@@ -79,6 +92,13 @@ const SummaryCards = ({ refreshKey }) => {
         value={counts.totalUnassigned}
         icon={<ErrorOutline sx={{ color: "red" }} />}
         loading={loading}
+        sx={{
+          border: 0.5,
+          borderColor: "text.input",
+          boxShadow: "none",
+          bgcolor: "background.red",
+          color: "text.danger",
+        }}
       />
     </Box>
   );

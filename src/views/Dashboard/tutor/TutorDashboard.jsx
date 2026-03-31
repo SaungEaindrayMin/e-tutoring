@@ -22,6 +22,8 @@ import { useEffect, useState } from "react";
 import InputField from "../../../layouts/main/components/InputFields";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
+import MeetingStatisticsChart from "./MeetingStatisticsChart";
+import ActivityTrendsChart from "./ActivityTrendsChart";
 
 const TutorDashboard = () => {
   const [data, setData] = useState({
@@ -107,7 +109,12 @@ const TutorDashboard = () => {
           value={data.totalStudents}
           icon={<Person2Outlined sx={{ color: "primary.main" }} />}
           loading={loading}
-          sx={{ border: 0.5, boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            boxShadow: "none",
+            bgcolor: "background.blue",
+            color: "primary.main",
+          }}
         />
 
         <StatsCard
@@ -115,7 +122,13 @@ const TutorDashboard = () => {
           value={data.upcomingMeeting}
           icon={<Person2Outlined sx={{ color: "text.message" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "background.green",
+            color: "text.message",
+          }}
         />
 
         <StatsCard
@@ -123,7 +136,13 @@ const TutorDashboard = () => {
           value={data.unreadMessages}
           icon={<Person2Outlined sx={{ color: "text.document" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "icon.document",
+            color: "text.document",
+          }}
         />
 
         <StatsCard
@@ -131,10 +150,16 @@ const TutorDashboard = () => {
           value={data.totalDocuments}
           icon={<Person2Outlined sx={{ color: "text.meeting" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "background.yellow",
+            color: "text.meeting",
+          }}
         />
       </Box>
-{/* 
+      {/* 
       <Box
         sx={{
           p: 2,
@@ -162,6 +187,16 @@ const TutorDashboard = () => {
           View Details
         </Button>
       </Box> */}
+
+      <Box
+        display="grid"
+        gridTemplateColumns={{ xs: "1fr", md: "1fr 1fr" }}
+        gap={2}
+        mt={2}
+      >
+        <MeetingStatisticsChart />
+        <ActivityTrendsChart />
+      </Box>
 
       <Card
         sx={{

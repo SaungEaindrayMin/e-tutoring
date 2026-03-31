@@ -221,11 +221,10 @@ const OtpVerify = () => {
         size="large"
         onClick={handleVerify}
         disabled={loading}
-        sx={{
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": { bgcolor: "primary.light" },
-        }}
+        color="primary"
+        useGradient
+               sx={{mt:2}}
+
       >
         {loading ? "Verifying..." : "Verify Code"}
       </Button>
