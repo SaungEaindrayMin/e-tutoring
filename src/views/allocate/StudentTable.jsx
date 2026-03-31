@@ -56,7 +56,7 @@ const StudentTable = ({
       if (res?.status === "success" && Array.isArray(res.data)) {
         setStudents(res.data);
         setTotalPages(res?.pagination?.totalPages || 1);
-        if (setStudentsData) setStudentsData(res.data); // Pass back full list
+        if (setStudentsData) setStudentsData(res.data); 
       } else {
         setStudents([]);
         setTotalPages(1);
