@@ -18,6 +18,9 @@ import { Search as SearchIcon } from "@mui/icons-material";
 import PageHeader from "../../../layouts/main/components/PageHeader";
 import StatsCard from "../../../layouts/main/components/StatsCard";
 import { Person2Outlined } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import IconButton from "@mui/material/IconButton";
 import { useEffect, useState } from "react";
 import InputField from "../../../layouts/main/components/InputFields";
 import Configuration from "../../../services/configuration";
@@ -26,6 +29,7 @@ import MeetingStatisticsChart from "./MeetingStatisticsChart";
 import ActivityTrendsChart from "./ActivityTrendsChart";
 
 const TutorDashboard = () => {
+  const [showWelcome, setShowWelcome] = useState(true);
   const [data, setData] = useState({
     totalStudents: 0,
     upcomingMeeting: 0,
@@ -103,6 +107,46 @@ const TutorDashboard = () => {
         title="Tutor Dashboard"
         subtitle="Manage your student and track their progress"
       />
+
+      {showWelcome && (
+        <Box
+          sx={{
+            mt: 2,
+            mb: 3,
+            px: { xs: 2, sm: 3 },
+            py: { xs: 2, sm: 2.5 },
+            borderRadius: 0.5,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "linear-gradient(90deg, #5B9BD5 0%, #0F6CBD 100%)",
+            color: "#fff",
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={2}>
+            <CheckCircleOutlineIcon sx={{ fontSize: 32, opacity: 0.9 }} />
+
+            <Box>
+              <Typography fontWeight={600} fontSize={18}>
+                Welcome to the eTutoring System!
+              </Typography>
+
+              <Typography fontSize={14} sx={{ opacity: 0.9 }}>
+                This is your first login. We’re glad to have you here. Explore
+                the system and don’t hesitate to reach out if you need any
+                assistance.
+              </Typography>
+            </Box>
+          </Box>
+
+          <IconButton
+            onClick={() => setShowWelcome(false)}
+            sx={{ color: "#fff" }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      )}
       <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={2}>
         <StatsCard
           title="Total Students"
