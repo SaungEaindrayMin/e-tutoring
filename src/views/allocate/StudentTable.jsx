@@ -25,13 +25,12 @@ const StudentTable = ({
   selectedStudents,
   setSelectedStudents,
   refreshKey,
+  setStudentsData, 
 }) => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -39,29 +38,16 @@ const StudentTable = ({
   const config = new Configuration();
   const dataService = new DataServices();
 
-  const handleSelect = (id) => {
-    if (selectedStudents.includes(id)) {
-      setSelectedStudents(selectedStudents.filter((item) => item !== id));
-    } else {
-      setSelectedStudents([...selectedStudents, id]);
-    }
-  };
-
   const fetchStudents = async (pageNumber = 1, searchValue = "") => {
     setLoading(true);
-
     try {
       const params = new URLSearchParams();
       params.append("page", pageNumber);
       params.append("limit", limit);
       params.append("role", "STUDENT");
-
-      if (searchValue) {
-        params.append("search", searchValue);
-      }
+      if (searchValue) params.append("search", searchValue);
 
       const serviceAction = `${config.SERVICE_USERS}?${params.toString()}`;
-
       const res = await dataService.retrieve(
         config.SERVICE_NAME,
         serviceAction,
@@ -70,14 +56,17 @@ const StudentTable = ({
       if (res?.status === "success" && Array.isArray(res.data)) {
         setStudents(res.data);
         setTotalPages(res?.pagination?.totalPages || 1);
+        if (setStudentsData) setStudentsData(res.data); // Pass back full list
       } else {
         setStudents([]);
         setTotalPages(1);
+        if (setStudentsData) setStudentsData([]);
       }
     } catch (error) {
       console.error("Failed to fetch students:", error);
       setStudents([]);
       setTotalPages(1);
+      if (setStudentsData) setStudentsData([]);
     } finally {
       setLoading(false);
     }
@@ -89,10 +78,8 @@ const StudentTable = ({
 
   const filteredStudents = students.filter((student) => {
     const assigned = !!student.studentProfile?.tutorId;
-
     if (filter === "assigned") return assigned;
     if (filter === "unassigned") return !assigned;
-
     return true;
   });
 
@@ -107,10 +94,17 @@ const StudentTable = ({
       const allIds = filteredStudents
         .map((s) => s.studentProfile?.id)
         .filter(Boolean);
-
       setSelectedStudents(allIds);
     } else {
       setSelectedStudents([]);
+    }
+  };
+
+  const handleSelect = (id) => {
+    if (selectedStudents.includes(id)) {
+      setSelectedStudents(selectedStudents.filter((item) => item !== id));
+    } else {
+      setSelectedStudents([...selectedStudents, id]);
     }
   };
   return (

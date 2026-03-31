@@ -30,7 +30,7 @@ const EXCLUDED_ACTIVITY_PATHS = new Set([
 ]);
 
 const PAGE_NAME_BY_PATH = {
-  "/": "Login",
+  "/": "Home",
   "/login": "Login",
   "/forget-password": "Forget Password",
   "/email-otp-verify": "OTP Verify",
@@ -69,6 +69,7 @@ const getPageNameFromPath = (pathname) => {
 import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./views/Dashboard/admin/AdminDashboard";
 import Dashboard from "./views/Dashboard/student/Dashboard";
+import Home from "./views/home/Home";
 
 const getDefaultRoute = () => {
   const role = sessionStorage.getItem("userRole");
@@ -107,7 +108,7 @@ const RouteComponent = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forget-password" element={<ForgetPassword />} />
       <Route path="/email-otp-verify" element={<OtpVerify />} />

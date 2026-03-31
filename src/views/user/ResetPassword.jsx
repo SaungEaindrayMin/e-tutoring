@@ -29,7 +29,6 @@ const ResetPassword = ({ open, onClose, email }) => {
   };
 
   const handleResetPassword = async () => {
-    // ✅ validation
     if (!password || !confirmPassword) {
       showAlert("Please fill all fields", "error");
       return;
@@ -106,20 +105,22 @@ const ResetPassword = ({ open, onClose, email }) => {
             />
           </Box>
 
-          <Button
-            fullWidth
-            size="large"
-            onClick={handleResetPassword}
-            disabled={loading}
-            sx={{
-              mt: 3,
-              bgcolor: "primary.main",
-              color: "background.paper",
-              ":hover": { bgcolor: "primary.light" },
-            }}
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
+          <Box display="flex" justifyContent="flex-end">
+            <Button
+              color="primary"
+              useGradient
+              onClick={handleResetPassword}
+              disabled={loading}
+              sx={{
+                mt: 3,
+                bgcolor: "primary.main",
+                color: "background.paper",
+                ":hover": { bgcolor: "primary.light" },
+              }}
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </Box>
         </Box>
       </CustomDialog>
 

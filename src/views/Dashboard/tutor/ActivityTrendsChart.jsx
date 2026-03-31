@@ -15,7 +15,6 @@ const ActivityTrendsChart = () => {
 
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
-      {/* HEADER */}
       <Box
         sx={{
           display: "flex",
@@ -25,19 +24,20 @@ const ActivityTrendsChart = () => {
           background: "linear-gradient(90deg, #F3E5F5, #B5B2F1)",
         }}
       >
-        <CalendarMonthOutlined color="primary" />
+        <CalendarMonthOutlined sx={{ color: "#1976d2", fontSize: 28 }} />
         <Box>
-          <Typography fontWeight={600}>Activity Trends</Typography>
+          <Typography fontWeight={600}>
+            Activity Trends
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             Your monthly engagement with your students
           </Typography>
         </Box>
       </Box>
 
-      {/* CHART */}
-      <Box p={2}>
+      <Box p={1}>
         <BarChart
-          height={300}
+          height={400}
           xAxis={[{ scaleType: "band", data: weeks }]}
           series={[
             {
@@ -56,14 +56,19 @@ const ActivityTrendsChart = () => {
               color: "#4DD0E1",
             },
           ]}
-          grid={{ vertical: true, horizontal: true }}
+          grid={{ horizontal: true, vertical: true }}
+          slotProps={{
+            legend: {
+              position: { vertical: "bottom", horizontal: "middle" },
+            },
+          }}
           sx={{
             "& .MuiChartsGrid-line": {
               strokeDasharray: "4 4",
-              stroke: "#D1D5DB",
+              stroke: "#E5E7EB",
             },
             "& .MuiBarElement-root": {
-              rx: 4,
+              rx: 0.5,
             },
           }}
         />

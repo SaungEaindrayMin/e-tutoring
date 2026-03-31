@@ -14,7 +14,6 @@ const MeetingStatisticsChart = () => {
 
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
-      {/* HEADER */}
       <Box
         sx={{
           display: "flex",
@@ -33,11 +32,10 @@ const MeetingStatisticsChart = () => {
         </Box>
       </Box>
 
-      {/* CHART */}
-      <Box p={2}>
+      <Box p={1}>
         <LineChart
-          height={300}
-          xAxis={[{ scaleType: "point", data: weeks }]}
+          height={400}
+          xAxis={[{ scaleType: "band", data: weeks }]}
           series={[
             {
               data: [16, 21, 18, 14, 22, 24],
@@ -50,12 +48,18 @@ const MeetingStatisticsChart = () => {
               color: "#FF8A80",
             },
           ]}
-          grid={{ vertical: true, horizontal: true }}
+          grid={{ horizontal: true, vertical: true }}
+          slotProps={{
+            legend: {
+              position: { vertical: "bottom", horizontal: "middle" },
+            },
+          }}
           sx={{
             "& .MuiChartsGrid-line": {
               strokeDasharray: "4 4",
-              stroke: "#D1D5DB",
+              stroke: "#E5E7EB",
             },
+        
           }}
         />
       </Box>

@@ -29,8 +29,11 @@ import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
 import MeetingStatisticsChart from "./MeetingStatisticsChart";
 import VisitPageChart from "./VisitPageChart";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const goToAllocate = () => navigate("/admin/allocate-tutor");
   const [data, setData] = useState({
     totalStudents: 0,
     totalTutors: 0,
@@ -202,13 +205,18 @@ const AdminDashboard = () => {
       >
         <Typography sx={{ color: "text.warning", display: "flex" }}>
           <ErrorOutline />
-          <Typography>1 Student Needs Tutor Assignment</Typography>
+          <Typography>
+            {data.unassignedStudents} Students Needs Tutor Assignment
+          </Typography>
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Use bulk allocation to quickly assign multiple students to a tutor
         </Typography>
         <Button
           variant="contained"
+          color="primary"
+          useGradient
+          onClick={goToAllocate}
           sx={{ px: { xs: 0.5, sm: 1 }, width: { xs: "100%", sm: "25%" } }}
           startIcon={<PersonAddAlt />}
         >

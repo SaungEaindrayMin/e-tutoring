@@ -23,6 +23,8 @@ const PageHeader = ({ title, subtitle, buttonText, onButtonClick }) => {
       {buttonText && (
         <Button
           variant="contained"
+          color="primary"
+          useGradient
           startIcon={<AddIcon />}
           onClick={onButtonClick}
           sx={{

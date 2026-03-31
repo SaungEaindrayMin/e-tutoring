@@ -17,7 +17,7 @@ class Configuration {
     SERVICE_USER_ACTIVITY = "user-activity";
     SERVICE_TUTOR_LIST = "users/lookup"
     SERVICE_ASSIGN_TUTOR = "allocate/assign-student"
-    SERVICE_UNASSIGN_TUTOR = "allocate/unassign-student"
+    SERVICE_UNASSIGN_TUTOR = "allocate/unassign-tutor"
     SERVICE_ADMIN_DASHBOARD = "dashboard"
 }
 

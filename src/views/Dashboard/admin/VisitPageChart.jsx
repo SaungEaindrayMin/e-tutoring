@@ -55,7 +55,7 @@ const VisitPageChart = () => {
 
       <Box p={2}>
         <BarChart
-          height={300}
+          height={400}
           xAxis={[
             {
               scaleType: "band",

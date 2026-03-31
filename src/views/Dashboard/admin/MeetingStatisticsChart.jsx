@@ -5,7 +5,6 @@ import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 const MeetingStatisticsChart = () => {
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -26,7 +25,7 @@ const MeetingStatisticsChart = () => {
 
       <Box p={2}>
         <LineChart
-          height={300}
+          height={400}
           series={[
             {
               id: "scheduled",

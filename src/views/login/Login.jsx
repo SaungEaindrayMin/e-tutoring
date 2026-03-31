@@ -150,12 +150,9 @@ const Login = () => {
         size="large"
         onClick={handleSignIn}
         disabled={loading}
-        sx={{
-          mt: 3,
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": { bgcolor: "primary.light" },
-        }}
+        color="primary"
+        useGradient
+        sx={{ mt: 2 }}
       >
         {loading ? "Signing in..." : "Login to Dashboard"}
       </Button>

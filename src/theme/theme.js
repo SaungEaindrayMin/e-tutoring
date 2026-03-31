@@ -84,45 +84,38 @@ const theme = createTheme({
 
   components: {
     MuiButton: {
-      defaultProps: {
-        color: "primary",
-      },
+      defaultProps: {},
       styleOverrides: {
-        root: {
+        root: ({ ownerState }) => ({
           borderRadius: "8px",
           padding: "10px 18px",
-          color: "#fff",
-
-          // 🎨 main gradient
-          background:
-            "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
-
-          // ✨ color-matched shadow
-          boxShadow: `
-      0 4px 12px rgba(124,58,237,0.30),
-      0 8px 24px rgba(37,99,235,0.25)
-    `,
-
-          textTransform: "none",
           fontWeight: 600,
+          textTransform: "none",
 
-          "&:hover": {
-            background:
-              "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
-
-            boxShadow: `
-        0 6px 16px rgba(124,58,237,0.35),
-        0 12px 32px rgba(37,99,235,0.30)
-      `,
-          },
-
-          "&:active": {
-            boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
-          },
-        },
+          ...(ownerState.color === "primary" &&
+            ownerState.useGradient && {
+              color: "#fff",
+              background:
+                "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
+              boxShadow: `
+          0 4px 12px rgba(124,58,237,0.30),
+          0 8px 24px rgba(37,99,235,0.25)
+        `,
+              "&:hover": {
+                background:
+                  "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+                boxShadow: `
+            0 6px 16px rgba(124,58,237,0.35),
+            0 12px 32px rgba(37,99,235,0.30)
+          `,
+              },
+              "&:active": {
+                boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
+              },
+            }),
+        }),
       },
     },
-
     MuiTextField: {
       styleOverrides: {
         root: {
