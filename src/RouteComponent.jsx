@@ -32,6 +32,8 @@ const EXCLUDED_ACTIVITY_PATHS = new Set([
 const PAGE_NAME_BY_PATH = {
   "/": "Home",
   "/login": "Login",
+  "/privacy-policy": "Privacy Policy",
+  "/terms-of-service": "Terms Of Service",
   "/forget-password": "Forget Password",
   "/email-otp-verify": "OTP Verify",
   "/verify-success": "Verify",
@@ -70,6 +72,8 @@ import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./views/Dashboard/admin/AdminDashboard";
 import Dashboard from "./views/Dashboard/student/Dashboard";
 import Home from "./views/home/Home";
+import PrivacyPolicy from "./views/home/PrivacyPolicy";
+import TermsOfService from "./views/home/TermsOfService";
 
 const getDefaultRoute = () => {
   const role = sessionStorage.getItem("userRole");
@@ -109,6 +113,8 @@ const RouteComponent = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forget-password" element={<ForgetPassword />} />
       <Route path="/email-otp-verify" element={<OtpVerify />} />

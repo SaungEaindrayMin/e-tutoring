@@ -13,6 +13,8 @@ import AppAlert from "../../layouts/main/components/AppAlert";
 
 const Login = () => {
   const navigate = useNavigate();
+  const goToPrivacyPolicy = () => navigate("/privacy-policy");
+  const goToTermsOfService = () => navigate("/terms-of-service");
   const config = new Configuration();
   const dataService = new DataServices();
 
@@ -173,6 +175,8 @@ const Login = () => {
         <Typography variant="body3" color="text.muted">
           By signing in, you agree to our{" "}
           <Link
+            component="button"
+            onClick={goToTermsOfService}
             underline="always"
             sx={{
               cursor: "pointer",
@@ -185,6 +189,8 @@ const Login = () => {
           </Link>{" "}
           and{" "}
           <Link
+            component="button"
+            onClick={goToPrivacyPolicy}
             underline="always"
             sx={{
               cursor: "pointer",
