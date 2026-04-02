@@ -1,6 +1,6 @@
+import { CalendarTodayOutlined } from "@mui/icons-material";
 import { Card, Box, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts/LineChart";
-import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 
 const MeetingStatisticsChart = () => {
   const weeks = [
@@ -23,7 +23,7 @@ const MeetingStatisticsChart = () => {
           background: "linear-gradient(90deg, #F3E5F5, #B5B2F1)",
         }}
       >
-        <CalendarMonthOutlined color="primary" />
+        <CalendarTodayOutlined color="primary" />
         <Box>
           <Typography fontWeight={600}>Weekly Meeting Statistics</Typography>
           <Typography variant="body2" color="text.secondary">

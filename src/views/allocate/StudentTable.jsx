@@ -14,6 +14,8 @@ import {
   Paper,
   Pagination,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
@@ -25,8 +27,10 @@ const StudentTable = ({
   selectedStudents,
   setSelectedStudents,
   refreshKey,
-  setStudentsData, 
+  setStudentsData,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [students, setStudents] = useState([]);
@@ -56,7 +60,7 @@ const StudentTable = ({
       if (res?.status === "success" && Array.isArray(res.data)) {
         setStudents(res.data);
         setTotalPages(res?.pagination?.totalPages || 1);
-        if (setStudentsData) setStudentsData(res.data); 
+        if (setStudentsData) setStudentsData(res.data);
       } else {
         setStudents([]);
         setTotalPages(1);
@@ -159,118 +163,184 @@ const StudentTable = ({
         </Box>
       </Box>
 
-      <TableContainer
-        component={Paper}
-        sx={{
-          border: 0.5,
-          borderColor: "text.input",
-          borderRadius: 0.5,
-          overflow: "hidden",
-          boxShadow: "none",
-          overflowX: "auto",
-        }}
-      >
-        <Table sx={{ minWidth: { xs: 480, sm: 600 } }}>
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  checked={allSelected}
-                  indeterminate={selectedStudents.length > 0 && !allSelected}
-                  onChange={handleSelectAll}
-                />
-              </TableCell>
-              <TableCell>Student name</TableCell>
-              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                University email
-              </TableCell>
-              <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                Current tutor
-              </TableCell>
-              <TableCell>Status</TableCell>
-            </TableRow>
-          </TableHead>
+      {/* Mobile: card list */}
+      {isMobile ? (
+        <Box display="flex" flexDirection="column" gap={1.5}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : filteredStudents.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+              No students found
+            </Typography>
+          ) : (
+            filteredStudents.map((student) => {
+              const tutorName = student.studentProfile?.tutor?.name;
+              const assigned = !!student.studentProfile?.tutorId;
+              const studentProfileId = student.studentProfile?.id;
+              const isChecked = selectedStudents.includes(studentProfileId);
 
-          <TableBody
-            sx={{
-              "& .MuiTableCell-root": { borderBottom: "none" },
-            }}
-          >
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <CircularProgress size={24} />
-                </TableCell>
-              </TableRow>
-            ) : filteredStudents.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <Typography variant="body2" color="text.secondary">
-                    No students found
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredStudents.map((student) => {
-                const tutorName = student.studentProfile?.tutor?.name;
-                const assigned = !!student.studentProfile?.tutorId;
-                const studentProfileId = student.studentProfile?.id;
-
-                return (
-                  <TableRow key={studentProfileId}>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedStudents.includes(studentProfileId)}
-                        onChange={() => handleSelect(studentProfileId)}
-                      />
-                    </TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell
-                      sx={{
-                        display: { xs: "none", sm: "table-cell" },
-                        maxWidth: { sm: 160, md: "unset" },
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {student.email}
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        display: { xs: "none", md: "table-cell" },
-                        color: assigned ? "text.primary" : "text.secondary",
-                      }}
-                    >
-                      {tutorName || "Not assigned"}
-                    </TableCell>
-                    <TableCell>
+              return (
+                <Box
+                  key={studentProfileId}
+                  sx={{
+                    border: 0.5,
+                    borderColor: isChecked ? "primary.main" : "text.input",
+                    borderRadius: 1,
+                    p: 1.5,
+                    bgcolor: isChecked ? "primary.active" : "background.paper",
+                    display: "flex",
+                    gap: 1,
+                    alignItems: "flex-start",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => handleSelect(studentProfileId)}
+                >
+                  <Checkbox
+                    checked={isChecked}
+                    onChange={() => handleSelect(studentProfileId)}
+                    size="small"
+                    sx={{ p: 0, mt: 0.25 }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Box flex={1} display="flex" flexDirection="column" gap={0.5}>
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography fontWeight={600} fontSize={13}>{student.name}</Typography>
                       {assigned ? (
-                        <Chip
-                          label="Assigned"
-                          size="small"
-                          sx={{
-                            px: 1,
-                            color: "text.assign",
-                            bgcolor: "icon.assign",
-                          }}
-                        />
+                        <Chip label="Assigned" size="small" sx={{ px: 1, color: "text.assign", bgcolor: "icon.assign" }} />
                       ) : (
-                        <Chip
-                          label="Unassigned"
-                          color="error"
-                          size="small"
-                          sx={{ px: 1 }}
-                        />
+                        <Chip label="Unassigned" color="error" size="small" sx={{ px: 1 }} />
                       )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                    </Box>
+                    <Typography fontSize={12} color="text.secondary" noWrap sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {student.email}
+                    </Typography>
+                    <Box display="flex" gap={0.5}>
+                      <Typography fontSize={12} color="text.secondary">Tutor:</Typography>
+                      <Typography fontSize={12} fontWeight={500}>{tutorName || "Not assigned"}</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      ) : (
+        /* Tablet & Desktop: scrollable table */
+        <TableContainer
+          component={Paper}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            borderRadius: 0.5,
+            overflow: "hidden",
+            boxShadow: "none",
+            overflowX: "auto",
+          }}
+        >
+          <Table sx={{ minWidth: { xs: 480, sm: 600 } }}>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={selectedStudents.length > 0 && !allSelected}
+                    onChange={handleSelectAll}
+                  />
+                </TableCell>
+                <TableCell>Student name</TableCell>
+                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                  University email
+                </TableCell>
+                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                  Current tutor
+                </TableCell>
+                <TableCell>Status</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody
+              sx={{
+                "& .MuiTableCell-root": { borderBottom: "none" },
+              }}
+            >
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <CircularProgress size={24} />
+                  </TableCell>
+                </TableRow>
+              ) : filteredStudents.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      No students found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredStudents.map((student) => {
+                  const tutorName = student.studentProfile?.tutor?.name;
+                  const assigned = !!student.studentProfile?.tutorId;
+                  const studentProfileId = student.studentProfile?.id;
+
+                  return (
+                    <TableRow key={studentProfileId}>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedStudents.includes(studentProfileId)}
+                          onChange={() => handleSelect(studentProfileId)}
+                        />
+                      </TableCell>
+                      <TableCell>{student.name}</TableCell>
+                      <TableCell
+                        sx={{
+                          display: { xs: "none", sm: "table-cell" },
+                          maxWidth: { sm: 160, md: "unset" },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {student.email}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          display: { xs: "none", md: "table-cell" },
+                          color: assigned ? "text.primary" : "text.secondary",
+                        }}
+                      >
+                        {tutorName || "Not assigned"}
+                      </TableCell>
+                      <TableCell>
+                        {assigned ? (
+                          <Chip
+                            label="Assigned"
+                            size="small"
+                            sx={{
+                              px: 1,
+                              color: "text.assign",
+                              bgcolor: "icon.assign",
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            label="Unassigned"
+                            color="error"
+                            size="small"
+                            sx={{ px: 1 }}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
       <Box display="flex" justifyContent="center" mt={4}>
         <Pagination

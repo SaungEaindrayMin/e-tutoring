@@ -14,7 +14,7 @@ import {
   Chip,
   Card,
 } from "@mui/material";
-import { Search as SearchIcon } from "@mui/icons-material";
+import { CalendarToday, Search as SearchIcon } from "@mui/icons-material";
 import PageHeader from "../../../layouts/main/components/PageHeader";
 import StatsCard from "../../../layouts/main/components/StatsCard";
 import { Person2Outlined } from "@mui/icons-material";
@@ -27,8 +27,11 @@ import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
 import MeetingStatisticsChart from "./MeetingStatisticsChart";
 import ActivityTrendsChart from "./ActivityTrendsChart";
+import { useNavigate } from "react-router-dom";
 
 const TutorDashboard = () => {
+  const navigate = useNavigate();
+  const goToMeeting = () => navigate("/admin/meetings");
   const [showWelcome, setShowWelcome] = useState(true);
   const [data, setData] = useState({
     totalStudents: 0,
@@ -203,7 +206,7 @@ const TutorDashboard = () => {
           }}
         />
       </Box>
-      {/* 
+
       <Box
         sx={{
           p: 2,
@@ -218,19 +221,25 @@ const TutorDashboard = () => {
           gap: 1.5,
         }}
       >
-        <Typography sx={{ color: "text.warning" }}>
-          1 Student Needs Tutor Assignment
+        <Typography sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <CalendarToday sx={{ color: "text.secondary" }} />
+          <Typography>Next Meeting</Typography>
         </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Use bulk allocation to quickly assign multiple students to a tutor
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{ px: { xs: 3, sm: 4 }, width: { xs: "100%", sm: "25%" } }}
-        >
-          View Details
-        </Button>
-      </Box> */}
+        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Typography variant="body2" color="text.secondary">
+            Use bulk allocation to quickly assign multiple students to a tutor
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            size="sm"
+            useGradient
+            onClick={goToMeeting}
+          >
+            View Details
+          </Button>
+        </Box>
+      </Box>
 
       <Box
         display="grid"
@@ -281,18 +290,18 @@ const TutorDashboard = () => {
           sx={{
             border: 0.5,
             borderColor: "text.input",
-            borderRadius: 0.5,
-            overflow: "hidden",
+            borderRadius: 1,
             boxShadow: "none",
-            overflowX: "auto",
           }}
         >
-          <Table sx={{ minWidth: { xs: 480, sm: 600 } }}>
+          <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Student name</TableCell>
+                <TableCell>Student Name</TableCell>
+
+                {/* Hide on mobile */}
                 <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                  University email
+                  University Email
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -304,13 +313,13 @@ const TutorDashboard = () => {
             >
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={2} align="center">
                     <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
               ) : students.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={2} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No students found
                     </Typography>
@@ -322,12 +331,29 @@ const TutorDashboard = () => {
 
                   return (
                     <TableRow key={studentProfileId}>
-                      <TableCell>{student.name}</TableCell>
+                      {/* 👇 Name + Email stacked on mobile */}
+                      <TableCell>
+                        <Typography fontWeight={500}>{student.name}</Typography>
+
+                        {/* Show email only on mobile */}
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            display: { xs: "block", sm: "none" },
+                            wordBreak: "break-all",
+                          }}
+                        >
+                          {student.email}
+                        </Typography>
+                      </TableCell>
+
+                      {/* 👇 Normal email column for tablet+ */}
                       <TableCell
                         sx={{
                           display: { xs: "none", sm: "table-cell" },
-                          maxWidth: { sm: 160, md: "unset" },
-                          overflowX: "auto",
+                          maxWidth: { sm: 160, md: 300 },
+                          overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
                         }}
