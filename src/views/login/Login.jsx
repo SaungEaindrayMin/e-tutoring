@@ -171,7 +171,7 @@ const Login = () => {
 
       <Box textAlign="center" mt={1} px={5}>
         <Typography variant="body3" color="text.muted">
-          By signing in, you aggree to our{" "}
+          By signing in, you agree to our{" "}
           <Link
             underline="always"
             sx={{
