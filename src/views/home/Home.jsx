@@ -20,6 +20,8 @@ const GRADIENT =
 const Home = () => {
   const navigate = useNavigate();
   const goToLogin = () => navigate("/login");
+  const goToPrivacyPolicy = () => navigate("/privacy-policy");
+  const goToTermsOfService = () => navigate("/terms-of-service");
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -188,7 +190,6 @@ const Home = () => {
             </Typography>
           </Box>
 
-          {/* CENTER - LINKS */}
           <Box
             sx={{
               display: "flex",
@@ -196,10 +197,15 @@ const Home = () => {
               flexWrap: "wrap",
             }}
           >
-            {["Privacy Policy", "Terms & Conditions", "Contact"].map((item) => (
+            {[
+              { label: "Privacy Policy", action: goToPrivacyPolicy },
+              { label: "Terms Of Service", action: goToTermsOfService },
+              { label: "Contact", action: () => navigate("/contact") },
+            ].map((item) => (
               <Typography
-                key={item}
+                key={item.label}
                 variant="body2"
+                onClick={item.action}
                 sx={{
                   color: "#64748B",
                   cursor: "pointer",
@@ -210,7 +216,7 @@ const Home = () => {
                   },
                 }}
               >
-                {item}
+                {item.label}
               </Typography>
             ))}
           </Box>
