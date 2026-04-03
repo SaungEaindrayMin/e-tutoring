@@ -6,9 +6,9 @@ const ProtectedRoute = () => {
   const config = new Configuration();
   const token = Cookies.get(config.COOKIE_NAME_TOKEN);
 
-  // if (!token) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
 
   return <Outlet />;
 };

@@ -28,18 +28,7 @@ const Verify = () => {
       >
         Your account has been verified successfully
       </Typography>
-      <Button
-        fullWidth
-        size="large"
-        sx={{
-          mt: 3,
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": {
-            bgcolor: "primary.light",
-          },
-        }}
-      >
+      <Button fullWidth size="large" color="primary" useGradient sx={{ mt: 2 }}>
         Done
       </Button>
     </AuthContainer>

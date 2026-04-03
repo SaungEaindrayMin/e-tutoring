@@ -13,6 +13,8 @@ import AppAlert from "../../layouts/main/components/AppAlert";
 
 const Login = () => {
   const navigate = useNavigate();
+  const goToPrivacyPolicy = () => navigate("/privacy-policy");
+  const goToTermsOfService = () => navigate("/terms-of-service");
   const config = new Configuration();
   const dataService = new DataServices();
 
@@ -66,7 +68,6 @@ const Login = () => {
 
         sessionStorage.setItem("userRole", response.user.role);
         sessionStorage.setItem("userId", response.user.id);
-
         sessionStorage.setItem("userName", response.user.name);
 
         navigate("/admin");
@@ -150,12 +151,9 @@ const Login = () => {
         size="large"
         onClick={handleSignIn}
         disabled={loading}
-        sx={{
-          mt: 3,
-          bgcolor: "primary.main",
-          color: "background.paper",
-          ":hover": { bgcolor: "primary.light" },
-        }}
+        color="primary"
+        useGradient
+        sx={{ mt: 2 }}
       >
         {loading ? "Signing in..." : "Login to Dashboard"}
       </Button>
@@ -174,8 +172,10 @@ const Login = () => {
 
       <Box textAlign="center" mt={1} px={5}>
         <Typography variant="body3" color="text.muted">
-          By signing in, you aggree to our{" "}
+          By signing in, you agree to our{" "}
           <Link
+            component="button"
+            onClick={goToTermsOfService}
             underline="always"
             sx={{
               cursor: "pointer",
@@ -188,6 +188,8 @@ const Login = () => {
           </Link>{" "}
           and{" "}
           <Link
+            component="button"
+            onClick={goToPrivacyPolicy}
             underline="always"
             sx={{
               cursor: "pointer",

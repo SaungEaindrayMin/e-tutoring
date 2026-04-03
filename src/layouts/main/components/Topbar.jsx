@@ -5,6 +5,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Avatar,
   Button,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -18,8 +19,12 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [prevScroll, setPrevScroll] = useState(0);
+  const [visible, setVisible] = useState(true);
+
   const config = new Configuration();
   const dataService = new DataServices();
+
   const formatRole = (role) =>
     role ? role.charAt(0) + role.slice(1).toLowerCase() : "";
 
@@ -28,18 +33,11 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   const handleLogout = async () => {
     try {
       const serviceName = config.SERVICE_NAME + config.SERVICE_LOGOUT;
-      const response = await dataService.retrievePOST({}, serviceName);
-
-      console.log("Logout response:", response);
-
+      await dataService.retrievePOST({}, serviceName);
       Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
-
       navigate("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
-
+    } catch {
       Cookies.remove(config.COOKIE_NAME_TOKEN, { path: "/" });
-
       navigate("/login");
     }
   };
@@ -47,10 +45,18 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
   useEffect(() => {
     const name = sessionStorage.getItem("userName");
     const role = sessionStorage.getItem("userRole");
-
     if (name) setUserName(name);
     if (role) setUserRole(role);
-  }, []);
+
+    const handleScroll = () => {
+      const current = window.scrollY;
+      setVisible(prevScroll > current || current < 50);
+      setPrevScroll(current);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [prevScroll]);
 
   return (
     <>
@@ -60,44 +66,101 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
         sx={{
           width: { lg: `calc(100% - ${drawerWidth}px)` },
           ml: { lg: `${drawerWidth}px` },
-          bgcolor: "background.paper",
+          backdropFilter: "blur(12px)",
+          background: "rgba(255,255,255,0.7)",
+          borderBottom: "1px solid rgba(255,255,255,0.6)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
           color: "text.primary",
-          borderBottom: "1px solid #e5e7eb",
+          transition: "top 0.3s ease",
+          top: visible ? 0 : "-80px",
+          zIndex: 1200,
         }}
       >
         <Toolbar
           sx={{
             justifyContent: "space-between",
-            px: { xs: 1, sm: 2, md: 3 },
-            py: { xs: 1, sm: 1.5 },
+            px: { xs: 2, md: 3 },
+            py: 1.5,
           }}
         >
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display="flex" alignItems="center" gap={1.5}>
             {!isDesktop && (
-              <IconButton onClick={onMenuClick}>
+              <IconButton
+                onClick={onMenuClick}
+                sx={{
+                  borderRadius: "10px",
+                  background: "rgba(124,58,237,0.10)",
+                  backdropFilter: "blur(6px)",
+                  "&:hover": { background: "rgba(124,58,237,0.15)" },
+                }}
+              >
                 <Menu />
               </IconButton>
             )}
 
             <Box>
-              <Typography fontWeight={600}>
-                Welcome, {userName || "User"}!
+              <Typography
+                fontWeight={700}
+                sx={{ fontSize: { xs: "0.95rem", md: "1rem" } }}
+              >
+                Welcome, {userName || "User"} 👋
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Here your personal tutoring overview
+
+              <Typography
+                variant="body2"
+                sx={{
+                  display: { xs: "none", sm: "block" },
+                  color: "#64748B",
+                  fontSize: "0.85rem",
+                }}
+              >
+                {formatRole(userRole) || "Role"} Dashboard
               </Typography>
             </Box>
           </Box>
 
           <Box display="flex" alignItems="center" gap={2}>
-            <Box textAlign="right">
-              <Typography fontWeight={500}>{userName || "User"}</Typography>{" "}
-              <Typography variant="body2" color="text.secondary">
-                {formatRole(userRole) || "Role"}
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              px={1.5}
+              py={0.5}
+              borderRadius="999px"
+              sx={{
+                background: "rgba(124,58,237,0.08)",
+                border: "1px solid rgba(124,58,237,0.15)",
+                backdropFilter: "blur(6px)",
+              }}
+            >
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: "primary.main",
+                  fontSize: "0.85rem",
+                }}
+              >
+                {userName?.[0] || "U"}
+              </Avatar>
+              <Typography sx={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                {userName || "User"}
               </Typography>
             </Box>
 
-            <IconButton onClick={() => setOpenLogoutDialog(true)}>
+            {/* Logout Button */}
+            <IconButton
+              onClick={() => setOpenLogoutDialog(true)}
+              sx={{
+                borderRadius: "10px",
+                background: "rgba(239,68,68,0.08)",
+                transition: "0.25s",
+                "&:hover": {
+                  background: "rgba(239,68,68,0.15)",
+                  transform: "translateY(-1px)",
+                },
+              }}
+            >
               <LogoutOutlined />
             </IconButton>
           </Box>
@@ -127,12 +190,25 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
           <Box display="flex" justifyContent="center" gap={2}>
             <Button
               variant="outlined"
+              sx={{
+                borderColor: "text.secondary",
+                color: "text.secondary",
+                border: 0.5,
+              }}
               onClick={() => setOpenLogoutDialog(false)}
             >
               Cancel
             </Button>
 
-            <Button variant="contained" onClick={handleLogout}>
+            <Button
+              variant="outlined"
+              sx={{
+                bgcolor: "primary.main",
+                boxShadow: "none",
+                color: "background.paper",
+              }}
+              onClick={handleLogout}
+            >
               Confirm
             </Button>
           </Box>

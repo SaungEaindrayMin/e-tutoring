@@ -13,17 +13,35 @@ import {
   Paper,
   Chip,
   Card,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { Search as SearchIcon } from "@mui/icons-material";
+import {
+  ErrorOutline,
+  PeopleAltOutlined,
+  PersonAddAlt,
+  PersonRemoveAlt1Outlined,
+  Search as SearchIcon,
+} from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import IconButton from "@mui/material/IconButton";
 import PageHeader from "../../../layouts/main/components/PageHeader";
 import StatsCard from "../../../layouts/main/components/StatsCard";
-import { Person2Outlined } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import InputField from "../../../layouts/main/components/InputFields";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
+import MeetingStatisticsChart from "./MeetingStatisticsChart";
+import VisitPageChart from "./VisitPageChart";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
+  const goToAllocate = () => navigate("/admin/allocate-tutor");
+  const [showWelcome, setShowWelcome] = useState(true);
   const [data, setData] = useState({
     totalStudents: 0,
     totalTutors: 0,
@@ -82,56 +100,148 @@ const AdminDashboard = () => {
   }, [page, search]);
 
   useEffect(() => {
-    setLoading(true);
+    const fetchDashboardStats = async () => {
+      setLoading(true);
 
-    setTimeout(() => {
-      setData({
-        totalStudents: 15,
-        totalTutors: 20,
-        assignedStudents: 10,
-        unassignedStudents: 20,
-      });
-      setLoading(false);
-    }, 800);
+      try {
+        const res = await dataService.retrieve(
+          config.SERVICE_NAME,
+          config.SERVICE_ADMIN_DASHBOARD,
+        );
+
+        if (res?.success === "success" && res?.stats) {
+          setData({
+            totalStudents: res.stats.totalStudents || 0,
+            totalTutors: res.stats.totalTutors || 0,
+            assignedStudents: res.stats.assignedStudents || 0,
+            unassignedStudents: res.stats.unassignedStudents || 0,
+          });
+        } else {
+          setData({
+            totalStudents: 0,
+            totalTutors: 0,
+            assignedStudents: 0,
+            unassignedStudents: 0,
+          });
+        }
+      } catch (error) {
+        console.error("Dashboard API error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
   }, []);
 
   return (
-    <Box>
+    <Box p={{ xs: 1.5, sm: 2 }}>
       <PageHeader
         title="Admin Dashboard"
         subtitle="System overview and management"
       />
-      <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={2}>
+      {showWelcome && (
+        <Box
+          sx={{
+            mt: 2,
+            mb: 3,
+            px: { xs: 2, sm: 3 },
+            py: { xs: 2, sm: 2.5 },
+            borderRadius: 1,
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
+            justifyContent: "space-between",
+            background: "linear-gradient(90deg, #5B9BD5 0%, #0F6CBD 100%)",
+            color: "#fff",
+          }}
+        >
+          <Box display="flex" alignItems="flex-start" gap={2}>
+            <CheckCircleOutlineIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
+
+            <Box>
+              <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                Welcome to the eTutoring System!
+              </Typography>
+
+              <Typography fontSize={{ xs: 13, sm: 14 }} sx={{ opacity: 0.9 }}>
+                This is your first login. Explore the system anytime.
+              </Typography>
+            </Box>
+          </Box>
+
+          <IconButton
+            onClick={() => setShowWelcome(false)}
+            sx={{ color: "#fff", alignSelf: { xs: "flex-end", sm: "center" } }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      )}
+
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: "1fr",
+          sm: "1fr 1fr",
+          md: "1fr 1fr 1fr 1fr",
+        }}
+        gap={2}
+      >
         <StatsCard
           title="Total Students"
           value={data.totalStudents}
-          icon={<Person2Outlined sx={{ color: "primary.main" }} />}
+          icon={<PeopleAltOutlined sx={{ color: "primary.main" }} />}
           loading={loading}
-          sx={{ border: 0.5, boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            boxShadow: "none",
+            bgcolor: "background.blue",
+            color: "primary.main",
+          }}
         />
 
         <StatsCard
           title="Total Tutors"
           value={data.totalTutors}
-          icon={<Person2Outlined sx={{ color: "text.message" }} />}
+          icon={<PeopleAltOutlined sx={{ color: "text.message" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "background.green",
+            color: "text.message",
+          }}
         />
 
         <StatsCard
           title="Assigned Students"
           value={data.assignedStudents}
-          icon={<Person2Outlined sx={{ color: "text.document" }} />}
+          icon={<PersonAddAlt sx={{ color: "text.document" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "icon.document",
+            color: "text.document",
+          }}
         />
 
         <StatsCard
           title="Unassigned Students"
           value={data.unassignedStudents}
-          icon={<Person2Outlined sx={{ color: "text.danger" }} />}
+          icon={<PersonRemoveAlt1Outlined sx={{ color: "text.danger" }} />}
           loading={loading}
-          sx={{ border: 0.5, borderColor: "text.input", boxShadow: "none" }}
+          sx={{
+            border: 0.5,
+            borderColor: "text.input",
+            boxShadow: "none",
+            bgcolor: "background.red",
+            color: "text.danger",
+          }}
         />
       </Box>
 
@@ -142,25 +252,45 @@ const AdminDashboard = () => {
           borderColor: "text.input",
           borderRadius: 0.5,
           boxShadow: "none",
-          mt: 5,
+          mt: { xs: 3, sm: 5 },
           bgcolor: "background.paper",
           display: "flex",
           flexDirection: "column",
           gap: 1.5,
         }}
       >
-        <Typography sx={{ color: "text.warning" }}>
-          1 Student Needs Tutor Assignment
+        <Typography sx={{ color: "text.warning", display: "flex" }}>
+          <ErrorOutline />
+          <Typography>
+            {data.unassignedStudents} Students Needs Tutor Assignment
+          </Typography>
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Use bulk allocation to quickly assign multiple students to a tutor
         </Typography>
         <Button
           variant="contained"
-          sx={{ px: { xs: 3, sm: 4 }, width: { xs: "100%", sm: "25%" } }}
+          color="primary"
+          useGradient
+          onClick={goToAllocate}
+          sx={{ px: { xs: 0.5, sm: 1 }, width: { xs: "100%", sm: "25%" } }}
+          startIcon={<PersonAddAlt />}
         >
           Bulk Allocate Students
         </Button>
+      </Box>
+
+      <Box
+        display="grid"
+        gridTemplateColumns={{
+          xs: "1fr",
+          md: "1fr 1fr",
+        }}
+        gap={2}
+        mt={3}
+      >
+        <MeetingStatisticsChart />
+        <VisitPageChart />
       </Box>
 
       <Card
@@ -173,7 +303,7 @@ const AdminDashboard = () => {
           borderRadius: 0.5,
         }}
       >
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant="h6" fontWeight={600} mb={2}>
           Recent Tutor Allocation
         </Typography>
 
@@ -183,7 +313,7 @@ const AdminDashboard = () => {
           gap={2}
           mb={3}
         >
-          <Box flex={3}>
+          <Box flex={1}>
             <InputField
               placeholder="Search..."
               size="small"
@@ -197,120 +327,255 @@ const AdminDashboard = () => {
           </Box>
         </Box>
 
-        <TableContainer
-          component={Paper}
-          sx={{
-            border: 0.5,
-            borderColor: "text.input",
-            borderRadius: 0.5,
-            overflow: "hidden",
-            boxShadow: "none",
-            overflowX: "auto",
-          }}
-        >
-          <Table sx={{ minWidth: { xs: 480, sm: 600 } }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Student name</TableCell>
-                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                  University email
-                </TableCell>
-                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                  Current tutor
-                </TableCell>
-                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                  Tutor email
-                </TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
+        {/* Mobile: card list */}
+        {isMobile ? (
+          <Box display="flex" flexDirection="column" gap={1.5}>
+            {loading ? (
+              <Box display="flex" justifyContent="center" py={3}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : students.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+                No students found
+              </Typography>
+            ) : (
+              students.map((student) => {
+                const tutorName = student.studentProfile?.tutor?.name;
+                const tutorEmail = student.studentProfile?.tutor?.email;
+                const assigned = !!student.studentProfile?.tutorId;
+                const studentProfileId = student.studentProfile?.id;
 
-            <TableBody
-              sx={{
-                "& .MuiTableCell-root": { borderBottom: "none" },
-              }}
-            >
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    <CircularProgress size={24} />
-                  </TableCell>
-                </TableRow>
-              ) : students.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      No students found
+                return (
+                  <Box
+                    key={studentProfileId}
+                    sx={{
+                      border: 0.5,
+                      borderColor: "text.input",
+                      borderRadius: 1,
+                      p: 1.5,
+                      bgcolor: "background.paper",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.75,
+                    }}
+                  >
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                      <Typography fontWeight={600} fontSize={13} noWrap sx={{ flex: 1, mr: 1 }}>
+                        {student.name}
+                      </Typography>
+                      {assigned ? (
+                        <Chip
+                          label="Assigned"
+                          size="small"
+                          sx={{ px: 1, color: "text.assign", bgcolor: "icon.assign", flexShrink: 0 }}
+                        />
+                      ) : (
+                        <Chip label="Unassigned" color="error" size="small" sx={{ px: 1, flexShrink: 0 }} />
+                      )}
+                    </Box>
+                    <Typography
+                      fontSize={12}
+                      color="text.secondary"
+                      noWrap
+                      sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
+                      {student.email}
                     </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                students.map((student) => {
-                  const tutorName = student.studentProfile?.tutor?.name;
-                  const tutorEmail = student.studentProfile?.tutor?.email;
-                  const assigned = !!student.studentProfile?.tutorId;
-                  const studentProfileId = student.studentProfile?.id;
-
-                  return (
-                    <TableRow key={studentProfileId}>
-                      <TableCell>{student.name}</TableCell>
-                      <TableCell
-                        sx={{
-                          display: { xs: "none", sm: "table-cell" },
-                          maxWidth: { sm: 160, md: "unset" },
-                          overflowX: "auto",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {student.email}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          display: { xs: "none", md: "table-cell" },
-                          color: assigned ? "text.primary" : "text.secondary",
-                        }}
-                      >
+                    <Box display="flex" gap={0.5} flexWrap="wrap">
+                      <Typography fontSize={12} color="text.secondary">
+                        Tutor:
+                      </Typography>
+                      <Typography fontSize={12} fontWeight={500} noWrap>
                         {tutorName || "Not assigned"}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          display: { xs: "none", sm: "table-cell" },
-                          maxWidth: { sm: 160, md: "unset" },
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
+                      </Typography>
+                    </Box>
+                    {tutorEmail && (
+                      <Typography
+                        fontSize={12}
+                        color="text.secondary"
+                        noWrap
+                        sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
                       >
                         {tutorEmail}
-                      </TableCell>
-                      <TableCell>
-                        {assigned ? (
-                          <Chip
-                            label="Assigned"
-                            size="small"
-                            sx={{
-                              px: 1,
-                              color: "text.assign",
-                              bgcolor: "icon.assign",
-                            }}
-                          />
-                        ) : (
-                          <Chip
-                            label="Unassigned"
-                            color="error"
-                            size="small"
-                            sx={{ px: 1 }}
-                          />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })
+            )}
+          </Box>
+        ) : (
+          /* Tablet & Desktop: scrollable table */
+          <TableContainer
+            component={Paper}
+            sx={{
+              border: 0.5,
+              borderColor: "text.input",
+              borderRadius: 1,
+              boxShadow: "none",
+              width: "100%",
+              overflowX: "auto",
+            }}
+          >
+            <Table sx={{ minWidth: 700 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 12, sm: 14 },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Student name
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 12, sm: 14 },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    University email
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 12, sm: 14 },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Current tutor
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 12, sm: 14 },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Tutor email
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      px: { xs: 1, sm: 2 },
+                      py: { xs: 1, sm: 1.5 },
+                      fontSize: { xs: 12, sm: 14 },
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Status
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody
+                sx={{
+                  "& .MuiTableCell-root": { borderBottom: "none" },
+                }}
+              >
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <CircularProgress size={24} />
+                    </TableCell>
+                  </TableRow>
+                ) : students.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      <Typography variant="body2" color="text.secondary">
+                        No students found
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  students.map((student) => {
+                    const tutorName = student.studentProfile?.tutor?.name;
+                    const tutorEmail = student.studentProfile?.tutor?.email;
+                    const assigned = !!student.studentProfile?.tutorId;
+                    const studentProfileId = student.studentProfile?.id;
+
+                    return (
+                      <TableRow key={studentProfileId}>
+                        <TableCell
+                          sx={{
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 1, sm: 1.5 },
+                            fontSize: { xs: 12, sm: 14 },
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {student.name}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 150,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {student.email}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 1, sm: 1.5 },
+                            fontSize: { xs: 12, sm: 14 },
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {tutorName || "Not assigned"}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            maxWidth: 150,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {tutorEmail || "-"}
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 1, sm: 1.5 },
+                            fontSize: { xs: 12, sm: 14 },
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {assigned ? (
+                            <Chip
+                              label="Assigned"
+                              size="small"
+                              sx={{
+                                px: 1,
+                                color: "text.assign",
+                                bgcolor: "icon.assign",
+                              }}
+                            />
+                          ) : (
+                            <Chip
+                              label="Unassigned"
+                              color="error"
+                              size="small"
+                              sx={{ px: 1 }}
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Card>
 
       <Box display="flex" justifyContent="center" mt={4}>

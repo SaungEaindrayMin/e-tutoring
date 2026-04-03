@@ -29,8 +29,10 @@ const EXCLUDED_ACTIVITY_PATHS = new Set([
 ]);
 
 const PAGE_NAME_BY_PATH = {
-  "/": "Login",
+  "/": "Home",
   "/login": "Login",
+  "/privacy-policy": "Privacy Policy",
+  "/terms-of-service": "Terms Of Service",
   "/forget-password": "Forget Password",
   "/email-otp-verify": "OTP Verify",
   "/verify-success": "Verify",
@@ -46,9 +48,7 @@ const PAGE_NAME_BY_PATH = {
 };
 
 const toTitleCase = (value) =>
-  value
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  value.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 const getPageNameFromPath = (pathname) => {
   if (pathname.startsWith("/admin/blog/")) {
@@ -66,20 +66,28 @@ const getPageNameFromPath = (pathname) => {
   }
 
   return toTitleCase(segments[segments.length - 1]);
-};import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
+};
+import TutorDashboard from "./views/Dashboard/tutor/TutorDashboard";
 import AdminDashboard from "./views/Dashboard/admin/AdminDashboard";
 import Dashboard from "./views/Dashboard/student/Dashboard";
+import Home from "./views/home/Home";
+import PrivacyPolicy from "./views/home/PrivacyPolicy";
+import TermsOfService from "./views/home/TermsOfService";
 
 const getDefaultRoute = () => {
   const role = sessionStorage.getItem("userRole");
 
   switch (role) {
     case "ADMIN":
+    case "STAFF":
       return "admin-dashboard";
+
     case "TUTOR":
       return "tutor-dashboard";
+
     case "STUDENT":
       return "student-dashboard";
+
     default:
       return "/login";
   }
@@ -103,7 +111,9 @@ const RouteComponent = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<Home />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forget-password" element={<ForgetPassword />} />
       <Route path="/email-otp-verify" element={<OtpVerify />} />

@@ -22,7 +22,8 @@ class DataServices {
         // if (!response.ok) {
         // 	// this.handleResponseError(response);
         // }
-        return response.text().then(text => text ? JSON.parse(text) : {});
+
+        return response.json();
       })
       .catch((error) => {
         this.handleError(error);
@@ -61,7 +62,7 @@ class DataServices {
       }
 
       if (!response.ok) this.handleResponseError(response);
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
     } catch (error) {
       this.handleError(error);
       return null;
@@ -81,7 +82,7 @@ class DataServices {
         body: JSON.stringify(data),
       });
 
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
     } catch (error) {
       this.handleError(error);
       return null;
@@ -106,11 +107,10 @@ class DataServices {
       let token = this.getTokenFromCookie();
       let response = await makeRequest(token);
 
-      const clonedResponse = response.clone();
-      const data = await response.text().then(text => text ? JSON.parse(text) : {});
+      const data = await response.json();
 
       if (!response.ok) {
-        this.handleResponseError(clonedResponse);
+        this.handleResponseError(response);
         return {
           success: false,
           status: response.status,
@@ -147,7 +147,7 @@ class DataServices {
       let token = this.getTokenFromCookie();
       let response = await makeRequest(token);
 
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
     } catch (error) {
       this.handleError(error);
       return null;
@@ -185,7 +185,33 @@ class DataServices {
 
       // if (!response.ok) this.handleResponseError(response);
 
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
+    } catch (error) {
+      this.handleError(error);
+      return null;
+    }
+  }
+
+  async retrievePATCH(data, serviceName) {
+    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+
+    const makeRequest = async (token) => {
+      return fetch(url, {
+        method: "PATCH",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(data),
+      });
+    };
+
+    try {
+      let token = this.getTokenFromCookie();
+      let response = await makeRequest(token);
+
+      return await response.json();
     } catch (error) {
       this.handleError(error);
       return null;
@@ -213,7 +239,7 @@ class DataServices {
 
       if (!response.ok) this.handleResponseError(response);
 
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
     } catch (error) {
       this.handleError(error);
       return null;
@@ -240,7 +266,7 @@ class DataServices {
 
       if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
 
-      return await response.text().then(text => text ? JSON.parse(text) : {});
+      return await response.json();
     } catch (error) {
       return null;
     }

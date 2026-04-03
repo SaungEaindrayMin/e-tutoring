@@ -13,7 +13,7 @@ const StatsCard = ({ title, value, icon, loading, sx = {} }) => {
         ...sx,
       }}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2">
         {title}
       </Typography>
 

@@ -100,6 +100,8 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents, onAssigned }) => {
       actions={
         <Button
           variant="contained"
+          color="primary"
+          useGradient
           onClick={handleAssignTutor}
           disabled={!selectedTutor || selectedStudents.length === 0}
           sx={{ px: { xs: 3, sm: 5 }, width: { xs: "100%", sm: "auto" } }}
