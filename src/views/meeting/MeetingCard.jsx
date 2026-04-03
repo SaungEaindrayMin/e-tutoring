@@ -9,27 +9,38 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
-const MeetingCard = ({ title, date, time, link, location, student, note, tutor, status, type = "Virtual", isUpcoming = false, onEdit }) => {
+const MeetingCard = ({ title, date, time, link, location, student, note, tutor, status, type = "Virtual", isUpcoming = false, onEdit, onDelete, onComplete, onCompleteClosed }) => {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
   const handleCancelClick = () => setCancelOpen(true);
   const handleCloseCancel = () => setCancelOpen(false);
   const handleConfirmCancel = () => {
-    // API logic to delete
+    if (onDelete) onDelete();
     setCancelOpen(false);
   };
 
-  const handleCompleteClick = () => setCompleteOpen(true);
-  const handleCloseComplete = () => setCompleteOpen(false);
+  const handleCompleteClick = async () => {
+    if (onComplete) {
+      const success = await onComplete();
+      if (success) setCompleteOpen(true);
+    } else {
+      setCompleteOpen(true);
+    }
+  };
+  
+  const handleCloseComplete = () => {
+    setCompleteOpen(false);
+    if (onCompleteClosed) onCompleteClosed();
+  };
 
   return (
     <Box
       sx={{
         p: 3,
         borderRadius: "8px",
-        border: isUpcoming ? "2px solid" : "1px solid",
-        borderColor: isUpcoming ? "primary.main" : "text.input",
+        border: "1px solid",
+        borderColor: "text.input",
         bgcolor: "background.paper",
         mb: 2,
       }}
@@ -78,7 +89,7 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
 
       {student && (
         <Typography variant="body2" color="text.primary" mb={1}>
-          Student: {student}
+          Student: {typeof student === 'object' ? (student.user?.firstName ? `${student.user.firstName} ${student.user.lastName || ''}` : student.user?.name || student.name || JSON.stringify(student)) : student}
         </Typography>
       )}
       {note && (
@@ -88,7 +99,7 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
       )}
       {tutor && (
         <Typography variant="body2" color="text.secondary">
-          Tutor: {tutor}
+          Tutor: {typeof tutor === 'object' ? (tutor.user?.firstName ? `${tutor.user.firstName} ${tutor.user.lastName || ''}` : tutor.user?.name || tutor.name || JSON.stringify(tutor)) : tutor}
         </Typography>
       )}
 

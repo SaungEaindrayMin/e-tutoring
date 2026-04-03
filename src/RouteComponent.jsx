@@ -17,7 +17,6 @@ import Analytics from "./views/analytics/Analytics";
 import DataServices from "./services/data-services";
 import Configuration from "./services/configuration";
 import DocumentCard from "./views/Documents/Documents";
-
 const dataService = new DataServices();
 const config = new Configuration();
 
