@@ -28,27 +28,52 @@ const Meeting = ({ role }) => {
   const [counts, setCounts] = useState({ upcoming: 0, past: 0 });
 
   const getSchedules = async () => {
-    const endpoint = "/v1/schedule";
-    const queryParams = "?page=1&limit=10";
-    const response = await dataService.retrieve(endpoint, queryParams);
+    try {
+      const userStr = Cookies.get(config.COOKIE_NAME_USER);
+      let currentUser = null;
+      try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
+      const currentUserId = currentUser?.id || currentUser?.userId || null;
 
-    if (response && response.status === "success") {
-      setSchedules(response.data || []);
-      if (response.meta) {
-        setCounts({
-          upcoming: response.meta.pendingCount || 0,
-          past: response.meta.completedCount || 0,
-        });
+      if (!currentUserId) {
+        console.error("No user ID found in cookies");
+        return;
       }
-    } else {
-      console.error("Failed to load schedules", response);
-      setSchedules([]);
+
+      // Fetch full profile to get specific role IDs (Tutor ID or Student ID)
+      const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
+      let filterParams = "?page=1&limit=50";
+
+      if (profileRes?.status === "success" && profileRes.data) {
+        const fullProfile = profileRes.data;
+        if (isTutor && fullProfile.tutorProfile?.id) {
+          filterParams += `&tutorId=${fullProfile.tutorProfile.id}`;
+        } else if (!isTutor && fullProfile.studentProfile?.id) {
+          filterParams += `&studentId=${fullProfile.studentProfile.id}`;
+        }
+      }
+
+      const response = await dataService.retrieve("/v1/schedule", filterParams);
+
+      if (response && response.status === "success") {
+        setSchedules(response.data || []);
+        if (response.meta) {
+          setCounts({
+            upcoming: response.meta.pendingCount || 0,
+            past: response.meta.completedCount || 0,
+          });
+        }
+      } else {
+        console.error("Failed to load schedules", response);
+        setSchedules([]);
+      }
+    } catch (err) {
+      console.error("Error in getSchedules:", err);
     }
   };
 
   useEffect(() => {
     getSchedules();
-  }, []);
+  }, [isTutor]);
 
   const formatMeetingData = (mtg) => {
     const optionsDate = { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' };
@@ -85,7 +110,9 @@ const Meeting = ({ role }) => {
       link: mtg.link,
       location: mtg.location,
       type: typeDisplay,
-      student: mtg.student?.user?.name,
+      student: mtg.students && mtg.students.length > 0 
+        ? mtg.students.map(s => s.user?.name).filter(Boolean).join(", ")
+        : mtg.student?.user?.name,
       tutor: mtg.tutor?.user?.name,
       note: mtg.note,
       status: mtg.isCompleted ? "Completed" : null,
@@ -194,9 +221,9 @@ const Meeting = ({ role }) => {
         return obj.id || obj; // Fallback to base id
       };
 
-      let studentId = isTutor 
-        ? (formData.selectedStudents.length > 0 ? extractId(formData.selectedStudents[0], 'student') : null)
-        : extractId(currentUser, 'student');
+      let studentIds = isTutor 
+        ? (formData.selectedStudents.length > 0 ? [extractId(formData.selectedStudents[0], 'student')] : [])
+        : [extractId(currentUser, 'student')].filter(Boolean);
         
       let tutorId = isTutor
         ? extractId(currentUser, 'tutor')
@@ -204,12 +231,12 @@ const Meeting = ({ role }) => {
 
       let fetchedProfile = null;
       // If the payload fell back to the root User ID because the Auth cookie lacks relation mapping, fetch the full user cleanly!
-      if (studentId === currentUserId || tutorId === currentUserId) {
+      if ((!isTutor && studentIds.length > 0 && studentIds[0] === currentUserId) || (isTutor && tutorId === currentUserId)) {
         try {
           const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
           if (profileRes?.status === "success" && profileRes.data) {
             fetchedProfile = profileRes.data;
-            if (!isTutor) studentId = extractId(fetchedProfile, 'student');
+            if (!isTutor) studentIds = [extractId(fetchedProfile, 'student')].filter(Boolean);
             if (isTutor) tutorId = extractId(fetchedProfile, 'tutor');
           }
         } catch (e) {
@@ -257,7 +284,7 @@ const Meeting = ({ role }) => {
       if (formData.id) {
         response = await dataService.retrievePUT(payload, `/v1/schedule/${formData.id}`);
       } else {
-        payload.studentId = studentId;
+        payload.studentIds = studentIds;
         payload.tutorId = tutorId;
         response = await dataService.retrievePOST(payload, "/v1/schedule");
       }

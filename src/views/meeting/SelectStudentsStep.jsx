@@ -29,22 +29,12 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
   }, [isTutor]);
 
   const handleToggle = (user) => {
-    const currentIndex = formData.selectedStudents.findIndex((u) => u.id === user.id);
-    const newSelected = [...formData.selectedStudents];
-
-    if (currentIndex === -1) {
-      newSelected.push(user);
-    } else {
-      newSelected.splice(currentIndex, 1);
-    }
-    setFormData({ ...formData, selectedStudents: newSelected });
-  };
-
-  const handleToggleAll = () => {
-    if (formData.selectedStudents.length === usersList.length && usersList.length > 0) {
+    // Single-select logic: if already selected, deselect. If not, set as the only selection.
+    const isSelected = formData.selectedStudents.findIndex((u) => u.id === user.id) !== -1;
+    if (isSelected) {
       setFormData({ ...formData, selectedStudents: [] });
     } else {
-      setFormData({ ...formData, selectedStudents: usersList });
+      setFormData({ ...formData, selectedStudents: [user] });
     }
   };
 
@@ -68,12 +58,7 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
         <Typography variant="body2" fontWeight={600} color="text.primary">
           University email
         </Typography>
-        <Checkbox
-          checked={formData.selectedStudents.length === usersList.length && usersList.length > 0}
-          indeterminate={formData.selectedStudents.length > 0 && formData.selectedStudents.length < usersList.length}
-          onChange={handleToggleAll}
-          sx={{ py: 0, color: "text.input", "&.Mui-checked": { color: "primary.main" } }}
-        />
+        <Box sx={{ width: 42 }} /> {/* Removed Toggle All Checkbox */}
       </Box>
 
       {/* List */}
