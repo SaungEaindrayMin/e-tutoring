@@ -103,7 +103,7 @@ const Topbar = ({ drawerWidth, isDesktop, onMenuClick }) => {
                 fontWeight={700}
                 sx={{ fontSize: { xs: "0.95rem", md: "1rem" } }}
               >
-                Welcome back, {userName || "User"} 👋
+                Welcome, {userName || "User"} 👋
               </Typography>
 
               <Typography
