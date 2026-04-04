@@ -21,6 +21,7 @@ import DataServices from "../../services/data-services";
 const AssignTutorDialog = ({ open, onClose, selectedStudents, onAssigned }) => {
   const [tutors, setTutors] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedTutor, setSelectedTutor] = useState(null);
   const [assignLoading, setAssignLoading] = useState(false);
@@ -115,12 +116,19 @@ const AssignTutorDialog = ({ open, onClose, selectedStudents, onAssigned }) => {
       </Typography>
 
       <InputField
-        icon={SearchIcon}
-        size="small"
         placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
+        size="small"
+        icon={SearchIcon}
+        value={searchInput}
+        onChange={(e) => {
+          setSearchInput(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            setSearch(searchInput);
+            setPage(1);
+          }
+        }}
       />
 
       <TableContainer

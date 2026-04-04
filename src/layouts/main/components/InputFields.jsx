@@ -31,7 +31,7 @@ const InputField = forwardRef(
         variant="outlined"
         InputProps={{
           startAdornment:
-            Icon && !otp && !select ? ( // ❗ don't show icon for dropdown
+            Icon && !otp && !select ? (
               <InputAdornment position="start">
                 <Icon fontSize="small" />
               </InputAdornment>

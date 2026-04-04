@@ -51,6 +51,7 @@ const AdminDashboard = () => {
 
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [students, setStudents] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -96,6 +97,7 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
+    console.log("SEARCH CHANGED:", search);
     fetchStudents(page, search);
   }, [page, search]);
 
@@ -318,16 +320,20 @@ const AdminDashboard = () => {
               placeholder="Search..."
               size="small"
               icon={SearchIcon}
-              value={search}
+              value={searchInput}
               onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+                setSearchInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearch(searchInput);
+                  setPage(1);
+                }
               }}
             />
           </Box>
         </Box>
 
-        {/* Mobile: card list */}
         {isMobile ? (
           <Box display="flex" flexDirection="column" gap={1.5}>
             {loading ? (
@@ -335,7 +341,12 @@ const AdminDashboard = () => {
                 <CircularProgress size={24} />
               </Box>
             ) : students.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                textAlign="center"
+                py={3}
+              >
                 No students found
               </Typography>
             ) : (
@@ -359,18 +370,37 @@ const AdminDashboard = () => {
                       gap: 0.75,
                     }}
                   >
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight={600} fontSize={13} noWrap sx={{ flex: 1, mr: 1 }}>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography
+                        fontWeight={600}
+                        fontSize={13}
+                        noWrap
+                        sx={{ flex: 1, mr: 1 }}
+                      >
                         {student.name}
                       </Typography>
                       {assigned ? (
                         <Chip
                           label="Assigned"
                           size="small"
-                          sx={{ px: 1, color: "text.assign", bgcolor: "icon.assign", flexShrink: 0 }}
+                          sx={{
+                            px: 1,
+                            color: "text.assign",
+                            bgcolor: "icon.assign",
+                            flexShrink: 0,
+                          }}
                         />
                       ) : (
-                        <Chip label="Unassigned" color="error" size="small" sx={{ px: 1, flexShrink: 0 }} />
+                        <Chip
+                          label="Unassigned"
+                          color="error"
+                          size="small"
+                          sx={{ px: 1, flexShrink: 0 }}
+                        />
                       )}
                     </Box>
                     <Typography
@@ -405,7 +435,6 @@ const AdminDashboard = () => {
             )}
           </Box>
         ) : (
-          /* Tablet & Desktop: scrollable table */
           <TableContainer
             component={Paper}
             sx={{

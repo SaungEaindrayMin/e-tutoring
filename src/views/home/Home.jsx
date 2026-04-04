@@ -145,7 +145,7 @@ const Home = () => {
         sx={{
           mt: 10,
           px: { xs: 3, md: 8 },
-          py: 5,
+          py: 6,
           background: "#fff",
           borderTop: "1px solid rgba(0,0,0,0.06)",
         }}
@@ -159,48 +159,64 @@ const Home = () => {
             gap: 4,
           }}
         >
-          {/* LEFT - LOGO */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Box
-              sx={{
-                width: 34,
-                height: 34,
-                borderRadius: "10px",
-                background: GRADIENT,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                boxShadow: "0 8px 20px rgba(124,58,237,0.35)",
-              }}
-            >
-              <SchoolIcon sx={{ fontSize: 18 }} />
+          {/* LEFT - LOGO + TAGLINE */}
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "12px",
+                  background: GRADIENT,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#fff",
+                  boxShadow: "0 8px 20px rgba(124,58,237,0.35)",
+                }}
+              >
+                <SchoolIcon sx={{ fontSize: 18 }} />
+              </Box>
+
+              <Typography
+                fontWeight={800}
+                sx={{
+                  fontSize: "1.2rem",
+                  background: GRADIENT,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                eTutoring
+              </Typography>
             </Box>
 
+            {/* Tagline */}
             <Typography
-              fontWeight={800}
+              variant="body2"
               sx={{
-                fontSize: "1.1rem",
-                background: GRADIENT,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                mt: 1.5,
+                color: "#94A3B8",
+                maxWidth: 280,
+                lineHeight: 1.6,
               }}
             >
-              eTutoring
+              Learn smarter with expert tutors. Personalized, flexible, and
+              built for modern education.
             </Typography>
           </Box>
 
+          {/* CENTER - LINKS */}
           <Box
             sx={{
               display: "flex",
-              gap: 3,
+              gap: 4,
               flexWrap: "wrap",
             }}
           >
             {[
               { label: "Privacy Policy", action: goToPrivacyPolicy },
               { label: "Terms Of Service", action: goToTermsOfService },
-              { label: "Contact", action: () => navigate("/contact") },
             ].map((item) => (
               <Typography
                 key={item.label}
@@ -210,9 +226,23 @@ const Home = () => {
                   color: "#64748B",
                   cursor: "pointer",
                   fontWeight: 500,
+                  position: "relative",
                   transition: "0.2s",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    width: "0%",
+                    height: "2px",
+                    left: 0,
+                    bottom: -4,
+                    background: GRADIENT,
+                    transition: "0.3s",
+                  },
                   "&:hover": {
                     color: "#7C3AED",
+                  },
+                  "&:hover::after": {
+                    width: "100%",
                   },
                 }}
               >
@@ -221,45 +251,63 @@ const Home = () => {
             ))}
           </Box>
 
-          {/* RIGHT - SOCIAL */}
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            {[
-              { icon: <FacebookIcon />, color: "#1877F2" },
-              { icon: <TwitterIcon />, color: "#1DA1F2" },
-              { icon: <InstagramIcon />, color: "#E1306C" },
-              { icon: <LinkedInIcon />, color: "#0A66C2" },
-            ].map((s, i) => (
-              <Box
-                key={i}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "10px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "#F8FAFC",
-                  color: "#64748B",
-                  cursor: "pointer",
-                  transition: "all 0.25s ease",
-                  "&:hover": {
-                    background: s.color,
-                    color: "#fff",
-                    transform: "translateY(-3px)",
-                    boxShadow: `0 10px 20px ${s.color}40`,
-                  },
-                }}
-              >
-                {s.icon}
-              </Box>
-            ))}
+          {/* RIGHT - CTA BOX */}
+          <Box
+            sx={{
+              p: 2.5,
+              borderRadius: "16px",
+              background: "linear-gradient(135deg, #F8FAFC, #F1F5F9)",
+              border: "1px solid rgba(0,0,0,0.05)",
+              minWidth: 220,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ color: "#475569", fontWeight: 600 }}
+            >
+              Start learning today
+            </Typography>
+
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                mt: 0.5,
+                mb: 1.5,
+                color: "#94A3B8",
+              }}
+            >
+              Join thousands of students improving daily.
+            </Typography>
+
+            <Box
+              onClick={goToLogin}
+              sx={{
+                px: 2,
+                py: 1,
+                borderRadius: "10px",
+                background: GRADIENT,
+                color: "#fff",
+                fontSize: "0.85rem",
+                fontWeight: 600,
+                textAlign: "center",
+                cursor: "pointer",
+                transition: "0.25s",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                  boxShadow: "0 8px 20px rgba(124,58,237,0.35)",
+                },
+              }}
+            >
+              Get Started
+            </Box>
           </Box>
         </Box>
 
-        {/* BOTTOM COPYRIGHT */}
+        {/* BOTTOM */}
         <Box
           sx={{
-            mt: 4,
+            mt: 5,
             pt: 3,
             borderTop: "1px solid rgba(0,0,0,0.05)",
             textAlign: "center",

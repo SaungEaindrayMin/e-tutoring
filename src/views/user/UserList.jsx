@@ -44,6 +44,7 @@ const UserList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [role, setRole] = useState("All");
   const [selectedEmail, setSelectedEmail] = useState("");
 
@@ -115,12 +116,14 @@ const UserList = () => {
           size="small"
           icon={SearchIcon}
           placeholderColor="text.secondary"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => {
+            setSearchInput(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              setSearch(searchInput);
               setPage(1);
-              fetchUsers(1, search, role);
             }
           }}
         />
@@ -149,7 +152,12 @@ const UserList = () => {
               <CircularProgress size={24} />
             </Box>
           ) : users.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+              py={3}
+            >
               No users found.
             </Typography>
           ) : (
@@ -167,31 +175,48 @@ const UserList = () => {
                   gap: 0.5,
                 }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
                   <Typography fontWeight={600} fontSize={13}>
                     {user.name}
                   </Typography>
                   <Box>
                     <IconButton
                       size="small"
-                      onClick={() => { setSelectedEmail(user.email); setOpenEdit(true); }}
+                      onClick={() => {
+                        setSelectedEmail(user.email);
+                        setOpenEdit(true);
+                      }}
                     >
                       <BorderColorOutlined fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={() => { setSelectedUserId(user.id); setOpenDelete(true); }}
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setOpenDelete(true);
+                      }}
                     >
                       <DeleteOutlineOutlined fontSize="small" />
                     </IconButton>
                   </Box>
                 </Box>
-                <Typography fontSize={12} color="text.secondary" noWrap sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                <Typography
+                  fontSize={12}
+                  color="text.secondary"
+                  noWrap
+                  sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                >
                   {user.email}
                 </Typography>
                 <Box display="flex" gap={1}>
-                  <Typography fontSize={12} color="text.secondary">Role:</Typography>
+                  <Typography fontSize={12} color="text.secondary">
+                    Role:
+                  </Typography>
                   <Typography fontSize={12} fontWeight={500}>
                     {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                   </Typography>
@@ -213,18 +238,37 @@ const UserList = () => {
             boxShadow: "none",
           }}
         >
-          <TableContainer component={Paper} sx={{ overflowX: "auto", boxShadow: "none" }}>
+          <TableContainer
+            component={Paper}
+            sx={{ overflowX: "auto", boxShadow: "none" }}
+          >
             <Table sx={{ minWidth: 550 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell><b>Name</b></TableCell>
-                  <TableCell><b>Email</b></TableCell>
-                  <TableCell sx={{ display: { sm: "table-cell", xs: "none" } }}><b>Role</b></TableCell>
-                  <TableCell sx={{ display: { md: "table-cell", xs: "none", sm: "none" } }}><b>Created At</b></TableCell>
-                  <TableCell><b>Action</b></TableCell>
+                  <TableCell>
+                    <b>Name</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>Email</b>
+                  </TableCell>
+                  <TableCell sx={{ display: { sm: "table-cell", xs: "none" } }}>
+                    <b>Role</b>
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      display: { md: "table-cell", xs: "none", sm: "none" },
+                    }}
+                  >
+                    <b>Created At</b>
+                  </TableCell>
+                  <TableCell>
+                    <b>Action</b>
+                  </TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody sx={{ "& .MuiTableCell-root": { borderBottom: "none" } }}>
+              <TableBody
+                sx={{ "& .MuiTableCell-root": { borderBottom: "none" } }}
+              >
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
@@ -234,27 +278,56 @@ const UserList = () => {
                 ) : users.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
-                      <Typography variant="body2" color="text.secondary">No users found.</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        No users found.
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
                   users.map((user, index) => (
                     <TableRow key={index}>
                       <TableCell>{user.name}</TableCell>
-                      <TableCell sx={{ maxWidth: { sm: 160, md: "unset" }, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <TableCell
+                        sx={{
+                          maxWidth: { sm: 160, md: "unset" },
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {user.email}
                       </TableCell>
-                      <TableCell sx={{ display: { sm: "table-cell", xs: "none" } }}>
+                      <TableCell
+                        sx={{ display: { sm: "table-cell", xs: "none" } }}
+                      >
                         {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                       </TableCell>
-                      <TableCell sx={{ display: { md: "table-cell", xs: "none", sm: "none" }, whiteSpace: "nowrap" }}>
+                      <TableCell
+                        sx={{
+                          display: { md: "table-cell", xs: "none", sm: "none" },
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {new Date(user.createdAt).toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <IconButton size="small" onClick={() => { setSelectedEmail(user.email); setOpenEdit(true); }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSelectedEmail(user.email);
+                            setOpenEdit(true);
+                          }}
+                        >
                           <BorderColorOutlined fontSize="small" />
                         </IconButton>
-                        <IconButton size="small" color="error" onClick={() => { setSelectedUserId(user.id); setOpenDelete(true); }}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => {
+                            setSelectedUserId(user.id);
+                            setOpenDelete(true);
+                          }}
+                        >
                           <DeleteOutlineOutlined fontSize="small" />
                         </IconButton>
                       </TableCell>

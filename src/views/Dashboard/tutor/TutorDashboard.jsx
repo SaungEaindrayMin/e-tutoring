@@ -42,6 +42,7 @@ const TutorDashboard = () => {
 
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [students, setStudents] = useState([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -276,10 +277,15 @@ const TutorDashboard = () => {
               placeholder="Search..."
               size="small"
               icon={SearchIcon}
-              value={search}
+              value={searchInput}
               onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
+                setSearchInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearch(searchInput);
+                  setPage(1);
+                }
               }}
             />
           </Box>
@@ -331,11 +337,9 @@ const TutorDashboard = () => {
 
                   return (
                     <TableRow key={studentProfileId}>
-                      {/* 👇 Name + Email stacked on mobile */}
                       <TableCell>
                         <Typography fontWeight={500}>{student.name}</Typography>
 
-                        {/* Show email only on mobile */}
                         <Typography
                           variant="body2"
                           color="text.secondary"
@@ -348,7 +352,6 @@ const TutorDashboard = () => {
                         </Typography>
                       </TableCell>
 
-                      {/* 👇 Normal email column for tablet+ */}
                       <TableCell
                         sx={{
                           display: { xs: "none", sm: "table-cell" },

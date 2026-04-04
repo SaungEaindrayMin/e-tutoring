@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Container,
-  Grid,
   Typography,
 } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -21,13 +20,13 @@ const GRADIENT =
 const FEATURES = [
   {
     icon: <AssignmentIndIcon fontSize="large" />,
-    title: "Smart Tutor Allocation",
+    title: "Tutor Allocation",
     desc: "Our system intelligently matches students with the most suitable tutors based on subject expertise and availability.",
   },
   {
     icon: <VideoCallIcon fontSize="large" />,
-    title: "Live Sessions",
-    desc: "Join seamless virtual meeting rooms directly from the platform for real-time, interactive learning experiences.",
+    title: "Schedule Meeting",
+    desc: "Easily schedule sessions with tutors and manage your learning timeline with flexible schedule options.",
   },
   {
     icon: <MessageIcon fontSize="large" />,
@@ -36,8 +35,8 @@ const FEATURES = [
   },
   {
     icon: <AutoStoriesIcon fontSize="large" />,
-    title: "Resource Library",
-    desc: "Access a rich library of documents, notes, and study materials uploaded and curated by expert tutors.",
+    title: "Upload Documents",
+    desc: "Easily upload, manage, and share your learning materials with a streamlined document system.",
   },
   {
     icon: <InsightsIcon fontSize="large" />,
