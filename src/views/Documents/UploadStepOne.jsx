@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel }) => {
+const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel, isStudent }) => {
     const [title, setTitle] = useState(initialTitle || "");
     const [file, setFile] = useState(initialFile || null);
     const [errors, setErrors] = useState({ title: false, file: false });
@@ -207,7 +207,7 @@ const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel }) => {
                         boxShadow: "none",
                     }}
                 >
-                    Next
+                    {isStudent ? "Upload" : "Next"}
                 </Button>
             </DialogActions>
         </>

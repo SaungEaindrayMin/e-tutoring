@@ -72,13 +72,22 @@ const Login = () => {
 
         navigate("/admin");
       } else {
-        setErrorMessage(response?.message || "Invalid email or password");
+        const msg = response?.message || "Invalid email or password";
+        setErrorMessage(msg);
+        setAlert({
+          open: true,
+          message: msg,
+          type: "error",
+        });
       }
     } catch (err) {
       setLoading(false);
+      const detail = err.toString().includes("TypeError") 
+        ? "Network error: Failed to connect to API. Is the server running?"
+        : err.toString();
       setAlert({
         open: true,
-        message: "Network error: Cannot connect to server",
+        message: detail,
         type: "error",
       });
     }

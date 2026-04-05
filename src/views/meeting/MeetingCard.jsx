@@ -45,12 +45,18 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
         mb: 2,
       }}
     >
-      <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-        <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+      <Box 
+        display="flex" 
+        justifyContent="space-between" 
+        alignItems="flex-start" 
+        mb={2}
+        sx={{ flexDirection: { xs: "column", sm: "row" }, gap: { xs: 1.5, sm: 0 } }}
+      >
+        <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: "1rem", sm: "1.1rem" } }}>
           {title}
         </Typography>
 
-        <Box display="flex" gap={1}>
+        <Box display="flex" gap={1} flexWrap="wrap">
           <Box sx={{ bgcolor: "primary.main", color: "white", px: 1.5, py: 0.5, borderRadius: "6px" }}>
             <Typography variant="caption" fontWeight={600}>{type}</Typography>
           </Box>
@@ -73,41 +79,52 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
         </Box>
         {link && (
           <Box display="flex" alignItems="center" gap={1} color="primary.main">
-            <VideocamOutlinedIcon sx={{ fontSize: 18 }} />
-            <Typography variant="body2" fontWeight={500} sx={{ cursor: "pointer" }}>
+            <VideocamOutlinedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+            <Typography 
+              variant="body2" 
+              fontWeight={500} 
+              sx={{ 
+                cursor: "pointer",
+                wordBreak: "break-all",
+                display: "-webkit-box",
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden"
+              }}
+            >
               {link}
             </Typography>
           </Box>
         )}
         {location && (
           <Box display="flex" alignItems="center" gap={1} color="text.secondary">
-            <LocationOnOutlinedIcon sx={{ fontSize: 18 }} />
-            <Typography variant="body2">{location}</Typography>
+            <LocationOnOutlinedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+            <Typography variant="body2" sx={{ wordBreak: "break-word" }}>{location}</Typography>
           </Box>
         )}
       </Box>
 
       {student && (
-        <Typography variant="body2" color="text.primary" mb={1}>
+        <Typography variant="body2" color="text.primary" mb={1} sx={{ wordBreak: "break-word" }}>
           Student: {typeof student === 'object' ? (student.user?.firstName ? `${student.user.firstName} ${student.user.lastName || ''}` : student.user?.name || student.name || JSON.stringify(student)) : student}
         </Typography>
       )}
       {note && (
-        <Typography variant="body2" color="text.primary" mb={1}>
+        <Typography variant="body2" color="text.primary" mb={1} sx={{ wordBreak: "break-word" }}>
           Note: {note}
         </Typography>
       )}
       {tutor && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
           Tutor: {typeof tutor === 'object' ? (tutor.user?.firstName ? `${tutor.user.firstName} ${tutor.user.lastName || ''}` : tutor.user?.name || tutor.name || JSON.stringify(tutor)) : tutor}
         </Typography>
       )}
 
       {isUpcoming && (
-        <Box display="flex" gap={2} mt={3}>
+        <Box display="flex" gap={1.5} mt={3} flexWrap="wrap">
           <Button
             variant="outlined"
-            startIcon={<EditOutlinedIcon />}
+            startIcon={<EditOutlinedIcon sx={{ fontSize: "18px !important" }} />}
             onClick={onEdit}
             sx={{
               textTransform: "none",
@@ -115,41 +132,52 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
               color: "text.primary",
               borderColor: "text.input",
               fontWeight: 600,
-              px: { xs: 1.5, sm: 2.5 },
+              fontSize: "0.85rem",
+              px: 2,
+              py: 0.5,
+              minWidth: "auto",
+              "&:hover": { borderColor: "text.secondary", bgcolor: "background.switch" }
             }}
           >
             Edit
           </Button>
           <Button
-            variant="outlined"
-            startIcon={<CheckCircleOutlineIcon />}
+            variant="contained"
+            startIcon={<CheckCircleOutlineIcon sx={{ fontSize: "18px !important" }} />}
             onClick={handleCompleteClick}
             sx={{
               textTransform: "none",
               borderRadius: "6px",
               color: "#137333",
-              borderColor: "#E6F4EA",
-              bgcolor: "#F6FBF7",
+              bgcolor: "#E6F4EA",
               fontWeight: 600,
-              px: { xs: 1.5, sm: 2.5 },
-              "&:hover": { borderColor: "#137333", bgcolor: "#E6F4EA" }
+              fontSize: "0.85rem",
+              px: 2,
+              py: 0.5,
+              minWidth: "auto",
+              boxShadow: "none",
+              whiteSpace: "nowrap",
+              "&:hover": { bgcolor: "#D7E9D1", boxShadow: "none" }
             }}
           >
             Make Complete
           </Button>
           <Button
-            variant="outlined"
-            startIcon={<CancelOutlinedIcon />}
+            variant="contained"
+            startIcon={<CancelOutlinedIcon sx={{ fontSize: "18px !important" }} />}
             onClick={handleCancelClick}
             sx={{
               textTransform: "none",
               borderRadius: "6px",
-              color: "error.main",
-              borderColor: "error.light",
-              bgcolor: "error.50",
+              color: "#D32F2F",
+              bgcolor: "#FDE7E9",
               fontWeight: 600,
-              px: { xs: 1.5, sm: 2.5 },
-              "&:hover": { borderColor: "error.main", bgcolor: "error.100" }
+              fontSize: "0.85rem",
+              px: 2,
+              py: 0.5,
+              minWidth: "auto",
+              boxShadow: "none",
+              "&:hover": { bgcolor: "#FAD2D6", boxShadow: "none" }
             }}
           >
             Cancel

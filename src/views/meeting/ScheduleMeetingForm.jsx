@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 
 const CustomCalendar = ({ value, onChange, error }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  
+
   // Parse value if it's passed from formData.date
   // value might be just a day string "9", or a full date like "Feb 9, 2026"
   let selectedDate = null;
@@ -44,7 +44,7 @@ const CustomCalendar = ({ value, onChange, error }) => {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
-  
+
   // We need 42 slots (6 weeks x 7 days)
   const dates = [];
   for (let i = 0; i < 42; i++) {
@@ -83,10 +83,16 @@ const CustomCalendar = ({ value, onChange, error }) => {
 
       <Box display="grid" gridTemplateColumns="repeat(7, 1fr)" gap={1} rowGap={2} textAlign="center">
         {dates.map((date, i) => {
-          const isSelected = selectedDate && date 
+          const isSelected = selectedDate && date
             && parseInt(date, 10) === selectedDate.getDate()
             && month === selectedDate.getMonth()
             && year === selectedDate.getFullYear();
+
+          const today = new Date();
+          const isToday = date 
+            && parseInt(date, 10) === today.getDate()
+            && month === today.getMonth()
+            && year === today.getFullYear();
 
           return (
             <Box
@@ -95,10 +101,10 @@ const CustomCalendar = ({ value, onChange, error }) => {
                 if (date && onChange) {
                   const newDate = new Date(year, month, parseInt(date, 10));
                   // Format as "MMM D, YYYY" for consistency with existing data
-                  const formatted = new Intl.DateTimeFormat('en-US', { 
-                    month: 'short', day: 'numeric', year: 'numeric' 
+                  const formatted = new Intl.DateTimeFormat('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric'
                   }).format(newDate);
-                  
+
                   onChange(formatted);
                 }
               }}
@@ -111,7 +117,10 @@ const CustomCalendar = ({ value, onChange, error }) => {
                 justifyContent: "center",
                 borderRadius: "50%",
                 bgcolor: isSelected ? "primary.main" : "transparent",
-                color: isSelected ? "background.paper" : "text.secondary",
+                color: isSelected ? "background.paper" : isToday ? "primary.main" : "text.secondary",
+                border: isToday && !isSelected ? "1px solid" : "none",
+                borderColor: "primary.main",
+                fontWeight: isToday || isSelected ? 600 : 400,
                 cursor: date ? "pointer" : "default",
                 transition: "0.2s",
                 "&:hover": {
@@ -119,7 +128,7 @@ const CustomCalendar = ({ value, onChange, error }) => {
                 }
               }}
             >
-              <Typography variant="body2">{date}</Typography>
+              <Typography variant="body2" sx={{ fontWeight: "inherit" }}>{date}</Typography>
             </Box>
           );
         })}
@@ -175,7 +184,7 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
           </TextField>
         </Box>
 
-        <Box>
+        <Box sx={{ width: "100%", maxWidth: { xs: "100%", sm: "360px" }, mx: { xs: 0, sm: "auto", md: 0 } }}>
           <Typography variant="body2" fontWeight={600} mb={1} color={errors.date ? "error.main" : "text.primary"}>
             Date*
           </Typography>
@@ -226,7 +235,7 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
                 </InputAdornment>
               ),
             }}
-            sx={{ 
+            sx={{
               "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
               "& input[type='time']::-webkit-calendar-picker-indicator": {
                 opacity: 0,
@@ -260,7 +269,7 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
                 </InputAdornment>
               ),
             }}
-            sx={{ 
+            sx={{
               "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
               "& input[type='time']::-webkit-calendar-picker-indicator": {
                 opacity: 0,

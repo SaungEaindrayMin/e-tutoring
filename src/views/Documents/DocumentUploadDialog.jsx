@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -9,23 +9,61 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import UploadStepOne from "./UploadStepOne";
 import UploadStepTwo from "./UploadStepTwo";
+import DataServices from "../../services/data-services";
+import Configuration from "../../services/configuration";
+import Cookies from "js-cookie";
 
-const mockStudents = [
-    { id: 1, name: "Zue Zue", email: "zue@university.edu" },
-    { id: 2, name: "Hmue", email: "hmue@university.edu" },
-    { id: 3, name: "Gue Gue", email: "gue@university.edu" },
-    { id: 4, name: "Ni Ni", email: "ni@university.edu" },
-    { id: 5, name: "Ngu", email: "ngu@university.edu" },
-    { id: 6, name: "Khin", email: "khin@university.edu" },
-    { id: 7, name: "Phue Phue", email: "phue@university.edu" },
-    { id: 8, name: "Eaint Eaint", email: "eaint@university.edu" },
-    { id: 9, name: "Aung Aung", email: "aung@university.edu" },
-    { id: 10, name: "Jhon", email: "jhon@university.edu" },
-];
+const dataService = new DataServices();
+const config = new Configuration();
 
-const DocumentUploadDialog = ({ open, onClose }) => {
+const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
+    const role = sessionStorage.getItem("userRole"); // "STUDENT" | "TUTOR"
+    const normalizedRole = role?.toLowerCase();
+    const isStudent = normalizedRole === "student";
     const [step, setStep] = useState(1);
+    const [students, setStudents] = useState([]);
 
+    useEffect(() => {
+        if (open && !isStudent) {
+            fetchStudents();
+        }
+    }, [open, isStudent]);
+
+    const fetchStudents = async () => {
+        try {
+            const userStr = Cookies.get(config.COOKIE_NAME_USER);
+            let currentUser = null;
+            try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
+            const currentUserId = currentUser?.id || currentUser?.userId || null;
+
+            if (!currentUserId) return;
+
+            // Fetch current user's profile to get relationship context
+            const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
+            let myRelationshipId = null; 
+            
+            if (profileRes?.status === "success" && profileRes.data) {
+                const profile = profileRes.data;
+                myRelationshipId = profile.tutorProfile?.id;
+            }
+
+            const serviceAction = `${config.SERVICE_USERS}?page=1&limit=50&role=STUDENT`;
+            const res = await dataService.retrieve(config.SERVICE_NAME, serviceAction);
+            
+            let fetchedUsers = [];
+            if (res?.status === "success" && Array.isArray(res.data)) {
+                fetchedUsers = res.data;
+            } else if (res?.data?.results) {
+                fetchedUsers = res.data.results;
+            }
+
+            // Filter users based on relationship (show only assigned students)
+            const filteredUsers = fetchedUsers.filter(u => u.studentProfile?.tutorId === myRelationshipId);
+            setStudents(filteredUsers);
+        } catch (err) {
+            console.error("Error fetching students:", err);
+        }
+    };
     const [formData, setFormData] = useState({
         title: "",
         file: null,
@@ -43,12 +81,20 @@ const DocumentUploadDialog = ({ open, onClose }) => {
     };
 
     const handleNextStep = ({ title, file }) => {
-        setFormData((prev) => ({
-            ...prev,
-            title,
-            file,
-        }));
-        setStep(2);
+        const updatedData = { ...formData, title, file };
+        setFormData(updatedData);
+        
+        if (isStudent) {
+            // Students skip step 2 and upload directly
+            onUpload({
+                title: updatedData.title,
+                file: updatedData.file,
+                studentIds: [] // Backend handles recipient for students
+            });
+            handleClose();
+        } else {
+            setStep(2);
+        }
     };
 
     const handleBack = () => {
@@ -63,23 +109,16 @@ const DocumentUploadDialog = ({ open, onClose }) => {
     };
 
     const handleUpload = () => {
-        const payload = {
+        if (!isStudent && formData.selectedStudents.length === 0) {
+            alert("Please select at least one student!");
+            return;
+        }
+
+        onUpload({
             title: formData.title,
             file: formData.file,
             studentIds: formData.selectedStudents,
-        };
-
-        console.log("Upload payload:", payload);
-
-        // Example API submit
-        // const submitData = new FormData();
-        // submitData.append("title", formData.title);
-        // submitData.append("file", formData.file);
-        // formData.selectedStudents.forEach((id) => {
-        //   submitData.append("studentIds[]", id);
-        // });
-
-        // await axios.post("/api/documents/upload", submitData);
+        });
 
         handleClose();
     };
@@ -115,12 +154,13 @@ const DocumentUploadDialog = ({ open, onClose }) => {
                         initialFile={formData.file}
                         onNext={handleNextStep}
                         onCancel={handleClose}
+                        isStudent={normalizedRole === "student"}
                     />
                 )}
 
                 {step === 2 && (
                     <UploadStepTwo
-                        students={mockStudents}
+                        students={students}
                         selectedStudents={formData.selectedStudents}
                         onSelectionChange={handleStudentSelection}
                         onBack={handleBack}

@@ -25,17 +25,17 @@ const UploadStepTwo = ({
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            onSelectionChange(students.map((student) => student.id));
+            onSelectionChange(students.map((student) => student.studentProfile?.id).filter(Boolean));
         } else {
             onSelectionChange([]);
         }
     };
 
-    const handleSelectOne = (studentId) => {
-        if (selectedStudents.includes(studentId)) {
-            onSelectionChange(selectedStudents.filter((id) => id !== studentId));
+    const handleSelectOne = (studentProfileId) => {
+        if (selectedStudents.includes(studentProfileId)) {
+            onSelectionChange(selectedStudents.filter((id) => id !== studentProfileId));
         } else {
-            onSelectionChange([...selectedStudents, studentId]);
+            onSelectionChange([...selectedStudents, studentProfileId]);
         }
     };
 
@@ -65,18 +65,23 @@ const UploadStepTwo = ({
                     </TableHead>
 
                     <TableBody>
-                        {students.map((student) => (
-                            <TableRow key={student.id} hover>
-                                <TableCell>{student.name}</TableCell>
-                                <TableCell>{student.email}</TableCell>
-                                <TableCell align="right">
-                                    <Checkbox
-                                        checked={selectedStudents.includes(student.id)}
-                                        onChange={() => handleSelectOne(student.id)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {students.map((student) => {
+                            const studentProfileId = student.studentProfile?.id;
+                            if (!studentProfileId) return null;
+                            
+                            return (
+                                <TableRow key={studentProfileId} hover>
+                                    <TableCell>{student.name}</TableCell>
+                                    <TableCell>{student.email}</TableCell>
+                                    <TableCell align="right">
+                                        <Checkbox
+                                            checked={selectedStudents.includes(studentProfileId)}
+                                            onChange={() => handleSelectOne(studentProfileId)}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            );
+                        })}
                     </TableBody>
                 </Table>
             </TableContainer>

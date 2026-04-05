@@ -95,8 +95,8 @@ const Meeting = ({ role }) => {
       return dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' });
     };
 
-    const formattedTime = (!mtg.startTime || !mtg.endTime) 
-      ? "" 
+    const formattedTime = (!mtg.startTime || !mtg.endTime)
+      ? ""
       : `${formatTimeStr(mtg.startTime)} - ${formatTimeStr(mtg.endTime)}`;
 
     let typeDisplay = mtg.type;
@@ -110,7 +110,7 @@ const Meeting = ({ role }) => {
       link: mtg.link,
       location: mtg.location,
       type: typeDisplay,
-      student: mtg.students && mtg.students.length > 0 
+      student: mtg.students && mtg.students.length > 0
         ? mtg.students.map(s => s.user?.name).filter(Boolean).join(", ")
         : mtg.student?.user?.name,
       tutor: mtg.tutor?.user?.name,
@@ -122,7 +122,7 @@ const Meeting = ({ role }) => {
   const upcomingSchedules = schedules.filter(s => !s.isCompleted);
   const pastSchedules = schedules.filter(s => s.isCompleted);
 
-  // Form state
+
   const [formData, setFormData] = useState({
     id: null,
     title: "",
@@ -152,11 +152,11 @@ const Meeting = ({ role }) => {
 
     let typeVal = mtg.type === "IN_PERSON" ? "Physical" : "Virtual";
 
-    // Extract time from raw "1970-01-01T09:00:00.000Z" (UTC representation)
+
     const extractTime = (timeStr) => {
       if (!timeStr) return "";
       const d = new Date(timeStr);
-      return isNaN(d) ? "" : `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`;
+      return isNaN(d) ? "" : `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
     };
 
     setFormData({
@@ -210,7 +210,7 @@ const Meeting = ({ role }) => {
 
       const userStr = Cookies.get(config.COOKIE_NAME_USER);
       let currentUser = null;
-      try { currentUser = userStr ? JSON.parse(userStr) : null; } catch(e) {}
+      try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
       const currentUserId = currentUser?.id || currentUser?.userId || null;
 
       const extractId = (obj, roleKey) => {
@@ -218,19 +218,19 @@ const Meeting = ({ role }) => {
         if (obj[`${roleKey}Profile`]?.id) return obj[`${roleKey}Profile`].id;
         if (obj[roleKey]?.id) return obj[roleKey].id;
         if (obj[`${roleKey}Id`]) return obj[`${roleKey}Id`];
-        return obj.id || obj; // Fallback to base id
+        return obj.id || obj;
       };
 
-      let studentIds = isTutor 
+      let studentIds = isTutor
         ? (formData.selectedStudents.length > 0 ? [extractId(formData.selectedStudents[0], 'student')] : [])
         : [extractId(currentUser, 'student')].filter(Boolean);
-        
+
       let tutorId = isTutor
         ? extractId(currentUser, 'tutor')
-        : (formData.selectedStudents.length > 0 ? extractId(formData.selectedStudents[0], 'tutor') : null); 
+        : (formData.selectedStudents.length > 0 ? extractId(formData.selectedStudents[0], 'tutor') : null);
 
       let fetchedProfile = null;
-      // If the payload fell back to the root User ID because the Auth cookie lacks relation mapping, fetch the full user cleanly!
+
       if ((!isTutor && studentIds.length > 0 && studentIds[0] === currentUserId) || (isTutor && tutorId === currentUserId)) {
         try {
           const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
@@ -244,9 +244,9 @@ const Meeting = ({ role }) => {
         }
       }
 
-      // IF the student is scheduling and skips the selection, automatically fetch their assigned tutor.
+
       if (!isTutor && !tutorId) {
-        // First try to see if the student naturally has a tutorId referenced in their loaded profile
+
         const activeProfile = fetchedProfile || currentUser;
         if (activeProfile?.studentProfile?.tutorId) {
           tutorId = activeProfile.studentProfile.tutorId;
@@ -310,7 +310,7 @@ const Meeting = ({ role }) => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, sm: 3 } }}>
       <PageHeader
         title="Meetings"
         subtitle="Schedule and manage your tutoring meetings"
@@ -318,11 +318,11 @@ const Meeting = ({ role }) => {
         onButtonClick={handleOpen}
       />
 
-      <TabSwitcher 
-        value={tab} 
-        onChange={setTab} 
-        upcomingCount={counts.upcoming} 
-        pastCount={counts.past} 
+      <TabSwitcher
+        value={tab}
+        onChange={setTab}
+        upcomingCount={counts.upcoming}
+        pastCount={counts.past}
       />
 
       {tab === "upcoming" && upcomingSchedules.length === 0 ? (
@@ -393,7 +393,7 @@ const Meeting = ({ role }) => {
             onEdit={() => handleEdit(mtg)}
             onDelete={async () => {
               const res = await dataService.retrieveDELETE("/v1/schedule/", mtg.id);
-              // A successful DELETE usually returns an empty object {} on 204 No Content or `{ status: "success" }`
+
               if (res && (res.status === "success" || Object.keys(res).length === 0)) {
                 await getSchedules();
               } else {
@@ -404,7 +404,7 @@ const Meeting = ({ role }) => {
               const extractT = (t) => {
                 if (!t) return "";
                 const d = new Date(t);
-                return isNaN(d) ? t : `${String(d.getUTCHours()).padStart(2,"0")}:${String(d.getUTCMinutes()).padStart(2,"0")}`;
+                return isNaN(d) ? t : `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
               };
               const payload = {
                 title: mtg.title,
@@ -462,7 +462,7 @@ const Meeting = ({ role }) => {
                   textTransform: "none",
                   borderRadius: "6px",
                   fontWeight: 600,
-                  px: isTutor ? 5 : 3,
+                  px: { xs: 3, sm: 5 },
                   py: 1,
                   boxShadow: "none",
                 }}
@@ -471,7 +471,7 @@ const Meeting = ({ role }) => {
               </Button>
             </Box>
           ) : (
-            <Box display="flex" justifyContent="flex-end" gap={2} width="100%" px={1} py={1}>
+            <Box display="flex" justifyContent="flex-end" gap={2} width="100%" px={1} py={1} sx={{ flexDirection: { xs: "column", sm: "row" } }}>
               <Button
                 variant="contained"
                 startIcon={<ArrowBackIcon />}
@@ -483,6 +483,7 @@ const Meeting = ({ role }) => {
                   px: 3,
                   py: 1,
                   boxShadow: "none",
+                  order: { xs: 2, sm: 1 }
                 }}
               >
                 Back
@@ -504,6 +505,7 @@ const Meeting = ({ role }) => {
                   px: 3,
                   py: 1,
                   boxShadow: "none",
+                  order: { xs: 1, sm: 2 }
                 }}
               >
                 Schedule Meeting
@@ -525,15 +527,16 @@ const Meeting = ({ role }) => {
         PaperProps={{
           sx: {
             borderRadius: "12px",
-            width: "100%",
-            maxWidth: "600px",
-            p: 4,
+            width: "calc(100% - 32px)",
+            maxWidth: "500px",
+            p: { xs: 3, sm: 4 },
+            m: 2
           }
         }}
       >
-        <Box display="flex" alignItems="center" justifyContent="center" gap={2} mb={4} mt={2}>
+        <Box display="flex" alignItems="center" justifyContent="center" gap={1.5} mb={4} mt={2}>
           <CheckCircleOutlineIcon sx={{ fontSize: 24, color: "text.primary" }} />
-          <Typography variant="h6" fontWeight={700}>
+          <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: "1.1rem", sm: "1.25rem" } }}>
             Meeting scheduled successfully
           </Typography>
         </Box>
