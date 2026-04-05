@@ -1,13 +1,4 @@
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  Typography,
-  Chip,
-  Stack,
-} from "@mui/material";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { Box, Container, Grid, Typography, Chip, Stack } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { useNavigate } from "react-router-dom";
 
@@ -23,12 +14,10 @@ const BENEFITS = [
 
 const WhyChooseUs = () => {
   const navigate = useNavigate();
-  const goToLogin = () => navigate("/login");
 
   return (
     <Box sx={{ py: { xs: 10, md: 14 } }}>
       <Container maxWidth="lg">
-        {/* 🔥 TOP CENTERED INTRO */}
         <Box textAlign="center" mb={8}>
           <Chip
             label="Why Choose Us"
@@ -69,10 +58,8 @@ const WhyChooseUs = () => {
             powerful and seamless platform.
           </Typography>
         </Box>
-
-        {/* 💎 MODERN GRID LAYOUT */}
+        ¥{" "}
         <Grid container spacing={4}>
-          {/* 📊 FEATURE CARD (BIG) */}
           <Grid item xs={12} md={6}>
             <Box
               sx={{
@@ -99,30 +86,9 @@ const WhyChooseUs = () => {
                   collaborative tools, and instant feedback.
                 </Typography>
               </Box>
-
-              <Stack direction="row" spacing={2} mt={4}>
-                {["12K+ Students", "540+ Tutors", "320+ Courses"].map(
-                  (item) => (
-                    <Box
-                      key={item}
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: "999px",
-                        background: "rgba(124,58,237,0.08)",
-                        fontSize: "0.85rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item}
-                    </Box>
-                  ),
-                )}
-              </Stack>
             </Box>
           </Grid>
 
-          {/* ✅ BENEFITS GRID */}
           <Grid item xs={12} md={6}>
             <Grid container spacing={3}>
               {BENEFITS.map((b, i) => (

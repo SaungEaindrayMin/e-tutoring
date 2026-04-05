@@ -3,11 +3,11 @@ import { Box, Container, Grid, Typography } from "@mui/material";
 const GRADIENT =
   "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)";
 
-const STATS = [
-  { value: "500+", label: "Active Students" },
-  { value: "80+", label: "Expert Tutors" },
-  { value: "1,200+", label: "Sessions Completed" },
-  { value: "15+", label: "Subjects Covered" },
+const HIGHLIGHTS = [
+  { title: "Active", subtitle: "Community" },
+  { title: "Expert", subtitle: "Tutors" },
+  { title: "Live", subtitle: "Sessions" },
+  { title: "All", subtitle: "Subjects" },
 ];
 
 const StatsBar = () => {
@@ -15,27 +15,36 @@ const StatsBar = () => {
     <Box sx={{ background: GRADIENT, py: 4 }}>
       <Container maxWidth="lg">
         <Grid container justifyContent="center" spacing={2}>
-          {STATS.map((s) => (
-            <Grid item xs={6} sm={3} key={s.label} sx={{ textAlign: "center" }}>
+          {HIGHLIGHTS.map((item) => (
+            <Grid
+              item
+              xs={6}
+              sm={3}
+              key={item.title}
+              sx={{ textAlign: "center" }}
+            >
+              {/* Title */}
               <Typography
-                variant="h3"
-                fontWeight={800}
+                variant="h6"
+                fontWeight={700}
                 sx={{
                   color: "#fff",
-                  fontSize: { xs: "1.8rem", md: "2.2rem" },
+                  fontSize: { xs: "1rem", md: "1.2rem" },
                 }}
               >
-                {s.value}
+                {item.title}
               </Typography>
+
+              {/* Subtitle */}
               <Typography
                 variant="body2"
                 sx={{
                   color: "rgba(255,255,255,0.80)",
                   mt: 0.5,
-                  fontWeight: 500,
+                  fontWeight: 400,
                 }}
               >
-                {s.label}
+                {item.subtitle}
               </Typography>
             </Grid>
           ))}

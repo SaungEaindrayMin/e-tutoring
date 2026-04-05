@@ -32,6 +32,7 @@ const StudentTable = ({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [filter, setFilter] = useState("all");
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -141,10 +142,15 @@ const StudentTable = ({
             placeholder="Search..."
             size="small"
             icon={SearchIcon}
-            value={search}
+            value={searchInput}
             onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
+              setSearchInput(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                setSearch(searchInput);
+                setPage(1);
+              }
             }}
           />
         </Box>
@@ -171,7 +177,12 @@ const StudentTable = ({
               <CircularProgress size={24} />
             </Box>
           ) : filteredStudents.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              textAlign="center"
+              py={3}
+            >
               No students found
             </Typography>
           ) : (
@@ -205,20 +216,48 @@ const StudentTable = ({
                     onClick={(e) => e.stopPropagation()}
                   />
                   <Box flex={1} display="flex" flexDirection="column" gap={0.5}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography fontWeight={600} fontSize={13}>{student.name}</Typography>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography fontWeight={600} fontSize={13}>
+                        {student.name}
+                      </Typography>
                       {assigned ? (
-                        <Chip label="Assigned" size="small" sx={{ px: 1, color: "text.assign", bgcolor: "icon.assign" }} />
+                        <Chip
+                          label="Assigned"
+                          size="small"
+                          sx={{
+                            px: 1,
+                            color: "text.assign",
+                            bgcolor: "icon.assign",
+                          }}
+                        />
                       ) : (
-                        <Chip label="Unassigned" color="error" size="small" sx={{ px: 1 }} />
+                        <Chip
+                          label="Unassigned"
+                          color="error"
+                          size="small"
+                          sx={{ px: 1 }}
+                        />
                       )}
                     </Box>
-                    <Typography fontSize={12} color="text.secondary" noWrap sx={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <Typography
+                      fontSize={12}
+                      color="text.secondary"
+                      noWrap
+                      sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
                       {student.email}
                     </Typography>
                     <Box display="flex" gap={0.5}>
-                      <Typography fontSize={12} color="text.secondary">Tutor:</Typography>
-                      <Typography fontSize={12} fontWeight={500}>{tutorName || "Not assigned"}</Typography>
+                      <Typography fontSize={12} color="text.secondary">
+                        Tutor:
+                      </Typography>
+                      <Typography fontSize={12} fontWeight={500}>
+                        {tutorName || "Not assigned"}
+                      </Typography>
                     </Box>
                   </Box>
                 </Box>
