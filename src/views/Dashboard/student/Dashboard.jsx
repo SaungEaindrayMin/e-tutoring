@@ -40,6 +40,7 @@ const Dashboard = () => {
   const studentId = sessionStorage.getItem("userId");
   const [loading, setLoading] = useState(false);
   const [lastLogin, setLastLogin] = useState(null);
+  const [activityData, setActivityData] = useState([]);
   const config = new Configuration();
   const dataService = new DataServices();
   const [stats, setStats] = useState({
@@ -48,6 +49,84 @@ const Dashboard = () => {
     documentsShared: 0,
     meetingHours: 0,
   });
+  const [meetingStats, setMeetingStats] = useState({
+    labels: [],
+    scheduled: [],
+    completed: [],
+  });
+
+  useEffect(() => {
+    fetchMeetingStats();
+  }, []);
+
+  const fetchMeetingStats = async () => {
+    const response = await dataService.retrieve(
+      config.SERVICE_NAME,
+      config.SERVICE_STUDENT_WEEKLY_MEETING_STATISTICS,
+    );
+
+    if (response?.status === "success") {
+      const apiData = response.data || {};
+
+      const labels = [];
+      const scheduled = [];
+      const completed = [];
+
+      for (let i = 1; i <= 6; i++) {
+        const key = `week${i}`;
+
+        labels.push(`Week ${i}`);
+
+        if (apiData[key]) {
+          scheduled.push(apiData[key][0] || 0);
+          completed.push(apiData[key][1] || 0);
+        } else {
+          scheduled.push(0);
+          completed.push(0);
+        }
+      }
+
+      setMeetingStats({
+        labels,
+        scheduled,
+        completed,
+      });
+    } else {
+      console.error(response?.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivityTrends();
+  }, []);
+
+  const fetchActivityTrends = async () => {
+    const response = await dataService.retrieve(
+      config.SERVICE_NAME,
+      config.SERVICE_STUDENT_ACTIVITY_TRENDS,
+    );
+
+    if (response?.status === "success") {
+      const apiData = response.data || [];
+
+      const colorMap = {
+        meetings: "#7C7CF8",
+        messages: "#FF8A80",
+        documents: "#4DD0E1",
+      };
+
+      const formatted = apiData.map((item) => ({
+        id: item.id,
+        label: item.label.charAt(0).toUpperCase() + item.label.slice(1),
+        value: item.value || 0,
+        color: colorMap[item.label] || "#ccc",
+      }));
+
+      setActivityData(formatted);
+    } else {
+      console.error(response?.message);
+    }
+  };
 
   useEffect(() => {
     const storedLastLogin = sessionStorage.getItem("lastLogin");
@@ -477,8 +556,8 @@ const Dashboard = () => {
         gap={2}
         mt={2}
       >
-        <MeetingStatisticsChart />
-        <ActivityTrendsChart />
+        <MeetingStatisticsChart data={meetingStats} />
+        <ActivityTrendsChart data={activityData} />
       </Box>
     </Box>
   );
