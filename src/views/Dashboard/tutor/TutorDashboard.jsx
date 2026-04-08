@@ -22,6 +22,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import IconButton from "@mui/material/IconButton";
 import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import InputField from "../../../layouts/main/components/InputFields";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
@@ -64,6 +65,19 @@ const TutorDashboard = () => {
       params.append("limit", limit);
       params.append("role", "STUDENT");
 
+      const userStr = Cookies.get(config.COOKIE_NAME_USER);
+      let currentUser = null;
+      try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
+      const currentUserId = currentUser?.id || currentUser?.userId || null;
+
+      let tutorId = null;
+      if (currentUserId) {
+        const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
+        if (profileRes?.status === "success" && profileRes.data) {
+          tutorId = profileRes.data.tutorProfile?.id;
+        }
+      }
+
       if (searchValue) {
         params.append("search", searchValue);
       }
@@ -76,7 +90,11 @@ const TutorDashboard = () => {
       );
 
       if (res?.status === "success" && Array.isArray(res.data)) {
-        setStudents(res.data);
+        // Filter students where studentProfile.tutorId matches the tutorId
+        const filtered = tutorId 
+          ? res.data.filter(s => s.studentProfile?.tutorId === tutorId)
+          : res.data;
+        setStudents(filtered);
         setTotalPages(res?.pagination?.totalPages || 1);
       } else {
         setStudents([]);

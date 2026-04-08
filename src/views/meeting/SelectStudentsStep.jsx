@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Typography, Checkbox, CircularProgress } from "@mui/material";
 import DataServices from "../../services/data-services";
 import Configuration from "../../services/configuration";
+import Cookies from "js-cookie";
 
 const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
   const [usersList, setUsersList] = useState([]);
@@ -12,24 +13,67 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
       setLoading(true);
       const dataService = new DataServices();
       const config = new Configuration();
-      const targetRole = isTutor ? "STUDENT" : "TUTOR";
-      const serviceAction = `${config.SERVICE_USERS}?page=1&limit=50&role=${targetRole}`;
-      
-      const res = await dataService.retrieve(config.SERVICE_NAME, serviceAction);
-      if (res?.status === "success" && Array.isArray(res.data)) {
-        setUsersList(res.data);
-      } else if (res?.data?.results) {
-        setUsersList(res.data.results);
-      } else {
-        setUsersList([]);
+
+      try {
+        const userStr = Cookies.get(config.COOKIE_NAME_USER);
+        let currentUser = null;
+        try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
+        const currentUserId = currentUser?.id || currentUser?.userId || null;
+
+        if (!currentUserId) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch current user's profile to get relationship context
+        const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
+        let myRelationshipId = null; 
+        
+        if (profileRes?.status === "success" && profileRes.data) {
+          const profile = profileRes.data;
+          if (isTutor) {
+            myRelationshipId = profile.tutorProfile?.id;
+          } else {
+            myRelationshipId = profile.studentProfile?.tutorId;
+          }
+        }
+
+        const targetRole = isTutor ? "STUDENT" : "TUTOR";
+        const serviceAction = `${config.SERVICE_USERS}?page=1&limit=50&role=${targetRole}`;
+        const res = await dataService.retrieve(config.SERVICE_NAME, serviceAction);
+        
+        let fetchedUsers = [];
+        if (res?.status === "success" && Array.isArray(res.data)) {
+          fetchedUsers = res.data;
+        } else if (res?.data?.results) {
+          fetchedUsers = res.data.results;
+        }
+
+        // Filter users based on relationship
+        let filteredUsers = fetchedUsers;
+        if (isTutor) {
+          // If Tutor: show only assigned students
+          filteredUsers = fetchedUsers.filter(u => u.studentProfile?.tutorId === myRelationshipId);
+        } else {
+          // If Student: show only assigned tutor
+          filteredUsers = fetchedUsers.filter(u => u.tutorProfile?.id === myRelationshipId);
+          // Auto-select the tutor if only one exists and nothing is selected
+          if (filteredUsers.length === 1 && formData.selectedStudents.length === 0) {
+            setFormData(prev => ({ ...prev, selectedStudents: [filteredUsers[0]] }));
+          }
+        }
+
+        setUsersList(filteredUsers);
+      } catch (err) {
+        console.error("Error fetching counterparties:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchCounterparty();
-  }, [isTutor]);
+  }, [isTutor, setFormData]);
 
   const handleToggle = (user) => {
-    // Single-select logic: if already selected, deselect. If not, set as the only selection.
     const isSelected = formData.selectedStudents.findIndex((u) => u.id === user.id) !== -1;
     if (isSelected) {
       setFormData({ ...formData, selectedStudents: [] });
@@ -44,9 +88,9 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr auto",
+          gridTemplateColumns: { xs: "1fr auto", sm: "1fr 1fr auto" },
           alignItems: "center",
-          px: 3,
+          px: { xs: 2, sm: 3 },
           py: 2,
           borderBottom: "1px solid",
           borderColor: "text.input",
@@ -55,10 +99,10 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
         <Typography variant="body2" fontWeight={600} color="text.primary">
           {isTutor ? "Student name" : "Tutor name"}
         </Typography>
-        <Typography variant="body2" fontWeight={600} color="text.primary">
+        <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ display: { xs: "none", sm: "block" } }}>
           University email
         </Typography>
-        <Box sx={{ width: 42 }} /> {/* Removed Toggle All Checkbox */}
+        <Box sx={{ width: 42 }} />
       </Box>
 
       {/* List */}
@@ -77,16 +121,27 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
               key={i}
               sx={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr auto",
+                gridTemplateColumns: { xs: "1fr auto", sm: "1fr 1fr auto" },
                 alignItems: "center",
-                px: 3,
+                px: { xs: 2, sm: 3 },
                 py: 1.5,
+                borderBottom: i < usersList.length - 1 ? "1px solid" : "none",
+                borderColor: "background.switch",
               }}
             >
-              <Typography variant="body2" fontWeight={600} color="text.primary">
-                {user.name}
-              </Typography>
-              <Typography variant="body2" fontWeight={500} color="text.primary">
+              <Box>
+                <Typography variant="body2" fontWeight={600} color="text.primary">
+                  {user.name}
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary" 
+                  sx={{ display: { xs: "block", sm: "none" }, wordBreak: "break-all" }}
+                >
+                  {user.email}
+                </Typography>
+              </Box>
+              <Typography variant="body2" fontWeight={500} color="text.primary" sx={{ display: { xs: "none", sm: "block" } }}>
                 {user.email}
               </Typography>
               <Checkbox

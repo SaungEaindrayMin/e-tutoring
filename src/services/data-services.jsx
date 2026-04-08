@@ -10,7 +10,9 @@ class DataServices {
   }
 
   async authorize(data, serviceName) {
-    return fetch(this.resources.BACKEND_SIDE_BASE_URL + serviceName, {
+    const fullUrl = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
+    console.log(`FETCHING: ${fullUrl}`);
+    return fetch(fullUrl, {
       method: "POST",
       mode: "cors",
       headers: {
@@ -33,7 +35,7 @@ class DataServices {
   }
 
   async authorizePUT(data, serviceName) {
-    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+    const url = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
 
     const makeRequest = async () => {
       return fetch(url, {
@@ -70,7 +72,7 @@ class DataServices {
   }
 
   async retrievePOST(data, serviceName) {
-    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+    const url = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
     try {
       let token = this.getTokenFromCookie();
       let response = await fetch(url, {
@@ -90,8 +92,10 @@ class DataServices {
   }
 
   async retrieve(serviceName, serviceAction) {
-    const url =
-      this.resources.BACKEND_SIDE_BASE_URL + serviceName + serviceAction;
+    const url = this.buildUrl(
+      this.resources.BACKEND_SIDE_BASE_URL,
+      serviceName + serviceAction,
+    );
 
     const makeRequest = async (token) => {
       return fetch(url, {
@@ -110,11 +114,11 @@ class DataServices {
       const data = await response.json();
 
       if (!response.ok) {
-        this.handleResponseError(response);
+        this.handleResponseError(response, data);
         return {
           success: false,
           status: response.status,
-          message: data.message,
+          message: data?.message || "Request failed",
           data,
         };
       }
@@ -130,7 +134,7 @@ class DataServices {
   }
 
   async retrievePOSTFormData(data, serviceName) {
-    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+    const url = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
 
     const makeRequest = async (token) => {
       return fetch(url, {
@@ -146,8 +150,19 @@ class DataServices {
     try {
       let token = this.getTokenFromCookie();
       let response = await makeRequest(token);
+      const result = await response.json();
 
-      return await response.json();
+      if (!response.ok) {
+        this.handleResponseError(response, result);
+        return {
+          success: false,
+          status: response.status,
+          message: result?.message || "Upload failed",
+          data: result,
+        };
+      }
+
+      return result;
     } catch (error) {
       this.handleError(error);
       return null;
@@ -155,7 +170,7 @@ class DataServices {
   }
 
   async retrievePUT(data, serviceName) {
-    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+    const url = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
 
     const makeRequest = async (token) => {
       return fetch(url, {
@@ -193,7 +208,7 @@ class DataServices {
   }
 
   async retrievePATCH(data, serviceName) {
-    const url = this.resources.BACKEND_SIDE_BASE_URL + serviceName;
+    const url = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, serviceName);
 
     const makeRequest = async (token) => {
       return fetch(url, {
@@ -219,8 +234,10 @@ class DataServices {
   }
 
   async retrieveDELETE(serviceName, serviceAction) {
-    const url =
-      this.resources.BACKEND_SIDE_BASE_URL + serviceName + serviceAction;
+    const url = this.buildUrl(
+      this.resources.BACKEND_SIDE_BASE_URL,
+      serviceName + serviceAction,
+    );
 
     const makeRequest = async (token) => {
       return fetch(url, {
@@ -247,7 +264,7 @@ class DataServices {
   }
 
   async retrieveBody(data, url) {
-    const fullUrl = this.resources.BACKEND_SIDE_BASE_URL + url;
+    const fullUrl = this.buildUrl(this.resources.BACKEND_SIDE_BASE_URL, url);
 
     const makeRequest = async (token) => {
       return fetch(fullUrl, {
@@ -283,6 +300,12 @@ class DataServices {
     Cookies.remove(this.config.COOKIE_NAME_TOKEN, { path: "/" });
   }
 
+  buildUrl(base, path) {
+    const cleanBase = base.endsWith("/") ? base.slice(0, -1) : base;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${cleanBase}${cleanPath}`;
+  }
+
   async handleError(error) {
     console.error("API Error:", error);
 
@@ -294,24 +317,29 @@ class DataServices {
     toast.error(message);
   }
 
-  handleResponseError = async (response) => {
-    let errorData;
+  handleResponseError = async (response, preParsedData = null) => {
+    let errorData = preParsedData;
 
-    try {
-      const contentType = response.headers.get("content-type");
+    if (!errorData) {
+      try {
+        const contentType = response.headers.get("content-type");
 
-      if (contentType && contentType.includes("application/json")) {
-        errorData = await response.json();
-      } else {
-        errorData = { message: await response.text() };
+        if (contentType && contentType.includes("application/json")) {
+          // Clone the response if we need to read it again
+          const clonedResponse = response.clone();
+          errorData = await clonedResponse.json();
+        } else {
+          errorData = { message: await response.text() };
+        }
+      } catch (err) {
+        errorData = { message: "Unknown error occurred" };
       }
-    } catch (err) {
-      errorData = { message: "Unknown error occurred" };
     }
 
     const message =
       errorData?.message ||
       errorData?.error ||
+      errorData?.message || // backend might send 'message' in different field
       `Request failed with status ${response.status}`;
 
     toast.error(message);

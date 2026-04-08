@@ -19,7 +19,8 @@ const TabSwitcher = ({ value, onChange, upcomingCount = 0, pastCount = 0 }) => {
           textTransform: "none",
           border: "none",
           borderRadius: "999px",
-          px: 3,
+          px: { xs: 2, sm: 3 },
+          fontSize: { xs: "0.8rem", sm: "0.875rem" },
           "&.Mui-selected": {
             backgroundColor: "primary.main",
             color: "background.paper",
@@ -36,7 +37,8 @@ const TabSwitcher = ({ value, onChange, upcomingCount = 0, pastCount = 0 }) => {
           textTransform: "none",
           border: "none",
           borderRadius: "999px",
-          px: 3,
+          px: { xs: 2, sm: 3 },
+          fontSize: { xs: "0.8rem", sm: "0.875rem" },
           "&.Mui-selected": {
             backgroundColor: "primary.main",
             color: "background.paper",
