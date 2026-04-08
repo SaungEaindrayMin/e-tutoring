@@ -42,6 +42,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const goToAllocate = () => navigate("/admin/allocate-tutor");
   const [showWelcome, setShowWelcome] = useState(true);
+  const [lastLogin, setLastLogin] = useState(null);
   const [data, setData] = useState({
     totalStudents: 0,
     totalTutors: 0,
@@ -102,6 +103,23 @@ const AdminDashboard = () => {
   }, [page, search]);
 
   useEffect(() => {
+    const storedLastLogin = sessionStorage.getItem("lastLogin");
+    setLastLogin(storedLastLogin);
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  useEffect(() => {
     const fetchDashboardStats = async () => {
       setLoading(true);
 
@@ -160,16 +178,38 @@ const AdminDashboard = () => {
           }}
         >
           <Box display="flex" alignItems="flex-start" gap={2}>
-            <CheckCircleOutlineIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
+            <CheckCircleOutline sx={{ fontSize: { xs: 24, sm: 32 } }} />
 
             <Box>
-              <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
-                Welcome to the eTutoring System!
-              </Typography>
+              {lastLogin ? (
+                <>
+                  {/* ✅ RETURNING USER UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome back, {sessionStorage.getItem("userName")}!
+                  </Typography>
 
-              <Typography fontSize={{ xs: 13, sm: 14 }} sx={{ opacity: 0.9 }}>
-                This is your first login. Explore the system anytime.
-              </Typography>
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    Your last login was on {formatDate(lastLogin)}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  {/* ✅ FIRST LOGIN UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome to the eTutoring System!
+                  </Typography>
+
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    This is your first login. Explore the system anytime.
+                  </Typography>
+                </>
+              )}
             </Box>
           </Box>
 
@@ -177,7 +217,7 @@ const AdminDashboard = () => {
             onClick={() => setShowWelcome(false)}
             sx={{ color: "#fff", alignSelf: { xs: "flex-end", sm: "center" } }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </Box>
       )}

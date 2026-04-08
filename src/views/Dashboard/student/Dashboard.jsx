@@ -13,7 +13,7 @@ import {
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import StatsCard from "../../../layouts/main/components/StatsCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AccessTime,
   CalendarTodayOutlined,
@@ -27,28 +27,85 @@ import {
 import { useNavigate } from "react-router-dom";
 import MeetingStatisticsChart from "./MeetingStatisticsChart";
 import ActivityTrendsChart from "./ActivityTrendsChart";
-
-
-const ProgressRow = ({ label, value }) => (
-  <Box>
-    <Stack direction="row" justifyContent="space-between">
-      <Typography color="text.secondary">{label}</Typography>
-      <Typography fontWeight={600}>{value}%</Typography>
-    </Stack>
-    <LinearProgress
-      variant="determinate"
-      value={value}
-      sx={{ mt: 1, height: 6, borderRadius: 1 }}
-    />
-  </Box>
-);
+import Configuration from "../../../services/configuration";
+import DataServices from "../../../services/data-services";
 
 const Dashboard = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const navigate = useNavigate();
   const goToMessage = () => navigate("/admin/messages");
   const goToMeeting = () => navigate("/admin/meetings");
+  const [tutorData, setTutorData] = useState(null);
+  const [tutorLoading, setTutorLoading] = useState(true);
+  const studentId = sessionStorage.getItem("userId");
   const [loading, setLoading] = useState(false);
+  const [lastLogin, setLastLogin] = useState(null);
+  const config = new Configuration();
+  const dataService = new DataServices();
+  const [stats, setStats] = useState({
+    upcomingMeetings: 0,
+    unreadMessages: 0,
+    documentsShared: 0,
+    meetingHours: 0,
+  });
+
+  useEffect(() => {
+    const storedLastLogin = sessionStorage.getItem("lastLogin");
+    setLastLogin(storedLastLogin);
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    setLoading(true);
+
+    const response = await dataService.retrieve(
+      config.SERVICE_NAME,
+      config.SERVICE_STUDENT_STATS,
+    );
+
+    setLoading(false);
+
+    if (response?.status === "success") {
+      setStats(response.data);
+    } else {
+      console.error(response?.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchTutor();
+  }, []);
+
+  const fetchTutor = async () => {
+    setTutorLoading(true);
+
+    const response = await dataService.retrieve(
+      config.SERVICE_NAME,
+      config.SERVICE_GET_STUDENT_TUTOR + studentId,
+    );
+
+    setTutorLoading(false);
+
+    if (response?.status === "success") {
+      setTutorData(response.data);
+    } else {
+      console.error(response?.message);
+    }
+  };
 
   return (
     <Box p={{ xs: 1.5, sm: 2 }}>
@@ -73,13 +130,35 @@ const Dashboard = () => {
             <CheckCircleOutline sx={{ fontSize: { xs: 24, sm: 32 } }} />
 
             <Box>
-              <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
-                Welcome to the eTutoring System!
-              </Typography>
+              {lastLogin ? (
+                <>
+                  {/* ✅ RETURNING USER UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome back, {sessionStorage.getItem("userName")}!
+                  </Typography>
 
-              <Typography fontSize={{ xs: 13, sm: 14 }} sx={{ opacity: 0.9 }}>
-                This is your first login. Explore the system anytime.
-              </Typography>
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    Your last login was on {formatDate(lastLogin)}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  {/* ✅ FIRST LOGIN UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome to the eTutoring System!
+                  </Typography>
+
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    This is your first login. Explore the system anytime.
+                  </Typography>
+                </>
+              )}
             </Box>
           </Box>
 
@@ -103,7 +182,7 @@ const Dashboard = () => {
       >
         <StatsCard
           title="Upcoming meetings"
-          value={""}
+          value={stats.upcomingMeetings}
           icon={<CalendarTodayOutlinedIcon sx={{ color: "text.message" }} />}
           loading={loading}
           sx={{
@@ -117,7 +196,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Unread Messages"
-          value={""}
+          value={stats.unreadMessages}
           icon={<ChatBubbleOutline sx={{ color: "text.document" }} />}
           loading={loading}
           sx={{
@@ -131,7 +210,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Documents Shared"
-          value={""}
+          value={stats.documentsShared}
           icon={<DescriptionOutlined sx={{ color: "text.warning" }} />}
           loading={loading}
           sx={{
@@ -145,7 +224,7 @@ const Dashboard = () => {
 
         <StatsCard
           title="Meeting Hours"
-          value={""}
+          value={stats.meetingHours}
           icon={<AccessTime sx={{ color: "text.danger" }} />}
           loading={loading}
           sx={{
@@ -178,14 +257,25 @@ const Dashboard = () => {
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 72, height: 72, fontSize: 28 }}>DSB</Avatar>
+            <Avatar sx={{ width: 72, height: 72, fontSize: 28 }}>
+              {tutorData?.tutor?.name?.charAt(0) || "?"}
+            </Avatar>
 
             <Box>
               <Typography variant="h6" fontWeight={700}>
-                Dr. Sarah Brown
+                {tutorLoading
+                  ? "Loading..."
+                  : tutorData?.hasTutor
+                    ? tutorData.tutor.name
+                    : "No Tutor Assigned"}
               </Typography>
+
               <Typography color="text.secondary">
-                tutor@example.com
+                {tutorLoading
+                  ? ""
+                  : tutorData?.hasTutor
+                    ? tutorData.tutor.email
+                    : ""}
               </Typography>
             </Box>
           </Stack>
@@ -203,8 +293,13 @@ const Dashboard = () => {
               color="primary"
               useGradient
               onClick={goToMessage}
+              disabled={!tutorData?.hasTutor}
               startIcon={<ChatBubbleOutlineOutlinedIcon />}
-              sx={{ borderRadius: 0.5, py: 1.4, width: { xs: "100%", sm: "auto" } }}
+              sx={{
+                borderRadius: 0.5,
+                py: 1.4,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Send Message
             </Button>
@@ -212,8 +307,13 @@ const Dashboard = () => {
             <Button
               variant="outlined"
               onClick={goToMeeting}
+              disabled={!tutorData?.hasTutor}
               startIcon={<CalendarTodayOutlinedIcon />}
-              sx={{ borderRadius: 0.5, py: 1.4, width: { xs: "100%", sm: "auto" } }}
+              sx={{
+                borderRadius: 0.5,
+                py: 1.4,
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               Schedule Meetings
             </Button>
@@ -227,7 +327,6 @@ const Dashboard = () => {
         gap={2}
         mt={2}
       >
-        {/* Upcoming Meetings */}
         <Card sx={{ borderRadius: 1, height: "100%" }}>
           <CardContent>
             <Stack
@@ -280,7 +379,10 @@ const Dashboard = () => {
                     </Typography>
                   </Box>
 
-                  <Chip label="Virtual" sx={{ borderRadius: 0.5, flexShrink: 0 }} />
+                  <Chip
+                    label="Virtual"
+                    sx={{ borderRadius: 0.5, flexShrink: 0 }}
+                  />
                 </Stack>
               </CardContent>
             </Card>
@@ -315,7 +417,10 @@ const Dashboard = () => {
                     </Typography>
                   </Box>
 
-                  <Chip label="In-Person" sx={{ borderRadius: 0.5, flexShrink: 0 }} />
+                  <Chip
+                    label="In-Person"
+                    sx={{ borderRadius: 0.5, flexShrink: 0 }}
+                  />
                 </Stack>
               </CardContent>
             </Card>

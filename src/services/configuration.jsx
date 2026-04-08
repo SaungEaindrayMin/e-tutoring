@@ -19,6 +19,10 @@ class Configuration {
     SERVICE_ASSIGN_TUTOR = "allocate/assign-student"
     SERVICE_UNASSIGN_TUTOR = "allocate/unassign-tutor"
     SERVICE_ADMIN_DASHBOARD = "dashboard"
+    SERVICE_TUTOR_DASHBOARD = "dashboard/tutor"
+    SERVICE_STUDENT_STATS = "student-dashboard/stats"
+    SERVICE_GET_STUDENT_TUTOR =  "allocate/student/"
+
 }
 
 export default Configuration;

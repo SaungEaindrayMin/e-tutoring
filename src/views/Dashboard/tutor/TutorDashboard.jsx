@@ -14,7 +14,7 @@ import {
   Chip,
   Card,
 } from "@mui/material";
-import { CalendarToday, Search as SearchIcon } from "@mui/icons-material";
+import { CalendarToday, Close, Search as SearchIcon } from "@mui/icons-material";
 import PageHeader from "../../../layouts/main/components/PageHeader";
 import StatsCard from "../../../layouts/main/components/StatsCard";
 import { Person2Outlined } from "@mui/icons-material";
@@ -47,6 +47,10 @@ const TutorDashboard = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [nextMeeting, setNextMeeting] = useState(null);
+  const [activityData, setActivityData] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState({});
+  const [lastLogin, setLastLogin] = useState(null);
 
   const config = new Configuration();
   const dataService = new DataServices();
@@ -92,26 +96,59 @@ const TutorDashboard = () => {
   }, [page, search]);
 
   useEffect(() => {
-    setLoading(true);
-
-    setTimeout(() => {
-      setData({
-        totalStudents: 15,
-        upcomingMeeting: 20,
-        unreadMessages: 10,
-        totalDocuments: 20,
-      });
-      setLoading(false);
-    }, 800);
+    const storedLastLogin = sessionStorage.getItem("lastLogin");
+    setLastLogin(storedLastLogin);
   }, []);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    setLoading(true);
+
+    try {
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        config.SERVICE_TUTOR_DASHBOARD,
+      );
+
+      if (res) {
+        setData({
+          totalStudents: res.cards?.totalStudents || 0,
+          upcomingMeeting: res.cards?.upcomingMeetings || 0,
+          unreadMessages: res.cards?.unreadMessages || 0,
+          totalDocuments: res.cards?.totalDocuments || 0,
+        });
+
+        setNextMeeting(res.nextMeeting);
+
+        setActivityData(res.activityTrends?.data || []);
+        setWeeklyStats(res.weeklyStats?.data || {});
+      }
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Box>
       <PageHeader
         title="Tutor Dashboard"
         subtitle="Manage your student and track their progress"
       />
-
       {showWelcome && (
         <Box
           sx={{
@@ -119,35 +156,57 @@ const TutorDashboard = () => {
             mb: 3,
             px: { xs: 2, sm: 3 },
             py: { xs: 2, sm: 2.5 },
-            borderRadius: 0.5,
+            borderRadius: 1,
             display: "flex",
-            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
             justifyContent: "space-between",
             background: "linear-gradient(90deg, #5B9BD5 0%, #0F6CBD 100%)",
             color: "#fff",
           }}
         >
-          <Box display="flex" alignItems="center" gap={2}>
-            <CheckCircleOutlineIcon sx={{ fontSize: 32, opacity: 0.9 }} />
+          <Box display="flex" alignItems="flex-start" gap={2}>
+            <CheckCircleOutlineIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
 
             <Box>
-              <Typography fontWeight={600} fontSize={18}>
-                Welcome to the eTutoring System!
-              </Typography>
+              {lastLogin ? (
+                <>
+                  {/* ✅ RETURNING USER UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome back, {sessionStorage.getItem("userName")}!
+                  </Typography>
 
-              <Typography fontSize={14} sx={{ opacity: 0.9 }}>
-                This is your first login. We’re glad to have you here. Explore
-                the system and don’t hesitate to reach out if you need any
-                assistance.
-              </Typography>
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    Your last login was on {formatDate(lastLogin)}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  {/* ✅ FIRST LOGIN UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome to the eTutoring System!
+                  </Typography>
+
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    This is your first login. Explore the system anytime.
+                  </Typography>
+                </>
+              )}
             </Box>
           </Box>
 
           <IconButton
             onClick={() => setShowWelcome(false)}
-            sx={{ color: "#fff" }}
+            sx={{ color: "#fff", alignSelf: { xs: "flex-end", sm: "center" } }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </Box>
       )}
@@ -228,7 +287,9 @@ const TutorDashboard = () => {
         </Typography>
         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="body2" color="text.secondary">
-            Use bulk allocation to quickly assign multiple students to a tutor
+            {nextMeeting
+              ? `${nextMeeting.title} • ${new Date(nextMeeting.date).toLocaleDateString()}`
+              : "No upcoming meeting"}
           </Typography>
           <Button
             variant="contained"
@@ -249,7 +310,7 @@ const TutorDashboard = () => {
         mt={2}
       >
         <MeetingStatisticsChart />
-        <ActivityTrendsChart />
+        <ActivityTrendsChart data={activityData} />
       </Box>
 
       <Card

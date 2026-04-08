@@ -27,7 +27,6 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const handleNavigation = () => {
     navigate("/forget-password");
@@ -41,7 +40,6 @@ const Login = () => {
     if (Object.keys(newErrors).length > 0) return;
 
     setLoading(true);
-    setErrorMessage("");
 
     const param = {
       email: email,
@@ -53,6 +51,7 @@ const Login = () => {
         param,
         config.SERVICE_NAME + config.SERVICE_USER,
       );
+
       setLoading(false);
 
       if (response?.status === "success" && response.token) {
@@ -60,6 +59,7 @@ const Login = () => {
         Cookies.set(config.COOKIE_NAME_USER, JSON.stringify(response.user), {
           path: "/",
         });
+
         sessionStorage.setItem(config.COOKIE_NAME_TOKEN, response.token);
         sessionStorage.setItem(
           config.COOKIE_NAME_USER,
@@ -69,16 +69,25 @@ const Login = () => {
         sessionStorage.setItem("userRole", response.user.role);
         sessionStorage.setItem("userId", response.user.id);
         sessionStorage.setItem("userName", response.user.name);
-
+        sessionStorage.setItem("lastLogin", response.user.lastLogin); 
         navigate("/admin");
       } else {
-        setErrorMessage(response?.message || "Invalid email or password");
+        setAlert({
+          open: true,
+          message: response?.message || "Invalid email or password",
+          type: "error",
+        });
       }
     } catch (err) {
       setLoading(false);
+
+      // ✅ IMPORTANT: get real backend message if exists
+      const apiMessage =
+        err?.response?.data?.message || err?.message || "Load Fail";
+
       setAlert({
         open: true,
-        message: "Network error: Cannot connect to server",
+        message: apiMessage,
         type: "error",
       });
     }
