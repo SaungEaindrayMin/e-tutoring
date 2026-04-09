@@ -198,6 +198,7 @@ const Message = () => {
   const user = Cookies.get(config.COOKIE_NAME_USER) ? JSON.parse(Cookies.get(config.COOKIE_NAME_USER)) : null;
   const isStudent = user?.role === "STUDENT";
   const [conversations, setConversations] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -206,6 +207,8 @@ const Message = () => {
   const [readStatusLoadingIds, setReadStatusLoadingIds] = useState({});
   const scrollContainerRef = useRef(null);
   const shouldScrollToBottom = useRef(true); // true for fresh/new messages, false when prepending old ones
+  const selectedConversationIdRef = useRef(null);
+  const conversationFetchRequestIdRef = useRef(0);
 
 
 
@@ -234,18 +237,33 @@ const Message = () => {
     return response;
   }, []);
 
-  const fetchConversations = useCallback(async () => {
+  const fetchConversations = useCallback(async (searchValue = "") => {
+    const normalizedSearch = typeof searchValue === "string" ? searchValue.trim() : "";
+    const endpoint =
+      !isStudent && normalizedSearch
+        ? `${config.SERVICE_GET_CONVERSATIONS}?search=${encodeURIComponent(normalizedSearch)}`
+        : config.SERVICE_GET_CONVERSATIONS;
+    const requestId = ++conversationFetchRequestIdRef.current;
+
     try {
       const response = await dataService.retrieve(
         config.SERVICE_NAME,
-        config.SERVICE_GET_CONVERSATIONS,
+        endpoint,
       );
+      if (requestId !== conversationFetchRequestIdRef.current) {
+        return;
+      }
+
       if (response?.status === "success") {
         const list = response.data || [];
         if (isStudent) {
           setSelectedContact(list[0] || null);
         } else {
           setConversations(list);
+          setSelectedContact((prev) => {
+            if (!prev) return prev;
+            return list.find((item) => item.id === prev.id) || null;
+          });
         }
       } else {
         setErrorMessage("Failed to fetch conversations");
@@ -256,7 +274,17 @@ const Message = () => {
     }
   }, [isStudent]);
 
-  const fetchMessages = useCallback(async (pageNumber = 1) => {
+  const fetchMessages = useCallback(async (pageNumber = 1, conversationIdOverride = null) => {
+    const conversationId = conversationIdOverride || selectedContact?.id || null;
+    if (!conversationId) {
+      if (pageNumber === 1) {
+        setMessages([]);
+        setPage(1);
+        setHasNextPage(false);
+      }
+      return;
+    }
+
     if (pageNumber === 1) {
       setIsLoading(true);
     } else {
@@ -264,10 +292,14 @@ const Message = () => {
     }
 
     try {
-      const endpoint = `${config.SERVICE_GET_MESSAGES}?page=${pageNumber}&limit=10`;
+      const endpoint = `${config.SERVICE_GET_MESSAGES}?conversationId=${conversationId}&page=${pageNumber}&limit=10`;
       const response = await dataService.retrieve(config.SERVICE_NAME, endpoint);
 
       if (response?.status === 'success') {
+        if (conversationId !== selectedConversationIdRef.current) {
+          return;
+        }
+
         const apiMessages = Array.isArray(response.data?.data)
           ? response.data.data
           : (Array.isArray(response.data) ? response.data : []);
@@ -314,12 +346,26 @@ const Message = () => {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
-  }, [myId]);
+  }, [myId, selectedContact?.id]);
 
-  // Fetch page 1 on mount
   useEffect(() => {
-    fetchMessages(1);
-  }, []);
+    selectedConversationIdRef.current = selectedContact?.id || null;
+  }, [selectedContact?.id]);
+
+  // Fetch page 1 whenever selected conversation changes
+  useEffect(() => {
+    if (!selectedContact?.id) {
+      setMessages([]);
+      setPage(1);
+      setHasNextPage(false);
+      return;
+    }
+
+    setMessages([]);
+    setPage(1);
+    setHasNextPage(false);
+    fetchMessages(1, selectedContact.id);
+  }, [selectedContact?.id, fetchMessages]);
 
   useEffect(() => {
     if (shouldScrollToBottom.current && scrollContainerRef.current) {
@@ -338,10 +384,18 @@ const Message = () => {
 
 
 
-  // Fetch conversations on component mount
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    if (isStudent) {
+      fetchConversations("");
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      fetchConversations(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [isStudent, searchQuery, fetchConversations]);
 
   // Initialize socket connection on component mount
   useEffect(() => {
@@ -354,8 +408,10 @@ const Message = () => {
       // Listen for incoming messages
       const handleReceiveMessage = (data) => {
         console.log("New message received via socket:", data.content);
-        fetchMessages(1);
-        fetchConversations();
+        if (selectedContact?.id) {
+          fetchMessages(1, selectedContact.id);
+        }
+        fetchConversations(searchQuery);
       };
 
       SocketService.onMessageReceived(handleReceiveMessage);
@@ -364,7 +420,7 @@ const Message = () => {
         SocketService.offMessageReceived();
       };
     }
-  }, [token, fetchConversations, fetchMessages]);
+  }, [token, fetchConversations, fetchMessages, selectedContact?.id, searchQuery]);
 
   useEffect(() => {
     if (!selectedContact || messages.length === 0) return;
@@ -472,7 +528,7 @@ const Message = () => {
         canUpdateReadStatus: false,
       };
       setMessages((prev) => (Array.isArray(prev) ? [...prev, newMessage] : [newMessage]));
-      fetchConversations();
+      fetchConversations(searchQuery);
     }
   };
 
@@ -556,6 +612,8 @@ const Message = () => {
         fullWidth
         placeholder="Search conversations..."
         size="small"
+        value={searchQuery}
+        onChange={(event) => setSearchQuery(event.target.value)}
         slotProps={{
           input: {
             startAdornment: (
@@ -585,10 +643,13 @@ const Message = () => {
           scrollbarWidth: "none",
         }}
       >
-        {(conversations).map((c) => (
+        {conversations.map((c) => (
           <Box
             key={c.id}
-            onClick={() => setSelectedContact(c)}
+            onClick={() => {
+              setSelectedContact(c);
+              setMessageText("");
+            }}
             sx={{
               display: "flex",
               flexDirection: "column",
