@@ -2,19 +2,12 @@ import { Card, Box, Typography } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 import CalendarMonthOutlined from "@mui/icons-material/CalendarMonthOutlined";
 
-const ActivityTrendsChart = () => {
-  const rawData = [
-    { label: "Meetings", value: 50, color: "#7C7CF8" },
-    { label: "Messages", value: 129, color: "#FF8A80" },
-    { label: "Documents", value: 84, color: "#4DD0E1" },
-  ];
+const ActivityTrendsChart = ({ data = [] }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  const total = rawData.reduce((sum, item) => sum + item.value, 0);
-
-  const data = rawData.map((item, index) => ({
-    id: index,
+  const formattedData = data.map((item) => ({
     ...item,
-    percentage: ((item.value / total) * 100).toFixed(1),
+    percentage: total > 0 ? ((item.value / total) * 100).toFixed(1) : 0,
   }));
 
   return (
@@ -38,15 +31,14 @@ const ActivityTrendsChart = () => {
         </Box>
       </Box>
 
-      {/* Chart */}
       <Box p={2} display="flex" flexDirection="column" alignItems="center">
         <PieChart
           height={300}
           series={[
             {
-              data: data.map((d) => ({
+              data: formattedData.map((d) => ({
                 ...d,
-                label: `${d.label} (${d.percentage}%)`, // 👈 label with %
+                label: `${d.label} (${d.percentage}%)`,
               })),
               innerRadius: 70,
               outerRadius: 120,

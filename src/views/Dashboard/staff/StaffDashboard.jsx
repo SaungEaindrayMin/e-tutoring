@@ -34,10 +34,9 @@ import InputField from "../../../layouts/main/components/InputFields";
 import Configuration from "../../../services/configuration";
 import DataServices from "../../../services/data-services";
 import MeetingStatisticsChart from "./MeetingStatisticsChart";
-import VisitPageChart from "./VisitPageChart";
 import { useNavigate } from "react-router-dom";
 
-const AdminDashboard = () => {
+const StaffDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
@@ -177,7 +176,7 @@ const AdminDashboard = () => {
   return (
     <Box p={{ xs: 1.5, sm: 2 }}>
       <PageHeader
-        title="Admin Dashboard"
+        title="Staff Dashboard"
         subtitle="System overview and management"
       />
       {showWelcome && (
@@ -341,16 +340,9 @@ const AdminDashboard = () => {
       </Box>
 
       <Box
-        display="grid"
-        gridTemplateColumns={{
-          xs: "1fr",
-          md: "1fr 1fr",
-        }}
-        gap={2}
         mt={3}
       >
         <MeetingStatisticsChart weeklyStats={weeklyStats} />
-        <VisitPageChart />
       </Box>
 
       <Card
@@ -691,4 +683,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default StaffDashboard;
