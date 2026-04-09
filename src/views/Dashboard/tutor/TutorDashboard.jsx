@@ -11,7 +11,6 @@ import {
   TableRow,
   Typography,
   Paper,
-  Chip,
   Card,
 } from "@mui/material";
 import {
@@ -151,7 +150,6 @@ const TutorDashboard = () => {
       );
 
       if (res) {
-        // ✅ Cards
         setData({
           totalStudents: res.cards?.totalStudents || 0,
           upcomingMeeting: res.cards?.upcomingMeetings || 0,
@@ -159,13 +157,37 @@ const TutorDashboard = () => {
           totalDocuments: res.cards?.totalDocuments || 0,
         });
 
-        // ✅ Next Meeting
         setNextMeeting(res.nextMeeting);
 
-        // ✅ Activity Trends
-        setActivityData(res.activityTrends?.data || []);
+        const rawActivity = res.activityTrends?.data || {};
 
-        // ✅ Weekly Stats FIXED
+        const weeks = [];
+        const meetings = [];
+        const documents = [];
+        const blogs = [];
+
+        for (let i = 1; i <= 7; i++) {
+          const key = `week${i}`;
+
+          weeks.push(`${i}th week`);
+
+          if (rawActivity[key]) {
+            meetings.push(rawActivity[key][0] || 0);
+            documents.push(rawActivity[key][1] || 0);
+            blogs.push(rawActivity[key][2] || 0);
+          } else {
+            meetings.push(0);
+            documents.push(0);
+            blogs.push(0);
+          }
+        }
+
+        setActivityData({
+          labels: weeks,
+          meetings,
+          documents,
+          blogs,
+        });
         const rawWeekly = res.weeklyStats?.data || {};
 
         const labels = [];

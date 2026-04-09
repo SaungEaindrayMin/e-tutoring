@@ -41,6 +41,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [lastLogin, setLastLogin] = useState(null);
   const [activityData, setActivityData] = useState([]);
+  const [upcomingMeetings, setUpcomingMeetings] = useState([]);
+  const [recentMessage, setRecentMessage] = useState(null);
   const config = new Configuration();
   const dataService = new DataServices();
   const [stats, setStats] = useState({
@@ -96,8 +98,64 @@ const Dashboard = () => {
     }
   };
 
+  const fetchUpcomingMeetings = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("studentId", studentId);
+      params.append("limit", 10);
+      params.append("page", 1);
+
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        `${config.SERVICE_SCHEDULE}?${params.toString()}`,
+      );
+
+      if (res?.status === "success") {
+        const meetings = res.data || [];
+
+        const filtered = meetings.filter((m) => m.isCompleted === false);
+
+        const sorted = filtered.sort((a, b) => {
+          const dateA = new Date(a.date + "T" + a.startTime);
+          const dateB = new Date(b.date + "T" + b.startTime);
+          return dateA - dateB;
+        });
+        const latestTwo = sorted.slice(0, 2);
+
+        setUpcomingMeetings(latestTwo);
+      }
+    } catch (error) {
+      console.error("Failed to fetch meetings:", error);
+    }
+  };
+
+  const fetchRecentMessage = async () => {
+    try {
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        config.SERVICE_RECENT_MESSAGE,
+      );
+
+      if (res?.status === "success") {
+        setRecentMessage(res.data || null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch recent message:", error);
+    }
+  };
+
   useEffect(() => {
     fetchActivityTrends();
+  }, []);
+
+  useEffect(() => {
+    if (studentId) {
+      fetchUpcomingMeetings();
+    }
+  }, [studentId]);
+
+  useEffect(() => {
+    fetchRecentMessage();
   }, []);
 
   const fetchActivityTrends = async () => {
@@ -405,147 +463,138 @@ const Dashboard = () => {
         gridTemplateColumns={{ xs: "1fr", md: "3fr 2fr" }}
         gap={2}
         mt={2}
+        alignItems="stretch"
       >
-        <Card sx={{ borderRadius: 1, height: "100%" }}>
-          <CardContent>
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={2}
+        <Box display="flex" flexDirection="column" height="100%">
+          {upcomingMeetings.length === 0 ? (
+            <Card
+              variant="outlined"
+              sx={{
+                flex: 1,
+                borderRadius: 1,
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
             >
-              <Typography
-                mb={2}
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
-              >
-                <CalendarTodayOutlined sx={{ color: "text.secondary" }} />
-                <Typography variant="body2" fontWeight={600}>
-                  Upcoming Meetings
-                </Typography>
-              </Typography>
-              <Button onClick={goToMeeting} sx={{ color: "text.secondary" }}>
-                View All
-              </Button>
-            </Stack>
-
-            <Card variant="outlined" sx={{ mb: 2, borderRadius: 1 }}>
               <CardContent>
-                <Stack direction="row" spacing={2}>
-                  <Box
-                    sx={{
-                      bgcolor: "primary.active",
-                      p: 1,
-                      borderRadius: 0.5,
-                      flexShrink: 0,
-                      boxShadow: `
-          0 6px 16px rgba(144, 210, 243, 0.35),
-          0 12px 32px rgba(71, 187, 211, 0.3)
-        `,
-                    }}
-                  >
-                    <CalendarTodayOutlinedIcon
-                      fontSize="large"
-                      sx={{ color: "primary.main" }}
-                    />
-                  </Box>
-
-                  <Box flex={1} minWidth={0}>
-                    <Typography fontWeight={600}>
-                      Academic Progress Review
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Feb 9, 2026 · 2:00 PM
-                    </Typography>
-                  </Box>
-
-                  <Chip
-                    label="Virtual"
-                    sx={{ borderRadius: 0.5, flexShrink: 0 }}
-                  />
-                </Stack>
+                <Typography color="text.secondary">
+                  No upcoming meetings
+                </Typography>
               </CardContent>
             </Card>
-
-            <Card variant="outlined" sx={{ borderRadius: 1 }}>
-              <CardContent>
-                <Stack direction="row" spacing={2}>
-                  <Box
-                    sx={{
-                      bgcolor: "primary.active",
-                      p: 1,
-                      borderRadius: 0.5,
-                      flexShrink: 0,
-                      boxShadow: `
-          0 6px 16px rgba(144, 210, 243, 0.35),
-          0 12px 32px rgba(71, 187, 211, 0.3)
-        `,
-                    }}
-                  >
-                    <CalendarTodayOutlinedIcon
-                      fontSize="large"
-                      sx={{ color: "primary.main" }}
-                    />
-                  </Box>
-
-                  <Box flex={1} minWidth={0}>
-                    <Typography fontWeight={600}>
-                      Career Planning Discussion
-                    </Typography>
-                    <Typography color="text.secondary">
-                      Feb 8, 2026 · 2:00 PM
-                    </Typography>
-                  </Box>
-
-                  <Chip
-                    label="In-Person"
-                    sx={{ borderRadius: 0.5, flexShrink: 0 }}
-                  />
-                </Stack>
-              </CardContent>
-            </Card>
-          </CardContent>
-        </Card>
-
-        {/* Recent Messages */}
-        <Card sx={{ borderRadius: 1, height: "100%" }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" mb={2}>
-              <Typography
-                mb={2}
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+          ) : (
+            upcomingMeetings.map((meeting) => (
+              <Card
+                key={meeting.id}
+                variant="outlined"
+                sx={{
+                  mb: 2,
+                  borderRadius: 1,
+                }}
               >
-                <ChatBubbleOutline sx={{ color: "text.secondary" }} />
-                <Typography variant="body2" fontWeight={600}>
-                  Recent Messages
-                </Typography>
-              </Typography>
-              <Button onClick={goToMessage} sx={{ color: "text.secondary" }}>
-                View All
-              </Button>
-            </Stack>
+                <CardContent>
+                  <Stack direction="row" spacing={2}>
+                    <Box
+                      sx={{
+                        bgcolor: "primary.active",
+                        p: 1,
+                        borderRadius: 0.5,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <CalendarTodayOutlinedIcon
+                        fontSize="large"
+                        sx={{ color: "primary.main" }}
+                      />
+                    </Box>
 
-            <Card variant="outlined" sx={{ borderRadius: 1 }}>
-              <CardContent>
-                <Stack spacing={1}>
+                    <Box flex={1} minWidth={0}>
+                      <Typography fontWeight={600}>{meeting.title}</Typography>
+
+                      <Typography color="text.secondary">
+                        {new Date(meeting.date).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}{" "}
+                        ·{" "}
+                        {new Date(meeting.startTime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Typography>
+                    </Box>
+
+                    <Chip
+                      label={
+                        meeting.type === "IN_PERSON" ? "In-Person" : "Virtual"
+                      }
+                      sx={{ borderRadius: 0.5, flexShrink: 0 }}
+                    />
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </Box>
+
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 1,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <CardContent sx={{ flex: 1 }}>
+            {recentMessage ? (
+              <Stack spacing={1} height="100%" justifyContent="space-between">
+                <Box>
                   <Stack direction="row" justifyContent="space-between">
-                    <Typography fontWeight={600}>Dr. Sarah Brown</Typography>
-                    <Typography color="text.secondary">Feb 07</Typography>
+                    <Typography fontWeight={600}>
+                      {recentMessage.senderName}
+                    </Typography>
+
+                    <Typography color="text.secondary">
+                      {new Date(recentMessage.date).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                        },
+                      )}
+                    </Typography>
                   </Stack>
 
-                  <Typography color="text.secondary">
-                    Hi! I reviewed your recent assignment. Great work on the
-                    project structure.
+                  <Typography color="text.secondary" mt={1}>
+                    {recentMessage.content}
                   </Typography>
+                </Box>
 
+                {!recentMessage.isRead && (
                   <Chip
                     label="New"
                     size="small"
                     color="primary"
                     sx={{ width: "fit-content", borderRadius: 0.5 }}
                   />
-                </Stack>
-              </CardContent>
-            </Card>
+                )}
+              </Stack>
+            ) : (
+              <Box
+                height="100%"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Typography color="text.secondary">
+                  No recent messages
+                </Typography>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Box>

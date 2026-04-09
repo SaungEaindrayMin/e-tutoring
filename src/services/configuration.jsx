@@ -24,8 +24,9 @@ class Configuration {
   SERVICE_GET_STUDENT_TUTOR = "allocate/student/";
   SERVICE_STUDENT_WEEKLY_MEETING_STATISTICS =
     "student-dashboard/weekly-meeting-statistics";
-  SERVICE_STUDENT_ACTIVITY_TRENDS =
-    "student-dashboard/activity-trends";
+  SERVICE_STUDENT_ACTIVITY_TRENDS = "student-dashboard/activity-trends";
+  SERVICE_SCHEDULE = "schedule/";
+  SERVICE_RECENT_MESSAGE = "student-dashboard/recent-messages";
 }
 
 export default Configuration;
