@@ -12,7 +12,6 @@ const ActivityTrendsChart = ({ data = [] }) => {
 
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
-      {/* Header */}
       <Box
         sx={{
           display: "flex",

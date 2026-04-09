@@ -3,19 +3,10 @@ import { BarChart } from "@mui/x-charts/BarChart";
 import { CalendarTodayOutlined } from "@mui/icons-material";
 
 const ActivityTrendsChart = ({ data }) => {
-  const weeks = [
-    "1st week",
-    "2nd week",
-    "3rd week",
-    "4th week",
-    "5th week",
-    "6th week",
-    "7th week",
-  ];
-
-  const meetings = data.find((d) => d.label === "meetings")?.value || 0;
-  const documents = data.find((d) => d.label === "documents")?.value || 0;
-  const blogs = data.find((d) => d.label === "blogs")?.value || 0;
+  const labels = data?.labels || [];
+  const meetings = data?.meetings || [];
+  const documents = data?.documents || [];
+  const blogs = data?.blogs || [];
 
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
@@ -40,19 +31,19 @@ const ActivityTrendsChart = ({ data }) => {
       <Box p={1}>
         <BarChart
           height={400}
-          xAxis={[{ scaleType: "band", data: weeks }]}
+          xAxis={[{ scaleType: "band", data: labels }]}
           series={[
             {
               label: "Total Meetings",
-              data: Array(7).fill(meetings),
+              data: meetings,
             },
             {
               label: "Total Documents",
-              data: Array(7).fill(documents),
+              data: documents,
             },
             {
               label: "Total Blogs",
-              data: Array(7).fill(blogs),
+              data: blogs,
             },
           ]}
           grid={{ horizontal: true, vertical: true }}
@@ -67,7 +58,7 @@ const ActivityTrendsChart = ({ data }) => {
               stroke: "#E5E7EB",
             },
             "& .MuiBarElement-root": {
-              rx: 0.5,
+              rx: 4,
             },
           }}
         />
