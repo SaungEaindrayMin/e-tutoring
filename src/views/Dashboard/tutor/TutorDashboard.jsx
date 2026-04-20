@@ -11,10 +11,14 @@ import {
   TableRow,
   Typography,
   Paper,
-  Chip,
   Card,
 } from "@mui/material";
-import { CalendarToday, Search as SearchIcon } from "@mui/icons-material";
+import {
+  CalendarToday,
+  Close,
+  Search as SearchIcon,
+  VideoCallOutlined,
+} from "@mui/icons-material";
 import PageHeader from "../../../layouts/main/components/PageHeader";
 import StatsCard from "../../../layouts/main/components/StatsCard";
 import { Person2Outlined } from "@mui/icons-material";
@@ -48,7 +52,10 @@ const TutorDashboard = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-
+  const [nextMeeting, setNextMeeting] = useState(null);
+  const [activityData, setActivityData] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState({});
+  const [lastLogin, setLastLogin] = useState(null);
   const config = new Configuration();
   const dataService = new DataServices();
 
@@ -63,12 +70,17 @@ const TutorDashboard = () => {
 
       const userStr = Cookies.get(config.COOKIE_NAME_USER);
       let currentUser = null;
-      try { currentUser = userStr ? JSON.parse(userStr) : null; } catch (e) { }
+      try {
+        currentUser = userStr ? JSON.parse(userStr) : null;
+      } catch (e) {}
       const currentUserId = currentUser?.id || currentUser?.userId || null;
 
       let tutorId = null;
       if (currentUserId) {
-        const profileRes = await dataService.retrieve(config.SERVICE_NAME, `${config.SERVICE_USERS}/${currentUserId}`);
+        const profileRes = await dataService.retrieve(
+          config.SERVICE_NAME,
+          `${config.SERVICE_USERS}/${currentUserId}`,
+        );
         if (profileRes?.status === "success" && profileRes.data) {
           tutorId = profileRes.data.tutorProfile?.id;
         }
@@ -86,9 +98,8 @@ const TutorDashboard = () => {
       );
 
       if (res?.status === "success" && Array.isArray(res.data)) {
-        // Filter students where studentProfile.tutorId matches the tutorId
-        const filtered = tutorId 
-          ? res.data.filter(s => s.studentProfile?.tutorId === tutorId)
+        const filtered = tutorId
+          ? res.data.filter((s) => s.studentProfile?.tutorId === tutorId)
           : res.data;
         setStudents(filtered);
         setTotalPages(res?.pagination?.totalPages || 1);
@@ -110,26 +121,111 @@ const TutorDashboard = () => {
   }, [page, search]);
 
   useEffect(() => {
-    setLoading(true);
-
-    setTimeout(() => {
-      setData({
-        totalStudents: 15,
-        upcomingMeeting: 20,
-        unreadMessages: 10,
-        totalDocuments: 20,
-      });
-      setLoading(false);
-    }, 800);
+    const storedLastLogin = sessionStorage.getItem("lastLogin");
+    setLastLogin(storedLastLogin);
   }, []);
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+  useEffect(() => {
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    setLoading(true);
+
+    try {
+      const res = await dataService.retrieve(
+        config.SERVICE_NAME,
+        config.SERVICE_TUTOR_DASHBOARD,
+      );
+
+      if (res) {
+        setData({
+          totalStudents: res.cards?.totalStudents || 0,
+          upcomingMeeting: res.cards?.upcomingMeetings || 0,
+          unreadMessages: res.cards?.unreadMessages || 0,
+          totalDocuments: res.cards?.totalDocuments || 0,
+        });
+
+        setNextMeeting(res.nextMeeting);
+
+        const rawActivity = res.activityTrends?.data || {};
+
+        const weeks = [];
+        const meetings = [];
+        const documents = [];
+        const blogs = [];
+
+        for (let i = 1; i <= 7; i++) {
+          const key = `week${i}`;
+
+          weeks.push(`${i}th week`);
+
+          if (rawActivity[key]) {
+            meetings.push(rawActivity[key][0] || 0);
+            documents.push(rawActivity[key][1] || 0);
+            blogs.push(rawActivity[key][2] || 0);
+          } else {
+            meetings.push(0);
+            documents.push(0);
+            blogs.push(0);
+          }
+        }
+
+        setActivityData({
+          labels: weeks,
+          meetings,
+          documents,
+          blogs,
+        });
+        const rawWeekly = res.weeklyStats?.data || {};
+
+        const labels = [];
+        const completed = [];
+        const scheduled = [];
+
+        for (let i = 1; i <= 6; i++) {
+          const key = `week${i}`;
+
+          labels.push(`${i}th week`);
+
+          if (rawWeekly[key]) {
+            scheduled.push(rawWeekly[key][0] || 0);
+            completed.push(rawWeekly[key][1] || 0);
+          } else {
+            scheduled.push(0);
+            completed.push(0);
+          }
+        }
+
+        setWeeklyStats({
+          labels,
+          completed,
+          scheduled,
+        });
+      }
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Box>
       <PageHeader
         title="Tutor Dashboard"
         subtitle="Manage your student and track their progress"
       />
-
       {showWelcome && (
         <Box
           sx={{
@@ -137,35 +233,56 @@ const TutorDashboard = () => {
             mb: 3,
             px: { xs: 2, sm: 3 },
             py: { xs: 2, sm: 2.5 },
-            borderRadius: 0.5,
+            borderRadius: 1,
             display: "flex",
-            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
             justifyContent: "space-between",
             background: "linear-gradient(90deg, #5B9BD5 0%, #0F6CBD 100%)",
             color: "#fff",
           }}
         >
-          <Box display="flex" alignItems="center" gap={2}>
-            <CheckCircleOutlineIcon sx={{ fontSize: 32, opacity: 0.9 }} />
+          <Box display="flex" alignItems="flex-start" gap={2}>
+            <CheckCircleOutlineIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
 
             <Box>
-              <Typography fontWeight={600} fontSize={18}>
-                Welcome to the eTutoring System!
-              </Typography>
+              {lastLogin ? (
+                <>
+                  {/* ✅ RETURNING USER UI */}
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome back, {sessionStorage.getItem("userName")}!
+                  </Typography>
 
-              <Typography fontSize={14} sx={{ opacity: 0.9 }}>
-                This is your first login. We’re glad to have you here. Explore
-                the system and don’t hesitate to reach out if you need any
-                assistance.
-              </Typography>
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    Your last login was on {formatDate(lastLogin)}
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                    Welcome to the eTutoring System!
+                  </Typography>
+
+                  <Typography
+                    fontSize={{ xs: 13, sm: 14 }}
+                    sx={{ opacity: 0.9 }}
+                  >
+                    This is your first login. Explore the system anytime.
+                  </Typography>
+                </>
+              )}
             </Box>
           </Box>
 
           <IconButton
             onClick={() => setShowWelcome(false)}
-            sx={{ color: "#fff" }}
+            sx={{ color: "#fff", alignSelf: { xs: "flex-end", sm: "center" } }}
           >
-            <CloseIcon />
+            <Close />
           </IconButton>
         </Box>
       )}
@@ -228,36 +345,87 @@ const TutorDashboard = () => {
 
       <Box
         sx={{
-          p: 2,
+          p: 3,
           border: 0.5,
           borderColor: "text.input",
           borderRadius: 0.5,
-          boxShadow: "none",
           mt: 5,
-          bgcolor: "background.paper",
+          bgcolor: "#f5f6f8",
           display: "flex",
-          flexDirection: "column",
-          gap: 1.5,
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 2,
         }}
       >
-        <Typography sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-          <CalendarToday sx={{ color: "text.secondary" }} />
-          <Typography>Next Meeting</Typography>
-        </Typography>
-        <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography variant="body2" color="text.secondary">
-            Use bulk allocation to quickly assign multiple students to a tutor
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="sm"
-            useGradient
-            onClick={goToMeeting}
+        <Box display="flex" flexDirection="column" gap={1}>
+          <Typography
+            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+            fontWeight={600}
           >
-            View Details
-          </Button>
+            <CalendarToday sx={{ color: "text.secondary" }} />
+            Next Meeting
+          </Typography>
+
+          <Typography fontWeight={700} fontSize={22}>
+            {nextMeeting ? nextMeeting.title : "No upcoming meeting"}
+          </Typography>
+
+          {nextMeeting && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ display: "flex", gap: 2, alignItems: "center" }}
+            >
+              <Typography
+                sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+              >
+                <CalendarToday
+                  sx={{ color: "text.secondary" }}
+                  fontSize="small"
+                />
+                {new Date(nextMeeting.date).toLocaleDateString("en-GB", {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })}{" "}
+                at{" "}
+                {new Date(nextMeeting.startTime).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Typography>
+
+              <Typography
+                sx={{ display: "flex", gap: 0.5, alignItems: "center" }}
+              >
+                <VideoCallOutlined
+                  sx={{ color: "text.secondary" }}
+                  fontSize="small"
+                />
+                {nextMeeting.type === "IN_PERSON"
+                  ? "In-Person meeting"
+                  : "Virtual meeting"}
+              </Typography>
+            </Typography>
+          )}
         </Box>
+
+        <Button
+          variant="contained"
+          color="primary"
+          useGradient
+          onClick={goToMeeting}
+          sx={{
+            borderRadius: 0.5,
+            px: 3,
+            py: 1,
+            textTransform: "none",
+            minWidth: 140,
+          }}
+        >
+          View Details
+        </Button>
       </Box>
 
       <Box
@@ -266,8 +434,8 @@ const TutorDashboard = () => {
         gap={2}
         mt={2}
       >
-        <MeetingStatisticsChart />
-        <ActivityTrendsChart />
+        <MeetingStatisticsChart data={weeklyStats} />
+        <ActivityTrendsChart data={activityData} />
       </Box>
 
       <Card
@@ -323,7 +491,6 @@ const TutorDashboard = () => {
               <TableRow>
                 <TableCell>Student Name</TableCell>
 
-                {/* Hide on mobile */}
                 <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
                   University Email
                 </TableCell>

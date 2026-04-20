@@ -2,17 +2,7 @@ import { Card, Box, Typography } from "@mui/material";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { CalendarTodayOutlined } from "@mui/icons-material";
 
-const MeetingStatisticsChart = () => {
-  const weeks = [
-    "1st week",
-    "2nd week",
-    "3rd week",
-    "4th week",
-    "5th week",
-    "6th week",
-    "7th week",
-  ];
-
+const MeetingStatisticsChart = ({ data }) => {
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
       <Box
@@ -36,16 +26,21 @@ const MeetingStatisticsChart = () => {
       <Box p={1}>
         <BarChart
           height={400}
-          xAxis={[{ scaleType: "band", data: weeks }]}
+          xAxis={[
+            {
+              scaleType: "band",
+              data: data?.labels || [],
+            },
+          ]}
           series={[
             {
               label: "Scheduled",
-              data: [7, 5, 8, 6, 7, 11, 6],
+              data: data?.scheduled || [],
               color: "#7C7CF8",
             },
             {
               label: "Completed",
-              data: [12, 18, 14, 21, 16, 28, 20],
+              data: data?.completed || [],
               color: "#FF8A80",
             },
           ]}

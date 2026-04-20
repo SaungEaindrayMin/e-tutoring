@@ -2,16 +2,7 @@ import { CalendarTodayOutlined } from "@mui/icons-material";
 import { Card, Box, Typography } from "@mui/material";
 import { LineChart } from "@mui/x-charts/LineChart";
 
-const MeetingStatisticsChart = () => {
-  const weeks = [
-    "1st week",
-    "2nd week",
-    "3rd week",
-    "4th week",
-    "5th week",
-    "6th week",
-  ];
-
+const MeetingStatisticsChart = ({ data }) => {
   return (
     <Card sx={{ borderRadius: 0.5, overflow: "hidden" }}>
       <Box
@@ -35,15 +26,20 @@ const MeetingStatisticsChart = () => {
       <Box p={1}>
         <LineChart
           height={400}
-          xAxis={[{ scaleType: "band", data: weeks }]}
+          xAxis={[
+            {
+              scaleType: "band",
+              data: data?.labels || [],
+            },
+          ]}
           series={[
             {
-              data: [16, 21, 18, 14, 22, 24],
+              data: data?.completed || [],
               label: "Completed",
               color: "#7C7CF8",
             },
             {
-              data: [18, 23, 19, 15, 24, 26],
+              data: data?.scheduled || [],
               label: "Scheduled",
               color: "#FF8A80",
             },
@@ -59,7 +55,6 @@ const MeetingStatisticsChart = () => {
               strokeDasharray: "4 4",
               stroke: "#E5E7EB",
             },
-        
           }}
         />
       </Box>

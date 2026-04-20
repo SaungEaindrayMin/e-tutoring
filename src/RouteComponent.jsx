@@ -73,15 +73,18 @@ import Dashboard from "./views/Dashboard/student/Dashboard";
 import Home from "./views/home/Home";
 import PrivacyPolicy from "./views/home/PrivacyPolicy";
 import TermsOfService from "./views/home/TermsOfService";
+import StaffDashboard from "./views/Dashboard/staff/StaffDashboard";
 
 const getDefaultRoute = () => {
   const role = sessionStorage.getItem("userRole");
 
   switch (role) {
     case "ADMIN":
-    case "STAFF":
       return "admin-dashboard";
 
+    case "STAFF":
+      return "staff-dashboard";
+      
     case "TUTOR":
       return "tutor-dashboard";
 
@@ -126,6 +129,7 @@ const RouteComponent = () => {
           <Route path="/admin/student-dashboard" element={<Dashboard />} />
           <Route path="/admin/tutor-dashboard" element={<TutorDashboard />} />
           <Route path="/admin/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/admin/users" element={<UserList />} />
           <Route path="/admin/messages" element={<Message />} />
           <Route path="/admin/blog" element={<BlogList />} />
