@@ -5,10 +5,11 @@ import {
     Button,
     Box,
     DialogActions,
+    CircularProgress,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel, isStudent }) => {
+const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel, isStudent, isSubmitting }) => {
     const [title, setTitle] = useState(initialTitle || "");
     const [file, setFile] = useState(initialFile || null);
     const [errors, setErrors] = useState({ title: false, file: false });
@@ -184,6 +185,7 @@ const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel, isStudent 
             <DialogActions sx={{ p: 0, pt: 3, gap: 1, justifyContent: "flex-end" }}>
                 <Button
                     variant="outlined"
+                    disabled={isSubmitting}
                     onClick={onCancel}
                     sx={{
                         px: 4,
@@ -198,16 +200,25 @@ const UploadStepOne = ({ initialTitle, initialFile, onNext, onCancel, isStudent 
 
                 <Button
                     variant="contained"
+                    color="primary"
+                    useGradient
+                    disabled={isSubmitting}
                     onClick={handleNext}
                     sx={{
                         px: 6,
-                        borderRadius: 2,
+                        borderRadius: "8px",
                         textTransform: "none",
-                        fontWeight: "bold",
-                        boxShadow: "none",
+                        fontWeight: 700,
+                        py: 1.2,
                     }}
                 >
-                    {isStudent ? "Upload" : "Next"}
+                    {isSubmitting ? (
+                        <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} />
+                    ) : isStudent ? (
+                        "Upload"
+                    ) : (
+                        "Next"
+                    )}
                 </Button>
             </DialogActions>
         </>

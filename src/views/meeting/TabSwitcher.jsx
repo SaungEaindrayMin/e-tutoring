@@ -22,9 +22,11 @@ const TabSwitcher = ({ value, onChange, upcomingCount = 0, pastCount = 0 }) => {
           px: { xs: 2, sm: 3 },
           fontSize: { xs: "0.8rem", sm: "0.875rem" },
           "&.Mui-selected": {
-            backgroundColor: "primary.main",
+            background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
             color: "background.paper",
-            "&:hover": { backgroundColor: "primary.dark" }
+            "&:hover": { 
+              background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+            }
           },
         }}
       >
@@ -40,9 +42,11 @@ const TabSwitcher = ({ value, onChange, upcomingCount = 0, pastCount = 0 }) => {
           px: { xs: 2, sm: 3 },
           fontSize: { xs: "0.8rem", sm: "0.875rem" },
           "&.Mui-selected": {
-            backgroundColor: "primary.main",
+            background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
             color: "background.paper",
-            "&:hover": { backgroundColor: "primary.dark" }
+            "&:hover": { 
+              background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+            }
           },
         }}
       >

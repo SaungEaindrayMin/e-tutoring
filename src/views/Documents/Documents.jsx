@@ -64,6 +64,8 @@ const DocumentsPage = () => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const userRole = useMemo(() => sessionStorage.getItem("userRole")?.toLowerCase(), []);
   const isAdmin = userRole === "admin";
@@ -167,6 +169,7 @@ const DocumentsPage = () => {
   const handleCloseUpload = () => setOpenUpload(false);
 
   const handleUploadDocument = async (payload) => {
+    setSubmitting(true);
     try {
       const userStr = Cookies.get(config.COOKIE_NAME_USER);
       let currentUser = null;
@@ -179,40 +182,46 @@ const DocumentsPage = () => {
       const formData = new FormData();
       formData.append("title", payload.title);
       formData.append("file", payload.file);
-      formData.append("userId", currentUserId); // Explicitly required by some endpoints
       
-      if (role === "tutor") {
-        if (payload.studentIds && payload.studentIds.length > 0) {
-          payload.studentIds.forEach((id) => {
-            formData.append("studentId", id);
-          });
-        }
-      } else if (role === "student" && profileRes?.status === "success") {
+      // Minimalist approach: Do NOT send userId. Rely on the token.
+      // Only send the recipient's ID based on the role.
+
+      if (profileRes?.status === "success" && profileRes.data) {
         const fullProfile = profileRes.data;
-        const studentId = fullProfile.studentProfile?.id;
-        const tutorId = fullProfile.studentProfile?.tutorId;
         
-        // For students, add themselves to the recipient list
-        if (studentId) {
-          formData.append("studentId", studentId);
-        }
-        // Also explicitly send current tutorId if known
-        if (tutorId) {
-          formData.append("tutorId", tutorId);
+        if (role === "tutor") {
+          // Tutor uploads for students - only send recipients
+          if (payload.studentIds && payload.studentIds.length > 0) {
+            payload.studentIds.forEach((id) => {
+              formData.append("studentId", id);
+            });
+            console.log("Adding student recipients:", payload.studentIds);
+          }
+        } else if (role === "student") {
+          // Student uploads for their tutor - only send recipient
+          const tutorId = fullProfile.studentProfile?.tutorId;
+          if (tutorId) {
+            formData.append("tutorId", tutorId);
+            console.log("Adding tutor recipient:", tutorId);
+          }
         }
       }
 
-      console.log("Uploading with FormData:", Array.from(formData.keys()));
+      console.log("Uploading with keys:", Array.from(formData.keys()));
       const result = await dataService.retrievePOSTFormData(formData, "/v1/documents");
 
       if (result && result.status === "success") {
         setOpenUpload(false);
         setSuccessMessage("Document uploaded successfully");
         setSuccessOpen(true);
+      } else {
+        console.error("Upload failed:", result);
       }
     } catch (err) {
-      console.error("Upload error:", err);
+      console.error("Upload process error:", err);
       toast.error("An error occurred during upload.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -309,15 +318,16 @@ const DocumentsPage = () => {
 
           <Button
             variant="contained"
+            color="primary"
+            useGradient
             startIcon={<FileUploadIcon />}
             onClick={handleOpenUpload}
             sx={{
               textTransform: "none",
-              borderRadius: "6px",
-              px: { xs: 2, sm: 3 },
-              py: 1,
-              fontWeight: 600,
-              boxShadow: "none",
+              borderRadius: "8px",
+              px: { xs: 2, sm: 4 },
+              py: 1.2,
+              fontWeight: 700,
             }}
           >
             Upload Document
@@ -383,20 +393,16 @@ const DocumentsPage = () => {
             </Typography>
 
             <Button
-              variant="outlined"
+              variant="contained"
+              color="primary"
+              useGradient
               onClick={handleOpenUpload}
               sx={{
                 textTransform: "none",
-                borderRadius: "6px",
-                fontWeight: 600,
-                color: "text.primary",
-                borderColor: "text.input",
-                px: 3,
-                py: 1,
-                ":hover": {
-                  borderColor: "text.secondary",
-                  bgcolor: "background.switch"
-                }
+                borderRadius: "8px",
+                fontWeight: 700,
+                px: 3.5,
+                py: 1.2,
               }}
             >
               Post Your First Document
@@ -561,6 +567,7 @@ const DocumentsPage = () => {
         open={openUpload}
         onClose={handleCloseUpload}
         onUpload={handleUploadDocument}
+        submitting={submitting}
       />
 
       <Dialog
@@ -630,22 +637,30 @@ const DocumentsPage = () => {
             <Button 
                variant="contained" 
                color="error"
+               disabled={isDeleting}
                onClick={async () => {
                  if (docToDelete) {
-                   const res = await dataService.retrieveDELETE("/v1/documents/", docToDelete.id);
-                   if (res && (res.status === "success" || Object.keys(res).length === 0)) {
-                     setDeleteDialogOpen(false);
-                     setDocToDelete(null);
-                     setSuccessMessage("Document deleted successfully");
-                     setSuccessOpen(true);
-                   } else {
-                     toast.error(res?.message || "Failed to delete document");
+                   setIsDeleting(true);
+                   try {
+                     const res = await dataService.retrieveDELETE("/v1/documents/", docToDelete.id);
+                     if (res && (res.status === "success" || Object.keys(res).length === 0)) {
+                       setDeleteDialogOpen(false);
+                       setDocToDelete(null);
+                       setSuccessMessage("Document deleted successfully");
+                       setSuccessOpen(true);
+                     } else {
+                       toast.error(res?.message || "Failed to delete document");
+                     }
+                   } catch (error) {
+                     toast.error("An error occurred while deleting.");
+                   } finally {
+                     setIsDeleting(false);
                    }
                  }
                }}
                sx={{ textTransform: "none", fontWeight: 600, boxShadow: "none" }}
             >
-              Delete
+              {isDeleting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} /> : "Delete"}
             </Button>
           </Box>
         </Box>

@@ -1,27 +1,236 @@
-import { Box, TextField, Typography, MenuItem, IconButton, InputAdornment } from "@mui/material";
+import { Box, TextField, Typography, MenuItem, IconButton, InputAdornment, Popover, List, ListItem, ListItemButton, ListItemText, Divider } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useState, useEffect, useRef } from "react";
 
-import { useState, useEffect } from "react";
+const format12h = (time24) => {
+  if (!time24) return "";
+  const [hours, minutes] = time24.split(":");
+  let h = parseInt(hours, 10);
+  const m = minutes || "00";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h.toString().padStart(2, "0")}:${m} ${ampm}`;
+};
+
+const parseTo24h = (h, m, ampm) => {
+  let hours = parseInt(h, 10);
+  if (ampm === "PM" && hours < 12) hours += 12;
+  if (ampm === "AM" && hours === 12) hours = 0;
+  return `${hours.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+};
+
+const CustomTimePicker = ({ value, onChange, error, placeholder }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const triggerRef = useRef(null);
+
+  // Split current value into parts
+  const displayValue = format12h(value);
+  
+  const now = new Date();
+  let initialH = (now.getHours() % 12 || 12).toString().padStart(2, "0");
+  let initialM = now.getMinutes().toString().padStart(2, "0");
+  let initialAMPM = now.getHours() >= 12 ? "PM" : "AM";
+  
+  if (displayValue) {
+    const [time, ampm] = displayValue.split(" ");
+    const [h, m] = time.split(":");
+    initialH = h;
+    initialM = m;
+    initialAMPM = ampm;
+  }
+
+  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0"));
+  const periods = ["AM", "PM"];
+
+  const handleOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+    // If no value is selected yet, auto-select "now"
+    if (!value) {
+      const now = new Date();
+      const h = (now.getHours() % 12 || 12).toString().padStart(2, "0");
+      const m = now.getMinutes().toString().padStart(2, "0");
+      const p = now.getHours() >= 12 ? "PM" : "AM";
+      handleSelect(h, m, p);
+    }
+  };
+
+  const handleClose = () => setAnchorEl(null);
+
+  const handleSelect = (h, m, p) => {
+    const new24h = parseTo24h(h, m, p);
+    onChange(new24h);
+  };
+
+  const open = Boolean(anchorEl);
+
+  return (
+    <>
+      <TextField
+        fullWidth
+        ref={triggerRef}
+        value={displayValue}
+        placeholder={placeholder}
+        error={error}
+        onClick={handleOpen}
+        autoComplete="off"
+        InputProps={{
+          readOnly: true,
+          endAdornment: (
+            <InputAdornment position="end" sx={{ cursor: "pointer" }}>
+              <AccessTimeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ 
+            "& .MuiOutlinedInput-root": { borderRadius: "6px", cursor: "pointer" },
+            "& input": { cursor: "pointer" }
+        }}
+      />
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        PaperProps={{
+          sx: {
+            mt: 0.5,
+            borderRadius: "12px",
+            boxShadow: "0px 8px 24px rgba(0,0,0,0.12)",
+            border: "1px solid",
+            borderColor: "divider",
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", height: 260, p: 0.5 }}>
+          {/* Hours */}
+          <Box sx={{ flex: 1, overflowY: "auto", borderRight: "1px solid", borderColor: "divider", "&::-webkit-scrollbar": { width: 0 } }}>
+            <List sx={{ p: 0 }}>
+              {hours.map((h) => (
+                <ListItem key={h} disablePadding>
+                  <ListItemButton
+                    selected={initialH === h}
+                    onClick={() => handleSelect(h, initialM, initialAMPM)}
+                    sx={{
+                      textAlign: "center",
+                      py: 0.8,
+                      "&.Mui-selected": { 
+                        background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
+                        color: "white",
+                        "&:hover": { 
+                          background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+                        }
+                      }
+                    }}
+                  >
+                    <ListItemText primary={h} primaryTypographyProps={{ fontSize: "0.9rem", fontWeight: initialH === h ? 700 : 400 }} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+
+          {/* Minutes */}
+          <Box sx={{ flex: 1, overflowY: "auto", borderRight: "1px solid", borderColor: "divider", "&::-webkit-scrollbar": { width: 0 } }}>
+            <List sx={{ p: 0 }}>
+              {minutes.map((m) => (
+                <ListItem key={m} disablePadding>
+                  <ListItemButton
+                    selected={initialM === m}
+                    onClick={() => handleSelect(initialH, m, initialAMPM)}
+                    sx={{
+                      textAlign: "center",
+                      py: 0.8,
+                      "&.Mui-selected": { 
+                        background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
+                        color: "white",
+                        "&:hover": { 
+                          background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+                        }
+                      }
+                    }}
+                  >
+                    <ListItemText primary={m} primaryTypographyProps={{ fontSize: "0.9rem", fontWeight: initialM === m ? 700 : 400 }} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+
+          {/* Period */}
+          <Box sx={{ flex: 1, overflowY: "auto", "&::-webkit-scrollbar": { width: 0 } }}>
+            <List sx={{ p: 0 }}>
+              {periods.map((p) => (
+                <ListItem key={p} disablePadding>
+                  <ListItemButton
+                    selected={initialAMPM === p}
+                    onClick={() => handleSelect(initialH, initialM, p)}
+                    sx={{
+                      textAlign: "center",
+                      py: 0.8,
+                      "&.Mui-selected": { 
+                        background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
+                        color: "white",
+                        "&:hover": { 
+                          background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+                        }
+                      }
+                    }}
+                  >
+                    <ListItemText primary={p} primaryTypographyProps={{ fontSize: "0.9rem", fontWeight: initialAMPM === p ? 700 : 400 }} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Box>
+        
+        <Divider />
+        <Box sx={{ p: 1, display: "flex", justifyContent: "center" }}>
+            <ListItemButton 
+                onClick={handleClose}
+                sx={{ 
+                    borderRadius: "6px", 
+                    justifyContent: "center",
+                    background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)",
+                    color: "white",
+                    width: "90%",
+                    py: 0.5,
+                    "&:hover": { 
+                        background: "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)",
+                    }
+                }}
+            >
+                <Typography variant="body2" fontWeight={700}>Done</Typography>
+            </ListItemButton>
+        </Box>
+      </Popover>
+    </>
+  );
+};
 
 const CustomCalendar = ({ value, onChange, error }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Parse value if it's passed from formData.date
-  // value might be just a day string "9", or a full date like "Feb 9, 2026"
+  // value might be an ISO string "2026-04-20T00:00:00.000Z" or formatted string "Apr 20, 2026"
   let selectedDate = null;
   if (value) {
-    if (value.toString().includes(" ")) {
-      selectedDate = new Date(value);
-    } else {
-      // If it's just a number string from the old mock, assume current month/year
-      const dayNum = parseInt(value, 10);
-      if (!isNaN(dayNum)) {
-        selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
-      }
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      selectedDate = d;
     }
   }
+
+  // Sync calendar view month with selectedDate when it changes (e.g. on mount/edit)
+  useEffect(() => {
+    if (selectedDate) {
+      setCurrentDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+    }
+  }, [value]); // Depend on value string to trigger sync
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -116,7 +325,7 @@ const CustomCalendar = ({ value, onChange, error }) => {
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "50%",
-                bgcolor: isSelected ? "primary.main" : "transparent",
+                background: isSelected ? "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)" : "transparent",
                 color: isSelected ? "background.paper" : isToday ? "primary.main" : "text.secondary",
                 border: isToday && !isSelected ? "1px solid" : "none",
                 borderColor: "primary.main",
@@ -124,7 +333,7 @@ const CustomCalendar = ({ value, onChange, error }) => {
                 cursor: date ? "pointer" : "default",
                 transition: "0.2s",
                 "&:hover": {
-                  bgcolor: date && !isSelected ? "action.hover" : isSelected ? "primary.dark" : "transparent",
+                  background: date && !isSelected ? "action.hover" : isSelected ? "linear-gradient(135deg, #6D28D9 0%, #3B82F6 40%, #1D4ED8 70%, #005B9E 100%)" : "transparent",
                 }
               }}
             >
@@ -221,68 +430,34 @@ const ScheduleMeetingForm = ({ formData, setFormData, errors }) => {
           <Typography variant="body2" fontWeight={600} mb={1}>
             Start Time*
           </Typography>
-          <TextField
-            fullWidth
-            type="time"
+          <CustomTimePicker
             value={formData.startTime}
-            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+            onChange={(newVal) => setFormData({ ...formData, startTime: newVal })}
             error={!!errors.startTime}
-            helperText={errors.startTime}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ pointerEvents: "none", mr: 1 }}>
-                  <AccessTimeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
-              "& input[type='time']::-webkit-calendar-picker-indicator": {
-                opacity: 0,
-                position: "absolute",
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width: "48px",
-                height: "100%",
-                cursor: "pointer",
-              }
-            }}
+            placeholder="Select Start Time"
           />
+          {errors.startTime && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5, display: "block" }}>
+              {errors.startTime}
+            </Typography>
+          )}
         </Box>
 
         <Box>
           <Typography variant="body2" fontWeight={600} mb={1}>
             End Time*
           </Typography>
-          <TextField
-            fullWidth
-            type="time"
+          <CustomTimePicker
             value={formData.endTime}
-            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+            onChange={(newVal) => setFormData({ ...formData, endTime: newVal })}
             error={!!errors.endTime}
-            helperText={errors.endTime}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end" sx={{ pointerEvents: "none", mr: 1 }}>
-                  <AccessTimeIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": { borderRadius: "6px", position: "relative" },
-              "& input[type='time']::-webkit-calendar-picker-indicator": {
-                opacity: 0,
-                position: "absolute",
-                right: 0,
-                top: 0,
-                bottom: 0,
-                width: "48px",
-                height: "100%",
-                cursor: "pointer",
-              }
-            }}
+            placeholder="Select End Time"
           />
+          {errors.endTime && (
+            <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5, display: "block" }}>
+              {errors.endTime}
+            </Typography>
+          )}
         </Box>
 
         {formData.type === "Virtual" ? (

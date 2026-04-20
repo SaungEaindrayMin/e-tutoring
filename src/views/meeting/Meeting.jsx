@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Typography, Dialog } from "@mui/material";
+import { Box, Button, Typography, Dialog, CircularProgress } from "@mui/material";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -26,8 +26,14 @@ const Meeting = ({ role }) => {
   const [successOpen, setSuccessOpen] = useState(false);
   const [schedules, setSchedules] = useState([]);
   const [counts, setCounts] = useState({ upcoming: 0, past: 0 });
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [completingId, setCompletingId] = useState(null);
+
+  const [loading, setLoading] = useState(true);
 
   const getSchedules = async () => {
+    setLoading(true);
     try {
       const userStr = Cookies.get(config.COOKIE_NAME_USER);
       let currentUser = null;
@@ -36,6 +42,7 @@ const Meeting = ({ role }) => {
 
       if (!currentUserId) {
         console.error("No user ID found in cookies");
+        setLoading(false);
         return;
       }
 
@@ -68,6 +75,8 @@ const Meeting = ({ role }) => {
       }
     } catch (err) {
       console.error("Error in getSchedules:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,7 +150,32 @@ const Meeting = ({ role }) => {
   const handleOpen = () => {
     setOpen(true);
     setStep(1);
-    setFormData({ id: null, title: "", type: "", date: "", startTime: "", endTime: "", link: "", location: "", notes: "", platform: "", selectedStudents: [] });
+    
+    const now = new Date();
+    const currentH = now.getHours();
+    const currentM = now.getMinutes(); // Removing rounding for better "live" feel
+    
+    const formatTime = (h, m) => `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+    const startTimeStr = formatTime(currentH, currentM);
+    const endTimeStr = formatTime((currentH + 1) % 24, currentM);
+
+    const todayStr = new Intl.DateTimeFormat('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    }).format(now);
+
+    setFormData({ 
+      id: null, 
+      title: "", 
+      type: "", 
+      date: "", 
+      startTime: "", 
+      endTime: "", 
+      link: "", 
+      location: "", 
+      notes: "", 
+      platform: "", 
+      selectedStudents: [] 
+    });
     setErrors({});
   };
 
@@ -222,7 +256,7 @@ const Meeting = ({ role }) => {
       };
 
       let studentIds = isTutor
-        ? (formData.selectedStudents.length > 0 ? [extractId(formData.selectedStudents[0], 'student')] : [])
+        ? formData.selectedStudents.map(s => extractId(s, 'student')).filter(Boolean)
         : [extractId(currentUser, 'student')].filter(Boolean);
 
       let tutorId = isTutor
@@ -299,14 +333,39 @@ const Meeting = ({ role }) => {
     } catch (err) {
       console.error("Error scheduling meeting:", err);
       alert("Error scheduling meeting! Check console.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleCloseSuccess = () => {
     setSuccessOpen(false);
-    setFormData({ id: null, title: "", type: "", date: "", startTime: "", endTime: "", link: "", location: "", notes: "", platform: "", selectedStudents: [] });
-    setStep(1);
+    
+    // Refresh list first
     getSchedules();
+
+    // Prepare fresh defaults for next open
+    const now = new Date();
+    const formatTime = (h, m) => `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+    const todayStr = new Intl.DateTimeFormat('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
+    }).format(now);
+
+    setFormData({ 
+      id: null, 
+      title: "", 
+      type: "", 
+      date: "", 
+      startTime: "", 
+      endTime: "", 
+      link: "", 
+      location: "", 
+      notes: "", 
+      platform: "", 
+      selectedStudents: [] 
+    });
+    setStep(1);
+    setErrors({});
   };
 
   return (
@@ -325,125 +384,145 @@ const Meeting = ({ role }) => {
         pastCount={counts.past}
       />
 
-      {tab === "upcoming" && upcomingSchedules.length === 0 ? (
-        <Box
-          sx={{
-            border: "2px solid",
-            borderColor: "primary.main",
-            borderRadius: "4px",
-            p: 3,
-            minHeight: 400,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            bgcolor: "background.paper",
-            mb: 2,
-          }}
-        >
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              mx: "auto",
-              mb: 2,
-              borderRadius: "12px",
-              bgcolor: "primary.active",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid",
-              borderColor: "primary.light"
-            }}
-          >
-            <CalendarTodayOutlinedIcon sx={{ color: "primary.main", fontSize: 32 }} />
-          </Box>
-
-          <Typography variant="body2" fontWeight={500} color="text.secondary" mb={2}>
-            No upcoming meetings
-          </Typography>
-
-          <Button
-            variant="outlined"
-            onClick={handleOpen}
-            sx={{
-              textTransform: "none",
-              borderRadius: "6px",
-              fontWeight: 600,
-              color: "text.primary",
-              borderColor: "text.input",
-              px: 3,
-              py: 1,
-              ":hover": {
-                borderColor: "text.secondary",
-                bgcolor: "background.switch"
-              }
-            }}
-          >
-            Schedule Your First Meeting
-          </Button>
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={12}>
+          <CircularProgress />
         </Box>
-      ) : tab === "upcoming" && upcomingSchedules.length > 0 ? (
-        upcomingSchedules.map((mtg, i) => (
-          <MeetingCard
-            key={mtg.id || i}
-            isUpcoming={true}
-            {...formatMeetingData(mtg)}
-            onEdit={() => handleEdit(mtg)}
-            onDelete={async () => {
-              const res = await dataService.retrieveDELETE("/v1/schedule/", mtg.id);
+      ) : (
+        <>
+          {tab === "upcoming" && upcomingSchedules.length === 0 ? (
+            <Box
+              sx={{
+                border: "2px solid",
+                borderColor: "primary.main",
+                borderRadius: "4px",
+                p: 3,
+                minHeight: 400,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                bgcolor: "background.paper",
+                mb: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  mx: "auto",
+                  mb: 2,
+                  borderRadius: "12px",
+                  bgcolor: "primary.active",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid",
+                  borderColor: "primary.light"
+                }}
+              >
+                <CalendarTodayOutlinedIcon sx={{ color: "primary.main", fontSize: 32 }} />
+              </Box>
 
-              if (res && (res.status === "success" || Object.keys(res).length === 0)) {
-                await getSchedules();
-              } else {
-                console.error("Failed to delete schedule", res);
-              }
-            }}
-            onComplete={async () => {
-              const extractT = (t) => {
-                if (!t) return "";
-                const d = new Date(t);
-                return isNaN(d) ? t : `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
-              };
-              const payload = {
-                title: mtg.title,
-                type: mtg.type,
-                date: mtg.date ? mtg.date.split("T")[0] : null,
-                startTime: extractT(mtg.startTime),
-                endTime: extractT(mtg.endTime),
-                link: mtg.link || null,
-                linkType: mtg.linkType || null,
-                location: mtg.location || null,
-                note: mtg.note || "",
-                isCompleted: true
-              };
-              const res = await dataService.retrievePUT(payload, `/v1/schedule/${mtg.id}`);
-              if (res && res.status === "success") {
-                return true;
-              }
-              console.error("Failed to complete schedule", res);
-              alert(`Failed: ${res?.message || "Validation Error"}`);
-              return false;
-            }}
-            onCompleteClosed={getSchedules}
-          />
-        ))
-      ) : null}
+              <Typography variant="body2" fontWeight={500} color="text.secondary" mb={2}>
+                No upcoming meetings
+              </Typography>
 
-      {tab === "past" && pastSchedules.length === 0 ? (
-        <Box textAlign="center" py={5} color="text.secondary">
-          <Typography>No past meetings</Typography>
-        </Box>
-      ) : tab === "past" && pastSchedules.length > 0 ? (
-        pastSchedules.map((mtg, i) => (
-          <MeetingCard
-            key={mtg.id || i}
-            isUpcoming={false}
-            {...formatMeetingData(mtg)}
-          />
-        ))
-      ) : null}
+              <Button
+                variant="contained"
+                color="primary"
+                useGradient
+                onClick={handleOpen}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: "8px",
+                  fontWeight: 700,
+                  px: 3.5,
+                  py: 1.2,
+                }}
+              >
+                Schedule Your First Meeting
+              </Button>
+            </Box>
+          ) : tab === "upcoming" && upcomingSchedules.length > 0 ? (
+            upcomingSchedules.map((mtg, i) => (
+              <MeetingCard
+                key={mtg.id || i}
+                isUpcoming={true}
+                {...formatMeetingData(mtg)}
+                onEdit={() => handleEdit(mtg)}
+                onDelete={async () => {
+                  setDeletingId(mtg.id);
+                  try {
+                    const res = await dataService.retrieveDELETE("/v1/schedule/", mtg.id);
+                    if (res && (res.status === "success" || Object.keys(res).length === 0)) {
+                      await getSchedules();
+                    } else {
+                      console.error("Failed to delete schedule", res);
+                    }
+                  } catch (err) {
+                    console.error("Delete error:", err);
+                  } finally {
+                    setDeletingId(null);
+                  }
+                }}
+                onComplete={async () => {
+                  setCompletingId(mtg.id);
+                  try {
+                    const extractT = (t) => {
+                      if (!t) return "";
+                      const d = new Date(t);
+                      return isNaN(d) ? t : `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+                    };
+                    const payload = {
+                      title: mtg.title,
+                      type: mtg.type,
+                      date: mtg.date ? mtg.date.split("T")[0] : null,
+                      startTime: extractT(mtg.startTime),
+                      endTime: extractT(mtg.endTime),
+                      link: mtg.link || null,
+                      linkType: mtg.linkType || null,
+                      location: mtg.location || null,
+                      note: mtg.note || "",
+                      isCompleted: true
+                    };
+                    const res = await dataService.retrievePUT(payload, `/v1/schedule/${mtg.id}`);
+                    if (res && res.status === "success") {
+                      return true;
+                    }
+                    console.error("Failed to complete schedule", res);
+                    alert(`Failed: ${res?.message || "Validation Error"}`);
+                    return false;
+                  } catch (err) {
+                    console.error("Complete error:", err);
+                    return false;
+                  } finally {
+                    setCompletingId(null);
+                  }
+                }}
+                onCompleteClosed={getSchedules}
+                isDeleting={deletingId === mtg.id}
+                isCompleting={completingId === mtg.id}
+              />
+            ))
+          ) : null}
+
+          {tab === "past" && pastSchedules.length === 0 ? (
+            <Box textAlign="center" py={5} color="text.secondary">
+              <Typography>No past meetings</Typography>
+            </Box>
+          ) : tab === "past" && pastSchedules.length > 0 ? (
+            pastSchedules.map((mtg, i) => (
+              <MeetingCard
+                key={mtg.id || i}
+                isUpcoming={false}
+                {...formatMeetingData(mtg)}
+              />
+            ))
+          ) : null}
+        </>
+      )}
 
       <CustomDialog
         open={open}
@@ -456,33 +535,37 @@ const Meeting = ({ role }) => {
             <Box display="flex" justifyContent="flex-end" width="100%" px={1} py={1}>
               <Button
                 variant="contained"
+                color="primary"
+                useGradient
                 onClick={handleNext}
-                startIcon={!isTutor ? <AddIcon /> : undefined}
+                disabled={submitting}
+                startIcon={(!submitting && !isTutor) ? <AddIcon /> : undefined}
                 sx={{
                   textTransform: "none",
-                  borderRadius: "6px",
-                  fontWeight: 600,
+                  borderRadius: "8px",
+                  fontWeight: 700,
                   px: { xs: 3, sm: 5 },
-                  py: 1,
-                  boxShadow: "none",
+                  py: 1.2,
                 }}
               >
-                {isTutor ? "Next" : "Schedule Meeting"}
+                {submitting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} /> : (isTutor ? "Next" : "Schedule Meeting")}
               </Button>
             </Box>
           ) : (
             <Box display="flex" justifyContent="flex-end" gap={2} width="100%" px={1} py={1} sx={{ flexDirection: { xs: "column", sm: "row" } }}>
               <Button
-                variant="contained"
-                startIcon={<ArrowBackIcon />}
+                variant="outlined"
+                startIcon={!submitting ? <ArrowBackIcon /> : undefined}
                 onClick={() => setStep(1)}
+                disabled={submitting}
                 sx={{
                   textTransform: "none",
-                  borderRadius: "6px",
+                  borderRadius: "8px",
                   fontWeight: 600,
                   px: 3,
                   py: 1,
-                  boxShadow: "none",
+                  color: "text.secondary",
+                  borderColor: "text.input",
                   order: { xs: 2, sm: 1 }
                 }}
               >
@@ -490,7 +573,10 @@ const Meeting = ({ role }) => {
               </Button>
               <Button
                 variant="contained"
-                startIcon={<AddIcon />}
+                color="primary"
+                useGradient
+                startIcon={!submitting ? <AddIcon /> : undefined}
+                disabled={submitting}
                 onClick={() => {
                   if (isTutor && formData.selectedStudents.length === 0) {
                     alert("Please select at least one student before scheduling!");
@@ -500,15 +586,14 @@ const Meeting = ({ role }) => {
                 }}
                 sx={{
                   textTransform: "none",
-                  borderRadius: "6px",
-                  fontWeight: 600,
+                  borderRadius: "8px",
+                  fontWeight: 700,
                   px: 3,
-                  py: 1,
-                  boxShadow: "none",
+                  py: 1.2,
                   order: { xs: 1, sm: 2 }
                 }}
               >
-                Schedule Meeting
+                {submitting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} /> : "Schedule Meeting"}
               </Button>
             </Box>
           )

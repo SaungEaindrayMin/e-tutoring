@@ -76,11 +76,28 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
   const handleToggle = (user) => {
     const isSelected = formData.selectedStudents.findIndex((u) => u.id === user.id) !== -1;
     if (isSelected) {
-      setFormData({ ...formData, selectedStudents: [] });
+      setFormData({ 
+        ...formData, 
+        selectedStudents: formData.selectedStudents.filter(u => u.id !== user.id) 
+      });
     } else {
-      setFormData({ ...formData, selectedStudents: [user] });
+      setFormData({ 
+        ...formData, 
+        selectedStudents: [...formData.selectedStudents, user] 
+      });
     }
   };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setFormData({ ...formData, selectedStudents: [...usersList] });
+    } else {
+      setFormData({ ...formData, selectedStudents: [] });
+    }
+  };
+
+  const isAllSelected = usersList.length > 0 && formData.selectedStudents.length === usersList.length;
+  const isSomeSelected = formData.selectedStudents.length > 0 && formData.selectedStudents.length < usersList.length;
 
   return (
     <Box sx={{ border: "1px solid", borderColor: "text.input", borderRadius: "8px", mt: 1 }}>
@@ -102,7 +119,14 @@ const SelectStudentsStep = ({ formData, setFormData, isTutor }) => {
         <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ display: { xs: "none", sm: "block" } }}>
           University email
         </Typography>
-        <Box sx={{ width: 42 }} />
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Checkbox
+                checked={isAllSelected}
+                indeterminate={isSomeSelected}
+                onChange={handleSelectAll}
+                sx={{ py: 0, color: "text.input", "&.Mui-checked": { color: "primary.main" } }}
+            />
+        </Box>
       </Box>
 
       {/* List */}

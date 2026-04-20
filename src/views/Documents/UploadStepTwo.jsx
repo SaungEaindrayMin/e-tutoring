@@ -11,6 +11,7 @@ import {
     TableHead,
     TableRow,
     Paper,
+    CircularProgress,
 } from "@mui/material";
 
 const UploadStepTwo = ({
@@ -19,6 +20,7 @@ const UploadStepTwo = ({
     onSelectionChange,
     onBack,
     onUpload,
+    isSubmitting,
 }) => {
     const isAllSelected =
         students.length > 0 && selectedStudents.length === students.length;
@@ -68,7 +70,7 @@ const UploadStepTwo = ({
                         {students.map((student) => {
                             const studentProfileId = student.studentProfile?.id;
                             if (!studentProfileId) return null;
-                            
+
                             return (
                                 <TableRow key={studentProfileId} hover>
                                     <TableCell>{student.name}</TableCell>
@@ -88,14 +90,17 @@ const UploadStepTwo = ({
 
             <DialogActions sx={{ p: 0, pt: 3, gap: 1, justifyContent: "flex-end" }}>
                 <Button
-                    variant="contained"
+                    variant="outlined"
+                    disabled={isSubmitting}
                     onClick={onBack}
                     sx={{
                         px: 5,
-                        borderRadius: 2,
+                        borderRadius: "8px",
                         textTransform: "none",
-                        fontWeight: "bold",
-                        boxShadow: "none",
+                        fontWeight: 600,
+                        py: 1,
+                        color: "text.secondary",
+                        borderColor: "text.input"
                     }}
                 >
                     ← Back
@@ -103,16 +108,19 @@ const UploadStepTwo = ({
 
                 <Button
                     variant="contained"
+                    color="primary"
+                    useGradient
+                    disabled={isSubmitting}
                     onClick={onUpload}
                     sx={{
                         px: 5,
-                        borderRadius: 2,
+                        borderRadius: "8px",
                         textTransform: "none",
-                        fontWeight: "bold",
-                        boxShadow: "none",
+                        fontWeight: 700,
+                        py: 1.2,
                     }}
                 >
-                    Upload
+                    {isSubmitting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} /> : "Upload"}
                 </Button>
             </DialogActions>
         </>

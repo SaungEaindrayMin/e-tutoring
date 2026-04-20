@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Typography, Button, Dialog, IconButton } from "@mui/material";
+import { Box, Typography, Button, Dialog, IconButton, CircularProgress } from "@mui/material";
 import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
@@ -9,7 +9,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 
-const MeetingCard = ({ title, date, time, link, location, student, note, tutor, status, type = "Virtual", isUpcoming = false, onEdit, onDelete, onComplete, onCompleteClosed }) => {
+const MeetingCard = ({ title, date, time, link, location, student, note, tutor, status, type = "Virtual", isUpcoming = false, onEdit, onDelete, onComplete, onCompleteClosed, isDeleting, isCompleting }) => {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
 
@@ -57,7 +57,7 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
         </Typography>
 
         <Box display="flex" gap={1} flexWrap="wrap">
-          <Box sx={{ bgcolor: "primary.main", color: "white", px: 1.5, py: 0.5, borderRadius: "6px" }}>
+          <Box sx={{ background: "linear-gradient(135deg, #7C3AED 0%, #60A5FA 40%, #2563EB 70%, #006AB5 100%)", color: "white", px: 1.5, py: 0.5, borderRadius: "6px" }}>
             <Typography variant="caption" fontWeight={600}>{type}</Typography>
           </Box>
           {status && (
@@ -143,7 +143,8 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
           </Button>
           <Button
             variant="contained"
-            startIcon={<CheckCircleOutlineIcon sx={{ fontSize: "18px !important" }} />}
+            disabled={isCompleting || isDeleting}
+            startIcon={!isCompleting ? <CheckCircleOutlineIcon sx={{ fontSize: "18px !important" }} /> : undefined}
             onClick={handleCompleteClick}
             sx={{
               textTransform: "none",
@@ -160,11 +161,12 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
               "&:hover": { bgcolor: "#D7E9D1", boxShadow: "none" }
             }}
           >
-            Make Complete
+            {isCompleting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "#137333" }} /> : "Make Complete"}
           </Button>
           <Button
             variant="contained"
-            startIcon={<CancelOutlinedIcon sx={{ fontSize: "18px !important" }} />}
+            disabled={isDeleting || isCompleting}
+            startIcon={!isDeleting ? <CancelOutlinedIcon sx={{ fontSize: "18px !important" }} /> : undefined}
             onClick={handleCancelClick}
             sx={{
               textTransform: "none",
@@ -230,6 +232,7 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
           </Button>
           <Button
             variant="contained"
+            disabled={isDeleting}
             onClick={handleConfirmCancel}
             sx={{
               textTransform: "none",
@@ -240,7 +243,7 @@ const MeetingCard = ({ title, date, time, link, location, student, note, tutor, 
               boxShadow: "none",
             }}
           >
-            Confirm
+            {isDeleting ? <CircularProgress size={20} thickness={2.5} sx={{ color: "white" }} /> : "Confirm"}
           </Button>
         </Box>
       </Dialog>

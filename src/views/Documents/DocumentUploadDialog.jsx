@@ -16,7 +16,7 @@ import Cookies from "js-cookie";
 const dataService = new DataServices();
 const config = new Configuration();
 
-const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
+const DocumentUploadDialog = ({ open, onClose, onUpload, submitting }) => {
     const role = sessionStorage.getItem("userRole"); // "STUDENT" | "TUTOR"
     const normalizedRole = role?.toLowerCase();
     const isStudent = normalizedRole === "student";
@@ -91,7 +91,6 @@ const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
                 file: updatedData.file,
                 studentIds: [] // Backend handles recipient for students
             });
-            handleClose();
         } else {
             setStep(2);
         }
@@ -119,8 +118,6 @@ const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
             file: formData.file,
             studentIds: formData.selectedStudents,
         });
-
-        handleClose();
     };
 
     return (
@@ -155,6 +152,7 @@ const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
                         onNext={handleNextStep}
                         onCancel={handleClose}
                         isStudent={normalizedRole === "student"}
+                        isSubmitting={submitting}
                     />
                 )}
 
@@ -165,6 +163,7 @@ const DocumentUploadDialog = ({ open, onClose, onUpload }) => {
                         onSelectionChange={handleStudentSelection}
                         onBack={handleBack}
                         onUpload={handleUpload}
+                        isSubmitting={submitting}
                     />
                 )}
             </DialogContent>
